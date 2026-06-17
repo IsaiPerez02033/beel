@@ -1,0 +1,203 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
+import { differenceInCalendarDays, parseISO, format } from "date-fns";
+import { es } from "date-fns/locale";
+import { Star, Info } from "lucide-react";
+import { formatPrice, formatRating, pluralNights } from "@/lib/utils";
+import type { Property } from "@/types";
+
+interface BookingWidgetProps {
+  property: Property;
+  initialCheckIn?: string;
+  initialCheckOut?: string;
+  initialGuests?: number;
+}
+
+export default function BookingWidget({
+  property,
+  initialCheckIn,
+  initialCheckOut,
+  initialGuests = 1,
+}: BookingWidgetProps) {
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+
+  const [checkIn, setCheckIn] = useState(initialCheckIn ?? "");
+  const [checkOut, setCheckOut] = useState(initialCheckOut ?? "");
+  const [guests, setGuests] = useState(
+    Math.min(initialGuests, property.max_guests)
+  );
+  const [loading, setLoading] = useState(false);
+
+  // Cálculo de noches y precios
+  const nights = useMemo(() => {
+    if (!checkIn || !checkOut) return 0;
+    try {
+      return Math.max(
+        0,
+        differenceInCalendarDays(parseISO(checkOut), parseISO(checkIn))
+      );
+    } catch {
+      return 0;
+    }
+  }, [checkIn, checkOut]);
+
+  const subtotal = nights * property.price_per_night;
+  const cleaningFee = property.cleaning_fee ?? 0;
+  const total = subtotal + cleaningFee;
+
+  async function handleReserve() {
+    if (!isSignedIn) {
+      router.push(
+        `/iniciar-sesion?redirect_url=/p/${property.id}/reservar`
+      );
+      return;
+    }
+    if (!checkIn || !checkOut || nights < property.min_stay_nights) return;
+
+    const params = new URLSearchParams({
+      check_in: checkIn,
+      check_out: checkOut,
+      huespedes: String(guests),
+    });
+    router.push(`/p/${property.id}/reservar?${params}`);
+  }
+
+  const canReserve =
+    checkIn && checkOut && nights >= property.min_stay_nights && nights > 0;
+
+  return (
+    <div className="card p-5 shadow-lg">
+      {/* Precio por noche */}
+      <div className="flex items-baseline justify-between mb-4">
+        <div>
+          <span className="text-h1 font-semibold text-[var(--text-primary)]">
+            {formatPrice(property.price_per_night)}
+          </span>
+          <span className="text-body-sm text-[var(--text-secondary)]"> / noche</span>
+        </div>
+        {property.avg_rating && (
+          <div className="flex items-center gap-1 text-caption text-[var(--text-secondary)]">
+            <Star size={12} className="fill-[var(--color-accent)] text-[var(--color-accent)]" />
+            <span className="font-medium text-[var(--text-primary)]">
+              {formatRating(property.avg_rating)}
+            </span>
+            <span>({property.total_reviews})</span>
+          </div>
+        )}
+      </div>
+
+      {/* Fecha y huéspedes */}
+      <div className="border border-[var(--border-default)] rounded-xl overflow-hidden mb-3">
+        {/* Fechas */}
+        <div className="grid grid-cols-2">
+          <div className="p-3 border-r border-[var(--border-default)]">
+            <label className="block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-primary)] mb-1">
+              Llegada
+            </label>
+            <input
+              type="date"
+              value={checkIn}
+              min={format(new Date(), "yyyy-MM-dd")}
+              onChange={(e) => {
+                setCheckIn(e.target.value);
+                if (checkOut && e.target.value >= checkOut) setCheckOut("");
+              }}
+              className="w-full text-body-sm text-[var(--text-primary)] bg-transparent outline-none"
+            />
+          </div>
+          <div className="p-3">
+            <label className="block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-primary)] mb-1">
+              Salida
+            </label>
+            <input
+              type="date"
+              value={checkOut}
+              min={checkIn || format(new Date(), "yyyy-MM-dd")}
+              onChange={(e) => setCheckOut(e.target.value)}
+              className="w-full text-body-sm text-[var(--text-primary)] bg-transparent outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Huéspedes */}
+        <div className="p-3 border-t border-[var(--border-default)] flex items-center justify-between">
+          <div>
+            <label className="block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-primary)] mb-0.5">
+              Huéspedes
+            </label>
+            <span className="text-body-sm text-[var(--text-secondary)]">
+              {guests} {guests === 1 ? "huésped" : "huéspedes"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setGuests(Math.max(1, guests - 1))}
+              className="w-7 h-7 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm hover:border-[var(--border-strong)] transition-colors"
+            >
+              −
+            </button>
+            <button
+              onClick={() => setGuests(Math.min(property.max_guests, guests + 1))}
+              className="w-7 h-7 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm hover:border-[var(--border-strong)] transition-colors"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mínimo de noches */}
+      {property.min_stay_nights > 1 && nights > 0 && nights < property.min_stay_nights && (
+        <div className="flex items-start gap-2 text-caption text-[var(--color-error)] mb-3">
+          <Info size={12} className="mt-0.5 flex-shrink-0" />
+          <span>Estancia mínima: {pluralNights(property.min_stay_nights)}</span>
+        </div>
+      )}
+
+      {/* Botón reservar */}
+      <button
+        onClick={handleReserve}
+        disabled={!canReserve || loading}
+        className="btn btn-primary w-full justify-center py-3 text-body disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading
+          ? "Procesando..."
+          : property.instant_booking
+          ? "Reservar ahora"
+          : "Solicitar reserva"}
+      </button>
+
+      {!property.instant_booking && (
+        <p className="text-caption text-center text-[var(--text-tertiary)] mt-2">
+          El anfitrión tiene 24 h para confirmar
+        </p>
+      )}
+
+      {/* Desglose de precio */}
+      {nights > 0 && (
+        <div className="mt-4 space-y-0">
+          <div className="price-row">
+            <span>
+              {formatPrice(property.price_per_night)} × {pluralNights(nights)}
+            </span>
+            <span>{formatPrice(subtotal)}</span>
+          </div>
+          {cleaningFee > 0 && (
+            <div className="price-row">
+              <span>Limpieza</span>
+              <span>{formatPrice(cleaningFee)}</span>
+            </div>
+          )}
+          <div className="price-row total">
+            <span>Total</span>
+            <span>{formatPrice(total)}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,628 @@
+/* ============================================================
+   Beel — Global CSS
+   Design System base styles, CSS variables y utilidades
+   ============================================================
+   Estructura:
+     1. Fuentes (Plus Jakarta Sans + Inter vía Google Fonts)
+     2. CSS Custom Properties (light mode)
+     3. CSS Custom Properties (dark mode)
+     4. Reset y base
+     5. Componentes base (clases utilitarias de Beel)
+     6. Animaciones
+   ============================================================ */
+
+/* ── 1. Fuentes (via next/font/google en layout.tsx) ────── */
+
+/* ── 2. CSS Variables — Light Mode ──────────────────────── */
+:root {
+  /* ── Colores de marca ── */
+  --color-primary:           #147A5C;  /* WCAG AA 4.5:1 con #fff */
+  --color-primary-dark:      #0E5C44;
+  --color-primary-light:     #E8F5F0;
+  --color-primary-border:    #9FE1CB;
+
+  --color-arena:             #F1EFE8;
+  --color-arena-border:      #D3D1C7;
+  --color-tierra:            #2C2C2A;
+
+  --color-accent:            #F5A623;
+  --color-accent-light:      #FEF3DC;
+  --color-accent-border:     #FAC775;
+  --color-accent-dark:       #633806;
+
+  /* ── Semánticos ── */
+  --color-success:           #10B981;
+  --color-success-light:     #D1FAE5;
+  --color-error:             #EF4444;
+  --color-error-light:       #FEE2E2;
+  --color-warning:           #F59E0B;
+  --color-warning-light:     #FEF3C7;
+  --color-info:              #3B82F6;
+  --color-info-light:        #DBEAFE;
+
+  /* ── Superficie / Fondo ── */
+  --bg-base:                 #FFFFFF;
+  --bg-subtle:               #FAFAFA;
+  --bg-arena:                #F1EFE8;
+  --bg-elevated:             #FFFFFF;
+  --bg-overlay:              rgba(44,44,42,0.5);
+
+  /* ── Texto ── */
+  --text-primary:            #2C2C2A;
+  --text-secondary:          #4A4946;  /* was #5F5E5A, darkened for WCAG AA */
+  --text-tertiary:           #888780;
+  --text-disabled:           #B5B3AE;
+  --text-inverse:            #FFFFFF;
+  --text-primary-brand:      #147A5C;
+  --text-accent:             #633806;
+
+  /* ── Bordes ── */
+  --border-subtle:           rgba(0,0,0,0.06);
+  --border-default:          rgba(0,0,0,0.10);
+  --border-strong:           rgba(0,0,0,0.16);
+  --border-brand:            #9FE1CB;
+
+  /* ── Sombras ── */
+  --shadow-xs:               0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm:               0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:               0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg:               0 8px 24px rgba(0,0,0,0.12);
+  --shadow-card:             0 4px 16px rgba(29,158,117,0.12);
+  --shadow-search:           0 2px 12px rgba(15,110,86,0.10);
+
+  /* ── Tipografía ── */
+  --font-display:            "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body:               "Inter", system-ui, sans-serif;
+  --font-mono:               "JetBrains Mono", "Fira Code", monospace;
+
+  /* Escala de tamaños */
+  --text-display:            28px;
+  --text-h1:                 22px;
+  --text-h2:                 17px;
+  --text-h3:                 15px;
+  --text-body-lg:            15px;
+  --text-body:               14px;
+  --text-body-sm:            13px;
+  --text-caption:            12px;
+  --text-micro:              10px;
+
+  /* ── Espaciado (base 4px) ── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+
+  /* ── Radios ── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   12px;
+  --radius-xl:   14px;
+  --radius-2xl:  16px;
+  --radius-card: 14px;
+  --radius-full: 9999px;
+
+  /* ── Transiciones ── */
+  --transition-fast:   100ms ease;
+  --transition-normal: 150ms ease;
+  --transition-slow:   250ms ease;
+
+  /* ── Z-Index ── */
+  --z-base:      0;
+  --z-raised:    10;
+  --z-map:       50;
+  --z-dropdown:  100;
+  --z-overlay:   200;
+  --z-modal:     300;
+  --z-toast:     400;
+
+  /* ── Coordenadas de mapa ── */
+  /* Radio de ofuscación (sinc con backend LOCATION_OBFUSCATION_RADIUS_METERS) */
+  --map-obfuscation-radius: 150;  /* metros */
+}
+
+/* ── 3. CSS Variables — Dark Mode ───────────────────────── */
+.dark {
+  /* Superficie */
+  --bg-base:                 #1A1A18;
+  --bg-subtle:               #222220;
+  --bg-arena:                #2A2A27;
+  --bg-elevated:             #2E2E2B;
+
+  /* Texto */
+  --text-primary:            #F1EFE8;
+  --text-secondary:          #B5B3AE;
+  --text-tertiary:           #888780;
+  --text-disabled:           #555450;
+  --text-inverse:            #2C2C2A;
+  --text-primary-brand:      #5DCAA5;
+  --text-accent:             #FBC86A;
+
+  /* Bordes */
+  --border-subtle:           rgba(255,255,255,0.06);
+  --border-default:          rgba(255,255,255,0.10);
+  --border-strong:           rgba(255,255,255,0.16);
+  --border-brand:            #147A5C;
+
+  /* Colores de marca (ligeramente más claros en dark para legibilidad) */
+  --color-primary:           #5DCAA5;
+  --color-primary-dark:      #1D9E75;
+  --color-primary-light:     rgba(29,158,117,0.15);
+  --color-primary-border:    rgba(29,158,117,0.3);
+
+  --color-arena:             #2A2A27;
+  --color-arena-border:      rgba(255,255,255,0.08);
+
+  --color-accent:            #FBC86A;
+  --color-accent-light:      rgba(245,166,35,0.12);
+  --color-accent-border:     rgba(245,166,35,0.3);
+  --color-accent-dark:       #FDE4A8;
+
+  /* Sombras más pronunciadas en dark */
+  --shadow-card:             0 4px 20px rgba(0,0,0,0.4);
+  --shadow-search:           0 2px 16px rgba(0,0,0,0.3);
+}
+
+/* ── 4. Reset y Base ─────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  background-color: var(--bg-base);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Headings usan Plus Jakarta Sans */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+h1 { font-size: var(--text-h1); }
+h2 { font-size: var(--text-h2); }
+h3 { font-size: var(--text-h3); }
+
+p { margin: 0; }
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-normal);
+}
+a:hover { color: var(--color-primary-dark); }
+
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-display);
+}
+
+input, textarea, select {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+}
+
+/* Focus visible accesible */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── 5. Clases Utilitarias de Beel ───────────────────────── */
+
+/* Tipografía */
+.text-display {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 500;
+  line-height: 1.2;
+}
+.text-h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  font-weight: 500;
+}
+.text-h2 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 500;
+}
+.text-body { font-size: var(--text-body); line-height: 1.6; }
+.text-caption { font-size: var(--text-caption); }
+
+/* Colores de texto */
+.text-brand   { color: var(--color-primary); }
+.text-accent  { color: var(--color-accent); }
+.text-muted   { color: var(--text-secondary); }
+
+/* Fondos */
+.bg-arena     { background-color: var(--color-arena); }
+.bg-brand     { background-color: var(--color-primary); }
+.bg-brand-light { background-color: var(--color-primary-light); }
+.bg-accent    { background-color: var(--color-accent); }
+.bg-elevated  { background-color: var(--bg-elevated); }
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-display);
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-normal),
+    color var(--transition-normal),
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: var(--color-tierra);
+  border-color: var(--color-accent);
+}
+.btn-accent:hover {
+  background: #E08A0A;
+  border-color: #E08A0A;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-outline:hover {
+  background: var(--color-primary-light);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+.btn-ghost:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  font-family: var(--font-display);
+  white-space: nowrap;
+}
+.badge-verified  { background: var(--color-primary-light); color: var(--color-primary-dark); }
+.badge-fast      { background: var(--color-primary-light); color: var(--color-primary-dark); }
+.badge-accent    { background: var(--color-accent-light);  color: var(--color-accent-dark); }
+.badge-brand     { background: var(--color-primary);       color: #fff; }
+.badge-neutral   { background: var(--bg-arena);            color: var(--text-secondary); }
+
+/* Cards */
+.card {
+  background: var(--bg-elevated);
+  border: 0.5px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  transition: box-shadow var(--transition-normal);
+}
+.card:hover {
+  box-shadow: var(--shadow-card);
+}
+
+/* Property card foto — aspect ratio 4:3 */
+.card-photo {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  position: relative;
+  background: var(--color-primary-light);
+}
+.card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+.card:hover .card-photo img {
+  transform: scale(1.03);
+}
+
+/* Chip de anfitrión en la foto — diferenciador de Beel */
+.host-chip {
+  position: absolute;
+  bottom: var(--space-2);
+  left: var(--space-2);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius-full);
+  padding: 4px 10px 4px 5px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Inputs */
+.input {
+  width: 100%;
+  border: 0.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  background: var(--bg-base);
+  transition:
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+.input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Search bar compuesta (Home hero) */
+.search-bar {
+  display: flex;
+  background: var(--bg-elevated);
+  border: 0.5px solid var(--color-primary-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-search);
+}
+.search-bar-field {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  border-right: 0.5px solid var(--border-default);
+  cursor: pointer;
+}
+.search-bar-field:last-of-type {
+  border-right: none;
+}
+.search-bar-field:hover {
+  background: var(--bg-subtle);
+}
+.search-bar-label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.search-bar-value {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+}
+
+/* Avatar */
+.avatar {
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.avatar-sm  { width: 28px; height: 28px; font-size: 11px; }
+.avatar-md  { width: 36px; height: 36px; font-size: 13px; }
+.avatar-lg  { width: 48px; height: 48px; font-size: 17px; }
+.avatar-xl  { width: 64px; height: 64px; font-size: 22px; }
+
+/* Chat bubbles */
+.bubble {
+  max-width: 70%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 12px;
+  font-size: var(--text-body-sm);
+  line-height: 1.45;
+}
+.bubble-guest {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border-bottom-left-radius: 3px;
+  align-self: flex-start;
+}
+.bubble-host {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  border-bottom-right-radius: 3px;
+  align-self: flex-end;
+}
+
+/* Price breakdown */
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+  border-bottom: 0.5px solid var(--border-subtle);
+}
+.price-row.total {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: var(--text-body);
+  border-bottom: none;
+  padding-top: var(--space-3);
+}
+
+/* Map pins (price bubbles) */
+.map-pin {
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+.map-pin:hover,
+.map-pin.active {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-card);
+}
+.map-pin.inactive {
+  background: var(--bg-elevated);
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+}
+
+/* Divider */
+.divider {
+  height: 0.5px;
+  background: var(--border-subtle);
+  border: none;
+  margin: 0;
+}
+
+/* Trust signal row (Home footer) */
+.trust-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+}
+
+/* Loading states */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    var(--border-subtle) 50%,
+    var(--bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-16) var(--space-8);
+  gap: var(--space-4);
+}
+.empty-state-icon {
+  color: var(--color-primary);
+  opacity: 0.4;
+}
+
+/* ── 6. Animaciones ─────────────────────────────────────── */
+
+@keyframes skeleton-pulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-brand {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.animate-fade-in  { animation: fade-in 200ms ease forwards; }
+.animate-slide-up { animation: slide-up 250ms ease forwards; }
+.animate-spin     { animation: spin 1s linear infinite; }
+.animate-pulse-brand { animation: pulse-brand 2s ease-in-out infinite; }
+
+/* Indicador de conexión SSE */
+.sse-connected::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  margin-right: 5px;
+  animation: pulse-brand 2s ease-in-out infinite;
+}

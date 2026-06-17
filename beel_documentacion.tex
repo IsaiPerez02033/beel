@@ -1,0 +1,1311 @@
+\documentclass[12pt,a4paper]{report}
+
+% ─── Paquetes ────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{setspace}
+\usepackage{lmodern}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{parskip}
+
+% ─── Geometría ───────────────────────────────────────────────────────────────
+\geometry{
+  top=2.5cm, bottom=2.5cm,
+  left=2.8cm, right=2.8cm,
+  headheight=20pt
+}
+
+% ─── Colores corporativos Beel ────────────────────────────────────────────────
+\definecolor{beelprimary}{HTML}{1D9E75}
+\definecolor{beelprimarylight}{HTML}{E8F7F2}
+\definecolor{beelaccent}{HTML}{F5A623}
+\definecolor{beeltier}{HTML}{2C2C2A}
+\definecolor{beelsand}{HTML}{F1EFE8}
+\definecolor{beelgray}{HTML}{6B7280}
+\definecolor{beellightgray}{HTML}{F9FAFB}
+
+% ─── Hyperref ────────────────────────────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=beelprimary,
+  urlcolor=beelprimary,
+  citecolor=beelprimary,
+  pdftitle={Beel -- Documentacion Tecnica Completa},
+  pdfauthor={Beel},
+  pdfsubject={Plataforma de hospedajes en Yucatan Mexico},
+}
+
+% ─── Tipografía de encabezados ───────────────────────────────────────────────
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{beeltier}}
+  {\color{beelprimary}\chaptertitlename\ \thechapter}{14pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{beeltier}}
+  {\color{beelprimary}\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{beeltier}}
+  {\color{beelprimary}\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\color{beelgray}}
+  {\thesubsubsection}{1em}{}
+
+% ─── Encabezado/pie de página ────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{beelprimary}{\textbf{Beel}}}
+\fancyhead[R]{\small\textcolor{beelgray}{\leftmark}}
+\fancyfoot[C]{\small\textcolor{beelgray}{\thepage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{{\color{beelprimary}\hrule height\headrulewidth\hfill}}
+
+% ─── Estilos de código ───────────────────────────────────────────────────────
+\lstdefinestyle{beelcode}{
+  backgroundcolor=\color{beellightgray},
+  commentstyle=\color{beelgray}\itshape,
+  keywordstyle=\color{beelprimary}\bfseries,
+  stringstyle=\color{beelaccent},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  keepspaces=true,
+  numbers=left,
+  numbersep=8pt,
+  numberstyle=\tiny\color{beelgray},
+  showspaces=false,
+  showstringspaces=false,
+  tabsize=2,
+  frame=leftline,
+  framerule=2pt,
+  rulecolor=\color{beelprimary},
+  xleftmargin=15pt,
+}
+\lstset{style=beelcode}
+
+% ─── Cajas informativas ──────────────────────────────────────────────────────
+\tcbset{
+  beelbox/.style={
+    colback=beelprimarylight,
+    colframe=beelprimary,
+    fonttitle=\bfseries,
+    breakable,
+    left=8pt, right=8pt, top=6pt, bottom=6pt,
+  },
+  beelinfo/.style={
+    colback=beelsand,
+    colframe=beeltier,
+    fonttitle=\bfseries\color{beeltier},
+    breakable,
+    left=8pt, right=8pt, top=6pt, bottom=6pt,
+  }
+}
+
+% ─── Columnas de tabla ───────────────────────────────────────────────────────
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% ─── Comando para endpoints ──────────────────────────────────────────────────
+\newcommand{\apiendpoint}[3]{%
+  \noindent\texttt{\textcolor{beelprimary}{\textbf{#1}}\ \textcolor{beeltier}{#2}}%
+  \hfill\textcolor{beelgray}{\small #3}\par\smallskip
+}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ════════════════════════════════════════════════════════════
+%  PORTADA
+% ════════════════════════════════════════════════════════════
+\begin{titlepage}
+  \pagecolor{beeltier}
+  \color{white}
+  \centering
+  \vspace*{2cm}
+
+  \includegraphics[width=9cm]{beel_logo_white_green.png}
+
+  \vspace{1.5cm}
+  {\Huge\bfseries Documentaci\'on T\'ecnica Completa}\\[0.5cm]
+  {\Large\color{beelprimary} Plataforma de Hospedajes --- M\'erida, Yucat\'an}
+
+  \vspace{1cm}
+  \begin{tcolorbox}[colback=beelprimary!20, colframe=beelprimary, width=12cm]
+    \centering\large
+    \textbf{Versi\'on:} MVP v1.0 \quad\textbullet\quad
+    \textbf{Fecha:} Junio 2026 \quad\textbullet\quad
+    \textbf{Dominio:} beel.mx
+  \end{tcolorbox}
+
+  \vfill
+
+  \begin{tabular}{ll}
+    Email de desarrollo: & \texttt{dev@beel.mx} \\[6pt]
+    Sitio web: & \texttt{https://beel.mx} \\[6pt]
+    Sede: & M\'erida, Yucat\'an, M\'exico \\[6pt]
+    Stack: & FastAPI + Next.js 14 + PostgreSQL \\
+  \end{tabular}
+
+  \vspace{1.5cm}
+  {\small\color{gray} Documento confidencial --- uso interno}
+\end{titlepage}
+\nopagecolor
+
+% ════════════════════════════════════════════════════════════
+%  TABLA DE CONTENIDOS
+% ════════════════════════════════════════════════════════════
+\tableofcontents
+\clearpage
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 1: LA EMPRESA
+% ════════════════════════════════════════════════════════════
+\chapter{La Empresa: Beel}
+
+\begin{tcolorbox}[beelbox, title={Identidad de Marca}]
+\textbf{Beel} es el marketplace de hospedajes especializado en M\'erida, Yucat\'an.
+Conecta a viajeros que buscan alojamiento aut\'entico con anfitri\'ones locales,
+priorizando confianza, transparencia y una experiencia 100\% adaptada al contexto mexicano.
+\end{tcolorbox}
+
+\section{Nombre y Marca}
+
+El nombre \textbf{Beel} es corto, memorable y f\'acil de pronunciar tanto en espa\~nol como
+en ingl\'es. El dominio principal es \texttt{beel.mx}, alineado con la identidad local
+yucateca. La paleta de colores corporativos refleja la naturaleza y cultura de la regi\'on:
+
+\begin{center}
+\begin{tabular}{L{4.5cm} C{2.5cm} L{4cm}}
+\toprule
+\textbf{Color} & \textbf{Hex} & \textbf{Uso} \\
+\midrule
+Verde Primario & \texttt{\#1D9E75} & CTA, botones, \'iconos principales \\
+Arena & \texttt{\#F1EFE8} & Fondos c\'alidos, tarjetas \\
+Tierra & \texttt{\#2C2C2A} & Textos principales, encabezados \\
+Acento Naranja & \texttt{\#F5A623} & Destacados, badges, llamadas \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Variantes del Logotipo}
+
+El proyecto incluye las siguientes variantes de logotipo:
+\begin{itemize}[leftmargin=*]
+  \item \texttt{beel\_logo\_green\_sand.png} --- Verde sobre arena (uso principal en web)
+  \item \texttt{beel\_logo\_white\_green.png} --- Blanco sobre verde (fondos oscuros)
+  \item \texttt{beel\_logo\_black\_sand.png} --- Negro sobre arena (impresi\'on)
+  \item \texttt{beel\_logo\_black\_white.png} --- Negro sobre blanco (documentos)
+  \item \texttt{beel\_icon\_app.png} --- \'Icono app m\'ovil
+  \item \texttt{beel\_symbol\_app.png} --- S\'imbolo aislado
+\end{itemize}
+
+\section{Misi\'on}
+
+\begin{tcolorbox}[beelbox, title={Misi\'on}]
+Hacer que encontrar y reservar un hospedaje en M\'erida sea tan f\'acil, seguro y
+transparente como deber\'ia ser: sin comisiones abusivas en el lanzamiento, con pagos
+locales en pesos mexicanos, y poniendo a los anfitri\'ones y hu\'espedes yucatecos en el
+centro de cada transacci\'on.
+\end{tcolorbox}
+
+\section{Visi\'on}
+
+\begin{tcolorbox}[beelbox, title={Visi\'on}]
+Ser la plataforma de referencia de hospedajes en el Sureste Mexicano para 2027,
+expandi\'endose progresivamente a las ciudades coloniales y destinos costeros de la regi\'on
+(Valladolid, Izamal, Progreso, Holbox), construyendo la comunidad de anfitri\'ones m\'as
+confiable de M\'exico.
+\end{tcolorbox}
+
+\section{Valores}
+
+\begin{enumerate}[leftmargin=*, label=\textbf{\arabic*.}]
+  \item \textbf{Confianza:} cada reserva est\'a protegida. El pago al anfitri\'on se libera
+        24~h despu\'es del check-in.
+  \item \textbf{Transparencia:} precios claros, sin sorpresas. La comisi\'on de plataforma
+        es \textbf{0\%} en fase de lanzamiento.
+  \item \textbf{Localismo:} pagos en MXN con MercadoPago, soporte en espa\~nol.
+  \item \textbf{Privacidad:} las coordenadas exactas se ofuscan 150~m en el mapa p\'ublico.
+  \item \textbf{Calidad:} revisi\'on manual de cada propiedad antes de activarse.
+\end{enumerate}
+
+\section{Modelo de Negocio}
+
+Beel opera como marketplace de doble cara (two-sided marketplace):
+
+\begin{center}
+\begin{tabularx}{\textwidth}{L{3cm} X X}
+\toprule
+\textbf{Actor} & \textbf{Propuesta de Valor} & \textbf{Monetizaci\'on} \\
+\midrule
+\textbf{Hu\'esped} & Hospedaje aut\'entico, pago seguro & Cargo por servicio (futuro) \\
+\textbf{Anfitri\'on} & Publicar y gestionar reservas & Comisi\'on sobre reserva (futuro) \\
+\textbf{Beel} & Infraestructura, confianza & \texttt{PLATFORM\_FEE} = 0\% en MVP \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 2: ARQUITECTURA
+% ════════════════════════════════════════════════════════════
+\chapter{Arquitectura del Sistema}
+
+\section{Vista General}
+
+Beel sigue una arquitectura cliente-servidor con separaci\'on estricta entre frontend y
+backend, comunicados v\'ia API REST + Server-Sent Events (SSE) para tiempo real.
+
+\begin{tcolorbox}[beelinfo, title={Capas de la Arquitectura}]
+\begin{lstlisting}[numbers=none, frame=none, xleftmargin=0pt]
+CLIENTE
+  Next.js 14 (App Router: RSC + Client)
+  Tailwind CSS  |  Clerk (auth)  |  MercadoPago
+        |
+        |  HTTPS / SSE
+        v
+BACKEND
+  FastAPI (Python 3.11, async)
+  6 modulos: users, properties, reservations,
+             payments, messaging, reviews
+        |                    |
+        v                    v
+  PostgreSQL 16          Redis 7
+  pgcrypto               Cache-aside
+  unaccent               TTL por tipo
+  pg_trgm
+  earthdistance
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Principios de Dise\~no}
+
+\begin{enumerate}[leftmargin=*, label=\textbf{\arabic*.}]
+  \item \textbf{UUIDs como PKs} --- seguridad y compatibilidad distribuida.
+  \item \textbf{Soft deletes} --- campo \texttt{deleted\_at}; preserva historial.
+  \item \textbf{Snapshots en reservas} --- precio y pol\'itica se congelan al crear la reserva.
+  \item \textbf{Anti-doble-booking} --- \texttt{SELECT FOR UPDATE SKIP LOCKED}.
+  \item \textbf{Transport-agnostic messaging} --- SSE hoy; migraci\'on a WebSocket sin cambiar schema.
+  \item \textbf{Cache-aside con Redis} --- TTL diferenciados por tipo de dato.
+  \item \textbf{Rate limiting} --- SlowAPI, 60 req/min por defecto.
+  \item \textbf{Ofuscaci\'on de coordenadas} --- radio aleatorio de 150 m en mapa p\'ublico.
+\end{enumerate}
+
+\section{Entornos}
+
+\begin{center}
+\begin{tabular}{L{4.5cm} L{3cm} L{3.5cm}}
+\toprule
+\textbf{Variable} & \textbf{Development} & \textbf{Production} \\
+\midrule
+\texttt{ENVIRONMENT} & \texttt{development} & \texttt{production} \\
+\texttt{DEBUG} & \texttt{True} & \texttt{False} \\
+Docs UI (/docs) & Habilitada & Deshabilitada \\
+MercadoPago & Sandbox & Producci\'on \\
+Sentry & Opcional & Requerido \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 3: STACK TECNOLÓGICO
+% ════════════════════════════════════════════════════════════
+\chapter{Stack Tecnol\'ogico}
+
+\section{Backend}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{L{4.5cm} L{2.5cm} X}
+\toprule
+\textbf{Tecnolog\'ia} & \textbf{Versi\'on} & \textbf{Rol} \\
+\midrule
+Python & 3.11+ & Lenguaje principal \\
+FastAPI & \^{}0.111 & Web framework async \\
+Uvicorn + Standard & \^{}0.30 & Servidor ASGI \\
+SQLAlchemy & \^{}2.0 & ORM async (\texttt{Mapped[]}) \\
+asyncpg & \^{}0.29 & Driver PostgreSQL async \\
+Alembic & \^{}1.13 & Migraciones de DB \\
+Pydantic v2 & \^{}2.8 & Validaci\'on y schemas \\
+pydantic-settings & \^{}2.3 & Variables de entorno \\
+redis[hiredis] & \^{}5.0 & Cache async \\
+python-jose[cryptography] & \^{}3.3 & JWT RS256 (Clerk) \\
+httpx & \^{}0.27 & HTTP async (JWKS, webhooks) \\
+boto3 & \^{}1.34 & AWS S3 (fotos) \\
+mercadopago & \^{}2.2 & SDK de pagos \\
+sendgrid & \^{}6.11 & Email transaccional \\
+sentry-sdk[fastapi] & \^{}2.11 & Monitoreo de errores \\
+slowapi & \^{}0.1 & Rate limiting \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Frontend}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{L{4.5cm} L{2.5cm} X}
+\toprule
+\textbf{Tecnolog\'ia} & \textbf{Versi\'on} & \textbf{Rol} \\
+\midrule
+Next.js & 14.2.3 & Framework React (App Router) \\
+React & \^{}18.3 & UI library \\
+TypeScript & \^{}5.4 & Tipado est\'atico \\
+Tailwind CSS & \^{}3.4 & Estilos utility-first \\
+@clerk/nextjs & \^{}5.1 & Autenticaci\'on \\
+date-fns & \^{}3.6 & Manipulaci\'on de fechas \\
+react-day-picker & \^{}8.10 & Calendario de reservas \\
+lucide-react & \^{}0.383 & \'Iconos SVG \\
+clsx + tailwind-merge & latest & Composici\'on de clases CSS \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Infraestructura y Servicios Externos}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{L{4cm} X}
+\toprule
+\textbf{Servicio} & \textbf{Funci\'on} \\
+\midrule
+PostgreSQL 16 & Base de datos con extensiones geoespaciales \\
+Redis 7 & Cache-aside con TTL por tipo de entidad \\
+AWS S3 + CloudFront & Almacenamiento y CDN de fotos \\
+Clerk & Autenticaci\'on: JWT RS256, webhooks, sesiones \\
+MercadoPago & Pagos en MXN: preferencias, webhooks HMAC-SHA256 \\
+Google Maps & Geocodificaci\'on de direcciones \\
+Sentry & Monitoreo de errores y trazas de rendimiento \\
+Resend / SendGrid & Email transaccional \\
+360dialog & Notificaciones por WhatsApp Business \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 4: ESTRUCTURA DEL PROYECTO
+% ════════════════════════════════════════════════════════════
+\chapter{Estructura del Proyecto}
+
+\begin{lstlisting}[language=bash, caption={Arbol completo del repositorio Beel}]
+beel/
+|-- backend/
+|   |-- alembic/
+|   |   |-- alembic.ini
+|   |   |-- env.py
+|   |   `-- versions/
+|   |       |-- 001_initial_extensions_and_functions.py
+|   |       |-- 002_users_and_auth.py
+|   |       |-- 003_properties.py
+|   |       |-- 004_availability_reservations_payments.py
+|   |       |-- 005_messaging_reviews_notifications.py
+|   |       `-- 006_seed_amenities.py
+|   |-- app/
+|   |   |-- core/
+|   |   |   |-- analytics.py   # Tracking de eventos fire-and-forget
+|   |   |   |-- auth.py        # JWT RS256 Clerk + ClerkUser dataclass
+|   |   |   |-- cache.py       # Redis cache-aside + generadores de claves
+|   |   |   |-- config.py      # Pydantic Settings (todas las env vars)
+|   |   |   `-- database.py    # AsyncEngine, SessionLocal, TimestampMixin
+|   |   |-- modules/
+|   |   |   |-- messaging/     # Conversaciones + SSE
+|   |   |   |-- payments/      # MercadoPago checkout + webhooks
+|   |   |   |-- properties/    # Busqueda, CRUD, fotos, amenidades
+|   |   |   |-- reservations/  # Reservas, disponibilidad, precios
+|   |   |   |-- reviews/       # Resenas bidireccionales
+|   |   |   |-- users/         # Perfiles, roles, conversion a host
+|   |   |   `-- webhooks/      # Clerk webhook (sync de usuarios)
+|   |   `-- main.py            # FastAPI app, middleware, routers
+|   |-- database/
+|   |   `-- schema.sql         # Schema SQL completo (referencia)
+|   |-- pyproject.toml         # Dependencias (Poetry)
+|   `-- .env.example
+|
+|-- frontend/
+|   |-- app/                   # Next.js App Router
+|   |   |-- layout.tsx         # Root layout + ClerkProvider
+|   |   |-- page.tsx           # Homepage (RSC)
+|   |   |-- not-found.tsx
+|   |   |-- buscar/page.tsx    # Busqueda + filtros (RSC)
+|   |   |-- mensajes/page.tsx  # Inbox + chat SSE (Client)
+|   |   |-- p/[id]/page.tsx    # Detalle de propiedad (RSC)
+|   |   |-- p/[id]/reservar/page.tsx  # Checkout (Client)
+|   |   `-- reservaciones/page.tsx    # Mis viajes (Client)
+|   |-- components/
+|   |   |-- AmenityList.tsx    # Amenidades con emojis
+|   |   |-- BookingWidget.tsx  # Widget de reserva sticky
+|   |   |-- Navbar.tsx         # Barra de navegacion Clerk
+|   |   |-- PropertyCard.tsx   # Tarjeta + carousel + favoritos
+|   |   |-- SearchBar.tsx      # Barra busqueda
+|   |   `-- SearchFilters.tsx  # Filtros (tipo, precio...)
+|   |-- hooks/
+|   |   |-- useApi.ts          # Fetch autenticado con JWT
+|   |   `-- useSSE.ts          # EventSource + backoff
+|   |-- lib/utils.ts           # cn(), formatPrice()...
+|   |-- styles/globals.css     # Variables CSS, clases Beel
+|   |-- types/index.ts         # Interfaces TypeScript
+|   |-- tailwind.config.ts     # Design system tokens beel.*
+|   `-- package.json
+|
+|-- beel_logo_green_sand.png
+|-- beel_logo_white_green.png
+|-- beel_logo_black_sand.png
+|-- beel_logo_black_white.png
+|-- beel_icon_app.png
+`-- beel_symbol_app.png
+\end{lstlisting}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 5: BACKEND CORE
+% ════════════════════════════════════════════════════════════
+\chapter{Backend --- N\'ucleo del Sistema}
+
+\section{Punto de Entrada: \texttt{main.py}}
+
+El archivo \texttt{backend/app/main.py} inicializa la aplicaci\'on FastAPI con:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Lifespan:} conecta la base de datos al iniciar; cierra conexiones al apagar.
+  \item \textbf{CORSMiddleware:} permite \texttt{localhost:3000}, \texttt{beel.mx}, \texttt{www.beel.mx}.
+  \item \textbf{SlowAPIMiddleware:} rate limiting 60~req/min por IP.
+  \item \textbf{Request ID:} header \texttt{X-Request-ID} en cada respuesta.
+  \item \textbf{Sentry:} monitoreo de errores, muestreo de trazas al 20\%.
+  \item \textbf{7 routers} registrados bajo el prefijo \texttt{/api/v1}.
+\end{itemize}
+
+\section{Configuraci\'on: \texttt{core/config.py}}
+
+Usa \textbf{Pydantic Settings} con lectura autom\'atica de \texttt{.env}.
+La instancia \texttt{settings} es global y se cachea con \texttt{@lru\_cache}.
+
+\subsection{Variables de Entorno Completas}
+
+\begin{longtable}{L{5.5cm} L{3.5cm} L{3.5cm}}
+\toprule
+\textbf{Variable} & \textbf{Default} & \textbf{Descripci\'on} \\
+\midrule
+\endhead
+\texttt{APP\_NAME} & \texttt{Beel} & Nombre de la app \\
+\texttt{APP\_VERSION} & \texttt{0.1.0} & Versi\'on semver \\
+\texttt{DEBUG} & \texttt{False} & Modo debug \\
+\texttt{ENVIRONMENT} & \texttt{development} & dev / staging / prod \\
+\texttt{DATABASE\_URL} & requerida & PostgreSQL async URL \\
+\texttt{REDIS\_URL} & redis://localhost:6379/0 & URL de Redis \\
+\texttt{CACHE\_TTL\_SEARCH} & 300 & TTL b\'usquedas (5~min) \\
+\texttt{CACHE\_TTL\_PROPERTY} & 120 & TTL propiedades (2~min) \\
+\texttt{CACHE\_TTL\_USER\_PROFILE} & 600 & TTL perfiles (10~min) \\
+\texttt{CACHE\_TTL\_RANKING} & 3600 & TTL ranking (1~hora) \\
+\texttt{CLERK\_SECRET\_KEY} & requerida & Clave secreta Clerk \\
+\texttt{CLERK\_PUBLISHABLE\_KEY} & requerida & Clave p\'ublica Clerk \\
+\texttt{CLERK\_WEBHOOK\_SECRET} & requerida & HMAC para webhooks \\
+\texttt{AWS\_ACCESS\_KEY\_ID} & requerida & Credencial AWS \\
+\texttt{AWS\_SECRET\_ACCESS\_KEY} & requerida & Credencial AWS \\
+\texttt{AWS\_REGION} & us-east-1 & Regi\'on S3 \\
+\texttt{S3\_BUCKET\_NAME} & beel-media & Bucket de fotos \\
+\texttt{S3\_BUCKET\_URL} & vac\'io & CloudFront CDN URL \\
+\texttt{MAX\_PHOTO\_SIZE\_BYTES} & 10485760 & M\'ax. 10~MB por foto \\
+\texttt{GOOGLE\_MAPS\_API\_KEY} & requerida & Geocodificaci\'on \\
+\texttt{LOCATION\_OBFUSCATION\_RADIUS} & 150 & Radio ofuscaci\'on (m) \\
+\texttt{MERCADOPAGO\_ACCESS\_TOKEN} & requerida & Token MercadoPago \\
+\texttt{MERCADOPAGO\_PUBLIC\_KEY} & requerida & Clave p\'ublica MP \\
+\texttt{MERCADOPAGO\_WEBHOOK\_SECRET} & requerida & HMAC-SHA256 MP \\
+\texttt{PLATFORM\_FEE\_PERCENTAGE} & 0.0 & Comisi\'on Beel (0\% MVP) \\
+\texttt{WHATSAPP\_API\_KEY} & requerida & API 360dialog \\
+\texttt{EMAIL\_PROVIDER} & resend & resend o sendgrid \\
+\texttt{EMAIL\_API\_KEY} & requerida & Clave proveedor email \\
+\texttt{EMAIL\_FROM\_ADDRESS} & hola@beel.mx & Remitente \\
+\texttt{SENTRY\_DSN} & vac\'io & DSN de Sentry \\
+\texttt{ALLOWED\_ORIGINS} & localhost + beel.mx & Or\'igenes CORS \\
+\texttt{RATE\_LIMIT\_PER\_MINUTE} & 60 & L\'imite general \\
+\texttt{RATE\_LIMIT\_AUTH\_PER\_MINUTE} & 10 & L\'imite en auth \\
+\texttt{AVAILABILITY\_HORIZON\_DAYS} & 365 & D\'ias hacia adelante \\
+\texttt{RESERVATION\_REQUEST\_TIMEOUT} & 24 & Horas para responder \\
+\texttt{PAYOUT\_DELAY\_HOURS} & 24 & Demora pago al host \\
+\texttt{REVIEW\_WINDOW\_DAYS} & 7 & D\'ias para dejar rese\~na \\
+\bottomrule
+\end{longtable}
+
+\section{Autenticaci\'on: \texttt{core/auth.py}}
+
+Beel usa \textbf{Clerk} para autenticaci\'on. El backend verifica JWT RS256:
+
+\begin{enumerate}[leftmargin=*]
+  \item Descarga JWKS desde \texttt{https://\{clerk\_domain\}/.well-known/jwks.json} (cacheado en memoria).
+  \item Valida firma, expiraci\'on y claims con \texttt{python-jose}.
+  \item En caso de error, refresca JWKS una vez (soporte a rotaci\'on de llaves).
+  \item Expone:
+  \begin{itemize}
+    \item \texttt{get\_current\_user} $\rightarrow$ levanta 401 si no hay token v\'alido (\texttt{CurrentUser})
+    \item \texttt{get\_optional\_user} $\rightarrow$ retorna \texttt{None} si no hay token (\texttt{OptionalUser})
+  \end{itemize}
+\end{enumerate}
+
+El dominio de Clerk se extrae autom\'aticamente del \texttt{CLERK\_PUBLISHABLE\_KEY}
+mediante decodificaci\'on base64 URL.
+
+\section{Cache: \texttt{core/cache.py}}
+
+Patr\'on \textbf{cache-aside} con Redis async. Todas las operaciones fallan silenciosamente
+si Redis no est\'a disponible.
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{get\_cached(key)} $\rightarrow$ valor cacheado o \texttt{None}
+  \item \texttt{set\_cached(key, value, ttl)} $\rightarrow$ guarda con TTL en segundos
+  \item \texttt{invalidate(pattern)} $\rightarrow$ elimina claves por patr\'on glob
+\end{itemize}
+
+\textbf{Prefijos de claves:} \texttt{beel:property:\{id\}}, \texttt{beel:search:\{params\}},
+\texttt{beel:user:\{clerk\_id\}}, \texttt{beel:ranking:scores}.
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 6: MÓDULOS DEL BACKEND
+% ════════════════════════════════════════════════════════════
+\chapter{M\'odulos del Backend}
+
+Cada m\'odulo sigue la misma estructura: \texttt{models.py}, \texttt{schemas.py},
+\texttt{service.py}, \texttt{router.py}.
+
+\section{M\'odulo: Users}
+
+\subsection{Modelo de Datos}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{L{4.5cm} L{3cm} X}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{Descripci\'on} \\
+\midrule
+\texttt{id} & UUID (PK) & Identificador interno \\
+\texttt{clerk\_id} & VARCHAR(255) & V\'inculo con Clerk (UNIQUE) \\
+\texttt{email} & VARCHAR(255) & Email verificado (UNIQUE) \\
+\texttt{phone} & VARCHAR(30) & Tel\'efono opcional \\
+\texttt{full\_name} & VARCHAR(255) & Nombre completo \\
+\texttt{avatar\_url} & TEXT & Foto de perfil \\
+\texttt{role} & VARCHAR(20) & guest / host / admin \\
+\texttt{is\_phone\_verified} & BOOLEAN & Verificaci\'on telef\'onica \\
+\texttt{is\_identity\_verified} & BOOLEAN & Verificaci\'on de identidad \\
+\texttt{host\_since} & TIMESTAMPTZ & Fecha de conversi\'on a host \\
+\texttt{total\_listings} & INTEGER & Propiedades publicadas \\
+\texttt{total\_trips} & INTEGER & Viajes como hu\'esped \\
+\texttt{deleted\_at} & TIMESTAMPTZ & Soft delete \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Endpoints --- Users}
+
+\begin{tcolorbox}[beelinfo, title={/api/v1/users}]
+\apiendpoint{GET}{/me}{Perfil completo del usuario autenticado}
+\apiendpoint{PATCH}{/me}{Actualizar nombre, tel\'efono, avatar}
+\apiendpoint{POST}{/me/become-host}{Convertirse en anfitri\'on (acepta t\'erminos)}
+\apiendpoint{GET}{/\{user\_id\}}{Perfil p\'ublico de un usuario}
+\end{tcolorbox}
+
+\section{M\'odulo: Properties}
+
+\subsection{Modelo de Datos}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{L{4.5cm} L{3cm} X}
+\toprule
+\textbf{Campo} & \textbf{Tipo} & \textbf{Descripci\'on} \\
+\midrule
+\texttt{id} & UUID (PK) & Identificador \\
+\texttt{host\_id} & UUID (FK) & Anfitri\'on \\
+\texttt{title} & VARCHAR(255) & T\'itulo del listado \\
+\texttt{description} & TEXT & Descripci\'on larga \\
+\texttt{property\_type} & VARCHAR(50) & casa, depto, caba\~na, villa, habitacion, hostal, otro \\
+\texttt{status} & VARCHAR(30) & pending\_review, active, inactive, suspended, deleted \\
+\texttt{address} & VARCHAR(500) & Direcci\'on completa \\
+\texttt{neighborhood} & VARCHAR(255) & Colonia \\
+\texttt{city} & VARCHAR(100) & Default: M\'erida \\
+\texttt{latitude / longitude} & NUMERIC(10,8) & Coords exactas (privadas) \\
+\texttt{latitude\_approx} & NUMERIC(8,5) & Coords ofuscadas $\pm$150~m \\
+\texttt{max\_guests} & SMALLINT & Capacidad m\'axima \\
+\texttt{bedrooms / beds} & SMALLINT & Habitaciones y camas \\
+\texttt{bathrooms} & NUMERIC(3,1) & Ba\~nos (admite 1.5) \\
+\texttt{price\_per\_night} & NUMERIC(10,2) & Precio en MXN \\
+\texttt{cleaning\_fee} & NUMERIC(10,2) & Tarifa de limpieza \\
+\texttt{security\_deposit} & NUMERIC(10,2) & Dep\'osito de seguridad \\
+\texttt{min\_stay\_nights} & SMALLINT & M\'inimo de noches \\
+\texttt{cancellation\_policy} & VARCHAR(20) & flexible, moderada, estricta \\
+\texttt{instant\_booking} & BOOLEAN & Reserva inmediata \\
+\texttt{allows\_pets / smoking / events} & BOOLEAN & Pol\'iticas de la casa \\
+\texttt{avg\_rating} & NUMERIC(3,2) & Calificaci\'on promedio \\
+\texttt{ranking\_score} & NUMERIC(8,4) & Score de posicionamiento \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Tablas Relacionadas}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{property\_photos} --- URL, thumbnail, orden, \texttt{is\_primary}
+  \item \textbf{amenities} --- cat\'alogo: slug, nombre ES/EN/PT, emoji, categor\'ia
+  \item \textbf{property\_amenities} --- tabla pivote (property\_id, amenity\_id)
+\end{itemize}
+
+\subsection{B\'usqueda de Propiedades}
+
+La b\'usqueda combina m\'ultiples estrategias:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Texto:} \texttt{ILIKE} sobre t\'itulo y colonia con \texttt{unaccent}
+  \item \textbf{Geolocaliz.:} \texttt{earthdistance} para filtrar por radio en km
+  \item \textbf{Disponibilidad:} sub-query a \texttt{availability} para excluir fechas bloqueadas
+  \item \textbf{Filtros:} tipo, precio m\'in/m\'ax, mascotas, instant\_booking, hu\'espedes
+  \item \textbf{Orden:} \texttt{ranking\_score DESC}
+\end{enumerate}
+
+\subsection{Endpoints --- Properties}
+
+\begin{tcolorbox}[beelinfo, title={/api/v1/properties}]
+\apiendpoint{GET}{/search}{B\'usqueda: destino, fechas, hu\'espedes, tipo, precio, geo}
+\apiendpoint{GET}{/amenities}{Cat\'alogo de amenidades}
+\apiendpoint{GET}{/\{property\_id\}}{Detalle completo con fotos y host}
+\apiendpoint{POST}{/}{Crear propiedad (requiere ser host)}
+\apiendpoint{PATCH}{/\{property\_id\}}{Actualizar (solo el host propietario)}
+\apiendpoint{DELETE}{/\{property\_id\}}{Soft-delete}
+\apiendpoint{GET}{/host/my-listings}{Propiedades del host autenticado}
+\end{tcolorbox}
+
+\section{M\'odulo: Reservations}
+
+\subsection{M\'aquina de Estados}
+
+\begin{tcolorbox}[beelinfo, title={Estados de Reserva}]
+\begin{lstlisting}[numbers=none, frame=none, xleftmargin=0pt]
+instant_booking=True
+       |
+[SOLICITUD] --> pending --> confirmed --> completed
+                  |              |
+                  |---(rechazo)-> rejected
+                  |---(guest)---> cancelled_guest
+                  `---(host)----> cancelled_host
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Campos Clave del Modelo}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Snapshots de precio:} \texttt{price\_per\_night\_snapshot},
+        \texttt{cleaning\_fee\_snapshot}, \texttt{platform\_fee\_snapshot},
+        \texttt{total\_price} --- inmutables al crear la reserva.
+  \item \textbf{Snapshot de pol\'itica:} \texttt{cancellation\_policy\_snapshot}
+  \item \textbf{Tiempos l\'imite:} \texttt{host\_response\_deadline} (24~h desde solicitud),
+        \texttt{payout\_scheduled\_at} (24~h post check-in)
+  \item \textbf{Anti-doble-booking:} \texttt{SELECT FOR UPDATE SKIP LOCKED} sobre \texttt{availability}
+\end{itemize}
+
+\subsection{Tabla: Availability}
+
+Una fila por propiedad/fecha. \texttt{UniqueConstraint(property\_id, date)}.
+\texttt{blocked\_reason}: \texttt{reservation}, \texttt{host\_block}, \texttt{maintenance}.
+\texttt{price\_override}: precio especial por temporada.
+
+\subsection{Endpoints --- Reservations}
+
+\begin{tcolorbox}[beelinfo, title={/api/v1/reservations}]
+\apiendpoint{GET}{/availability/\{property\_id\}}{Disponibilidad de un rango (p\'ublico)}
+\apiendpoint{GET}{/price-breakdown}{Desglose de precios sin crear reserva}
+\apiendpoint{POST}{/}{Crear reserva (bloquea fechas at\'omicamente)}
+\apiendpoint{GET}{/my-trips}{Viajes del hu\'esped autenticado}
+\apiendpoint{GET}{/host-requests}{Solicitudes recibidas por el host}
+\apiendpoint{GET}{/\{reservation\_id\}}{Detalle de una reserva}
+\apiendpoint{POST}{/\{reservation\_id\}/respond}{Host acepta o rechaza}
+\apiendpoint{POST}{/\{reservation\_id\}/cancel}{Cancelar reserva activa}
+\apiendpoint{POST}{/availability/\{property\_id\}/block}{Host bloquea fechas}
+\apiendpoint{POST}{/availability/\{property\_id\}/unblock}{Host desbloquea fechas}
+\end{tcolorbox}
+
+\section{M\'odulo: Payments}
+
+\subsection{Flujo de Pago}
+
+\begin{tcolorbox}[beelinfo, title={Flujo MercadoPago}]
+\begin{lstlisting}[numbers=none, frame=none, xleftmargin=0pt]
+1. Guest: POST /reservations
+   --> status = pending / confirmed
+
+2. Guest: POST /payments/checkout/{id}
+   --> Beel crea preferencia MP
+   --> Retorna { checkout_url, sandbox_init_point }
+
+3. Guest es redirigido a MercadoPago
+
+4. MP: POST /payments/webhook/mercadopago (HMAC-SHA256)
+   --> Beel verifica firma, consulta pago en API de MP
+
+5. Si status = approved:
+   --> Payment.status = "approved"
+   --> Reservation.status = "confirmed"
+   --> Bloqueo de fechas en availability
+   --> payout_scheduled_at = check_in + 24h
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Endpoints --- Payments}
+
+\begin{tcolorbox}[beelinfo, title={/api/v1/payments}]
+\apiendpoint{POST}{/checkout/\{reservation\_id\}}{Inicia checkout en MercadoPago}
+\apiendpoint{GET}{/\{reservation\_id\}}{Estado del pago de una reserva}
+\apiendpoint{POST}{/webhook/mercadopago}{Notificaciones MP (HMAC-SHA256)}
+\end{tcolorbox}
+
+\section{M\'odulo: Messaging}
+
+\subsection{Dise\~no}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Una conversaci\'on por par} \texttt{(guest\_id, host\_id, property\_id)} ---
+        \texttt{UniqueConstraint}
+  \item \textbf{Mensajes append-only} --- no se pueden editar, solo soft-delete (\texttt{is\_deleted})
+  \item \textbf{Tipos:} \texttt{text}, \texttt{system}, \texttt{image}, \texttt{reservation}
+  \item \textbf{Contadores:} \texttt{guest\_unread} y \texttt{host\_unread} en la conversaci\'on
+  \item \textbf{Preview:} \texttt{last\_message\_preview} para el inbox sin JOINs adicionales
+\end{itemize}
+
+\subsection{Server-Sent Events (SSE)}
+
+\begin{itemize}[leftmargin=*]
+  \item El cliente conecta a \texttt{GET /api/v1/messaging/\{conv\_id\}/stream}
+  \item El servidor mantiene \texttt{\_sse\_listeners: dict[UUID, List[asyncio.Queue]]}
+  \item Cada nuevo mensaje hace broadcast a todas las colas registradas
+  \item \textbf{Keepalive:} ping cada 25~s para evitar que Nginx cierre la conexi\'on
+  \item \textbf{Header:} \texttt{X-Accel-Buffering: no}
+  \item \textbf{Reconexiones:} el cliente usa exponential backoff (1s $\rightarrow$ 30s m\'ax.)
+\end{itemize}
+
+\subsection{Endpoints --- Messaging}
+
+\begin{tcolorbox}[beelinfo, title={/api/v1/messaging}]
+\apiendpoint{GET}{/}{Inbox del usuario autenticado}
+\apiendpoint{POST}{/}{Iniciar conversaci\'on con un host}
+\apiendpoint{GET}{/\{conv\_id\}/messages}{Mensajes (paginaci\'on por cursor before\_id)}
+\apiendpoint{POST}{/\{conv\_id\}/messages}{Enviar mensaje de texto}
+\apiendpoint{POST}{/\{conv\_id\}/read}{Marcar mensajes como le\'idos}
+\apiendpoint{GET}{/\{conv\_id\}/stream}{SSE: stream en tiempo real}
+\end{tcolorbox}
+
+\section{M\'odulo: Reviews}
+
+\subsection{Dise\~no Bidireccional}
+
+\begin{itemize}[leftmargin=*]
+  \item \texttt{reviewer\_type = 'guest'} $\rightarrow$ hu\'esped califica la propiedad y al host
+  \item \texttt{reviewer\_type = 'host'} $\rightarrow$ host califica al hu\'esped
+\end{itemize}
+
+\textbf{Restricciones:} solo disponible si \texttt{status = completed}; ventana de 7 d\'ias;
+una rese\~na por \texttt{(reservation\_id, reviewer\_id)}.
+
+\textbf{Calificaciones granulares (guest $\rightarrow$ propiedad):}
+rating, cleanliness, communication, location, value --- todas entre 1 y 5.
+
+\subsection{Endpoints --- Reviews}
+
+\begin{tcolorbox}[beelinfo, title={/api/v1/reviews}]
+\apiendpoint{GET}{/property/\{property\_id\}}{Rese\~nas p\'ublicas (paginadas)}
+\apiendpoint{POST}{/}{Crear rese\~na post-estancia}
+\apiendpoint{POST}{/\{review\_id\}/respond}{El host responde p\'ublicamente}
+\end{tcolorbox}
+
+\section{M\'odulo: Webhooks}
+
+El endpoint \texttt{POST /api/v1/webhooks/clerk} recibe eventos de Clerk:
+\begin{itemize}[leftmargin=*]
+  \item Verificaci\'on HMAC-SHA256 con \texttt{svix}, tolerancia de 5 minutos
+  \item \texttt{user.created} $\rightarrow$ upsert del usuario en la DB
+  \item \texttt{user.updated} $\rightarrow$ actualiza email, nombre, avatar
+  \item \texttt{user.deleted} $\rightarrow$ soft delete (\texttt{deleted\_at = now()})
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 7: BASE DE DATOS
+% ════════════════════════════════════════════════════════════
+\chapter{Base de Datos}
+
+\section{Extensiones PostgreSQL}
+
+\begin{center}
+\begin{tabular}{L{4cm} L{8cm}}
+\toprule
+\textbf{Extensi\'on} & \textbf{Uso} \\
+\midrule
+\texttt{pgcrypto} & \texttt{gen\_random\_uuid()} para PKs \\
+\texttt{unaccent} & B\'usqueda sin acentos \\
+\texttt{pg\_trgm} & B\'usqueda por similitud de texto \\
+\texttt{cube} & Dependencia de earthdistance \\
+\texttt{earthdistance} & B\'usqueda geoespacial por radio en km \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Tablas Principales}
+
+\begin{center}
+\begin{tabular}{L{5cm} L{7.5cm}}
+\toprule
+\textbf{Tabla} & \textbf{Prop\'osito} \\
+\midrule
+\texttt{users} & Usuarios y perfiles (guest/host/admin) \\
+\texttt{identity\_verifications} & Proceso KYC manual (INE, pasaporte) \\
+\texttt{properties} & Listados de hospedaje \\
+\texttt{property\_photos} & Fotos (S3 URLs) \\
+\texttt{amenities} & Cat\'alogo de amenidades \\
+\texttt{property\_amenities} & Pivote property $\leftrightarrow$ amenity \\
+\texttt{availability} & Calendario de disponibilidad \\
+\texttt{reservations} & Reservas con snapshots de precio \\
+\texttt{payments} & Pagos MP: preferencias, estados, auditor\'ia \\
+\texttt{conversations} & Hilos de mensajer\'ia guest-host \\
+\texttt{messages} & Mensajes individuales (append-only) \\
+\texttt{reviews} & Rese\~nas bidireccionales \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Migraciones Alembic}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{C{1.2cm} X}
+\toprule
+\textbf{\#} & \textbf{Descripci\'on} \\
+\midrule
+001 & Extensiones PostgreSQL + funci\'on \texttt{fn\_update\_updated\_at} \\
+002 & Tabla \texttt{users} + \'indices + \texttt{identity\_verifications} \\
+003 & Tablas \texttt{properties}, \texttt{property\_photos}, \texttt{amenities}, \texttt{property\_amenities} \\
+004 & Tablas \texttt{availability}, \texttt{reservations}, \texttt{payments} \\
+005 & Tablas \texttt{conversations}, \texttt{messages}, \texttt{reviews}, notificaciones, analytics \\
+006 & Seed de amenidades iniciales \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{\'Indices Clave}
+
+\begin{center}
+\begin{tabular}{L{5.5cm} L{6cm}}
+\toprule
+\textbf{\'Indice} & \textbf{Prop\'osito} \\
+\midrule
+\texttt{idx\_users\_clerk\_id} & Lookup por auth en cada request \\
+\texttt{idx\_users\_email} & Login y deduplicaci\'on \\
+\texttt{uq\_availability\_property\_date} & Anti-doble-booking \\
+\texttt{idx\_messages\_conversation\_created} & Paginaci\'on de mensajes \\
+\texttt{uq\_conversation} & Una conv. por (guest, host, property) \\
+\texttt{uq\_review\_per\_stay} & Una rese\~na por (reservation, reviewer) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 8: FRONTEND
+% ════════════════════════════════════════════════════════════
+\chapter{Frontend}
+
+\section{Arquitectura Next.js 14 App Router}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{React Server Components (RSC):} homepage, b\'usqueda, detalle ---
+        fetch en servidor, mejor SEO, sin estado client-side.
+  \item \textbf{Client Components} (\texttt{"use client"}): checkout, mensajes,
+        reservaciones --- estado e interacci\'on compleja.
+\end{itemize}
+
+\section{Design System --- Tokens Beel}
+
+El archivo \texttt{tailwind.config.ts} define tokens en el namespace \texttt{beel.*}:
+
+\begin{center}
+\begin{tabular}{L{4.5cm} L{2.5cm} L{4.5cm}}
+\toprule
+\textbf{Token} & \textbf{Valor} & \textbf{Uso} \\
+\midrule
+\texttt{beel.primary} & \texttt{\#1D9E75} & Botones, \'iconos, links \\
+\texttt{beel.primary-dark} & \texttt{\#157A5A} & Hover states \\
+\texttt{beel.primary-light} & \texttt{\#E8F7F2} & Fondos sutiles, badges \\
+\texttt{beel.arena} & \texttt{\#F1EFE8} & Fondos de p\'agina \\
+\texttt{beel.tierra} & \texttt{\#2C2C2A} & Texto principal \\
+\texttt{beel.accent} & \texttt{\#F5A623} & Destacados, badges \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\texttt{globals.css} define clases utilitarias: \texttt{.btn}, \texttt{.btn-primary},
+\texttt{.btn-accent}, \texttt{.card}, \texttt{.badge}, \texttt{.input},
+\texttt{.avatar}, \texttt{.bubble}, \texttt{.bubble-guest}, \texttt{.bubble-host},
+\texttt{.price-row}, \texttt{.divider}, \texttt{.skeleton}, \texttt{.empty-state}.
+
+\section{P\'aginas}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{L{5cm} C{1.8cm} X}
+\toprule
+\textbf{Ruta} & \textbf{Tipo} & \textbf{Descripci\'on} \\
+\midrule
+\texttt{/} & RSC & Homepage: hero, SearchBar, grid de propiedades, trust signals \\
+\texttt{/buscar} & RSC & B\'usqueda: SearchBar compacto sticky, filtros, resultados \\
+\texttt{/p/[id]} & RSC & Detalle: galería, host, amenidades, BookingWidget \\
+\texttt{/p/[id]/reservar} & Client & Checkout: desglose de precios, crear reserva, pago MP \\
+\texttt{/reservaciones} & Client & Mis viajes: tabs Pr\'oximos / Pasados / Cancelados \\
+\texttt{/mensajes} & Client & Inbox + chat SSE en tiempo real \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Componentes}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{L{4cm} X}
+\toprule
+\textbf{Componente} & \textbf{Descripci\'on} \\
+\midrule
+\texttt{Navbar} & Sticky, logo Beel, Clerk SignedIn/SignedOut, hamburger m\'ovil \\
+\texttt{SearchBar} & Prop \texttt{compact}; campos: destino, check-in, check-out, hu\'espedes \\
+\texttt{PropertyCard} & Carousel de fotos, Heart favorito, badge Zap instant booking \\
+\texttt{SearchFilters} & Pills de tipo con \texttt{useSearchParams} \\
+\texttt{BookingWidget} & Selector de fechas, stepper, desglose de precios, CTA de reserva \\
+\texttt{AmenityList} & slug $\rightarrow$ emoji, highlights primero, ``Mostrar N m\'as'' \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Hooks}
+
+\textbf{\texttt{useApi.ts}} --- fetch autenticado: obtiene JWT con \texttt{getToken()},
+agrega \texttt{Authorization: Bearer} en cada petici\'on. M\'etodos: \texttt{get},
+\texttt{post}, \texttt{patch}, \texttt{del}.
+
+\textbf{\texttt{useSSE.ts}} --- gestiona \texttt{EventSource}, escucha eventos
+\texttt{connected/message/system}, reconexión con exponential backoff hasta 30~s,
+limpieza al desmontar.
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 9: SEGURIDAD
+% ════════════════════════════════════════════════════════════
+\chapter{Seguridad}
+
+\section{Autenticaci\'on y Autorizaci\'on}
+
+\begin{itemize}[leftmargin=*]
+  \item JWT RS256 de Clerk verificado en cada request protegido (sin sesiones server-side).
+  \item Rotaci\'on de llaves: JWKS se refresca autom\'aticamente si la verificaci\'on falla.
+  \item Roles: \texttt{guest}, \texttt{host}, \texttt{admin} --- verificaci\'on en la capa service.
+  \item Ownership: solo el due\~no del recurso o un admin puede modificarlo.
+\end{itemize}
+
+\section{Protecci\'on de Datos}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Coordenadas ofuscadas:} offset aleatorio de 150~m; las exactas son privadas.
+  \item \textbf{Soft deletes:} historial de reservas y pagos se preserva.
+  \item \textbf{Snapshots de precio:} los precios de reservas pasadas no cambian.
+\end{itemize}
+
+\section{Validaci\'on de Webhooks}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Clerk:} HMAC-SHA256 via \texttt{svix}, tolerancia de 5 minutos.
+  \item \textbf{MercadoPago:} HMAC-SHA256 con \texttt{MERCADOPAGO\_WEBHOOK\_SECRET}.
+\end{itemize}
+
+\section{Rate Limiting y CORS}
+
+\begin{itemize}[leftmargin=*]
+  \item 60~req/min general; 10~req/min en endpoints de auth (SlowAPI).
+  \item CORS: solo or\'igenes \texttt{localhost:3000}, \texttt{beel.mx}, \texttt{www.beel.mx}.
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 10: FLUJOS PRINCIPALES
+% ════════════════════════════════════════════════════════════
+\chapter{Flujos Principales}
+
+\section{Registro y Onboarding}
+
+\begin{enumerate}[leftmargin=*]
+  \item Usuario se registra en Clerk (email/Google/Apple).
+  \item Clerk dispara webhook \texttt{user.created} $\rightarrow$ Beel crea registro
+        (\texttt{role = guest}).
+  \item Usuario puede buscar y reservar inmediatamente.
+\end{enumerate}
+
+\section{Conversi\'on a Anfitri\'on}
+
+\begin{enumerate}[leftmargin=*]
+  \item \texttt{POST /api/v1/users/me/become-host} con \texttt{accepts\_terms: true}.
+  \item \texttt{role} cambia a \texttt{host}, se registra \texttt{host\_since = now()}.
+  \item El host puede crear propiedades (inician en \texttt{pending\_review}).
+  \item Admin las revisa y activa.
+\end{enumerate}
+
+\section{Flujo Completo de Reserva}
+
+\begin{enumerate}[leftmargin=*]
+  \item Hu\'esped busca en \texttt{/buscar} con destino, fechas y hu\'espedes.
+  \item Visita el detalle (\texttt{/p/\{id\}}).
+  \item BookingWidget calcula precios con \texttt{GET /price-breakdown}.
+  \item Hu\'esped va a \texttt{/p/\{id\}/reservar}.
+  \item Sistema verifica disponibilidad y crea reserva (\texttt{SELECT FOR UPDATE SKIP LOCKED}).
+  \item Si \texttt{instant\_booking=true}: reserva queda \texttt{confirmed} autom\'aticamente.
+  \item Si no: reserva queda \texttt{pending}, host tiene 24~h para responder.
+  \item Hu\'esped paga en MercadoPago.
+  \item Webhook MP confirma el pago $\rightarrow$ reserva activa, fechas bloqueadas.
+  \item 24~h post check-in: pago liberado al host.
+\end{enumerate}
+
+\section{Flujo de Rese\~na}
+
+\begin{enumerate}[leftmargin=*]
+  \item Reserva cambia a \texttt{completed} tras el check-out.
+  \item Durante 7 d\'ias, hu\'esped puede calificar la propiedad.
+  \item Durante 7 d\'ias, host puede calificar al hu\'esped.
+  \item Al crear rese\~na de tipo \texttt{guest}, se recalculan promedios en la propiedad.
+  \item Host puede responder p\'ublicamente.
+\end{enumerate}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 11: REFERENCIA COMPLETA DE API
+% ════════════════════════════════════════════════════════════
+\chapter{Referencia Completa de API}
+
+\textbf{Base URL:} \texttt{https://beel.mx/api/v1} \quad
+\textbf{Auth:} \texttt{Authorization: Bearer \{clerk\_jwt\}} \quad
+\textbf{Formato:} JSON
+
+\begin{longtable}{C{1.8cm} L{8cm} C{2.5cm}}
+\toprule
+\textbf{M\'etodo} & \textbf{Ruta} & \textbf{Auth} \\
+\midrule
+\endhead
+\multicolumn{3}{l}{\textbf{Health}} \\
+GET & /health & No \\[4pt]
+\multicolumn{3}{l}{\textbf{Users}} \\
+GET & /users/me & S\'i \\
+PATCH & /users/me & S\'i \\
+POST & /users/me/become-host & S\'i \\
+GET & /users/\{user\_id\} & No \\[4pt]
+\multicolumn{3}{l}{\textbf{Properties}} \\
+GET & /properties/search & No \\
+GET & /properties/amenities & No \\
+GET & /properties/\{property\_id\} & No \\
+POST & /properties & S\'i (host) \\
+PATCH & /properties/\{property\_id\} & S\'i (propietario) \\
+DELETE & /properties/\{property\_id\} & S\'i (propietario) \\
+GET & /properties/host/my-listings & S\'i (host) \\[4pt]
+\multicolumn{3}{l}{\textbf{Reservations}} \\
+GET & /reservations/availability/\{property\_id\} & No \\
+GET & /reservations/price-breakdown & No \\
+POST & /reservations & S\'i \\
+GET & /reservations/my-trips & S\'i \\
+GET & /reservations/host-requests & S\'i (host) \\
+GET & /reservations/\{reservation\_id\} & S\'i (participante) \\
+POST & /reservations/\{reservation\_id\}/respond & S\'i (host) \\
+POST & /reservations/\{reservation\_id\}/cancel & S\'i (participante) \\
+POST & /reservations/availability/\{property\_id\}/block & S\'i (host) \\
+POST & /reservations/availability/\{property\_id\}/unblock & S\'i (host) \\[4pt]
+\multicolumn{3}{l}{\textbf{Payments}} \\
+POST & /payments/checkout/\{reservation\_id\} & S\'i (guest) \\
+GET & /payments/\{reservation\_id\} & S\'i (participante) \\
+POST & /payments/webhook/mercadopago & Signature MP \\[4pt]
+\multicolumn{3}{l}{\textbf{Messaging}} \\
+GET & /messaging & S\'i \\
+POST & /messaging & S\'i \\
+GET & /messaging/\{conv\_id\}/messages & S\'i \\
+POST & /messaging/\{conv\_id\}/messages & S\'i \\
+POST & /messaging/\{conv\_id\}/read & S\'i \\
+GET & /messaging/\{conv\_id\}/stream & S\'i (SSE) \\[4pt]
+\multicolumn{3}{l}{\textbf{Reviews}} \\
+GET & /reviews/property/\{property\_id\} & No \\
+POST & /reviews & S\'i \\
+POST & /reviews/\{review\_id\}/respond & S\'i (host) \\[4pt]
+\multicolumn{3}{l}{\textbf{Webhooks}} \\
+POST & /webhooks/clerk & Svix sig. \\
+\bottomrule
+\end{longtable}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 12: DECISIONES TÉCNICAS
+% ════════════════════════════════════════════════════════════
+\chapter{Decisiones T\'ecnicas Clave}
+
+\section{Anti-doble-booking}
+
+La creaci\'on de reserva usa \texttt{SELECT FOR UPDATE SKIP LOCKED} sobre las filas de
+\texttt{availability}. Si alguna fecha est\'a bloqueada, la transacci\'on lanza 409.
+Si todas est\'an disponibles, las bloquea y crea la reserva at\'omicamente.
+
+\section{Snapshots de Precio}
+
+Los campos \texttt{*\_snapshot} en \texttt{reservations} congelan el precio al momento de
+la reserva. Si el host cambia su precio despu\'es, las reservas existentes no se ven
+afectadas. Fundamental para la confianza del usuario.
+
+\section{Mensajer\'ia Transport-Agnostic}
+
+El schema de \texttt{conversations} y \texttt{messages} no asume ning\'un protocolo de
+transporte. El SSE actual puede migrarse a WebSocket cambiando solo el router y el
+cliente, sin modificar el schema.
+
+\section{Privacidad de Coordenadas}
+
+La funci\'on \texttt{\_obfuscate\_coords()} agrega un offset aleatorio dentro de
+\texttt{LOCATION\_OBFUSCATION\_RADIUS\_METERS} (150~m). Solo hosts y admins ven las
+coordenadas exactas.
+
+\section{Clerk como Identity Provider}
+
+Clerk gestiona el ciclo de vida de autenticaci\'on. Beel guarda un perfil extendido
+sincronizado v\'ia webhook.
+\begin{itemize}[leftmargin=*]
+  \item Seguridad de clase empresarial sin implementarla desde cero.
+  \item Soporte a email, Google, Apple, tel\'efono.
+  \item JWT RS256 con rotaci\'on autom\'atica de llaves.
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 13: GUÍA DE DESARROLLO LOCAL
+% ════════════════════════════════════════════════════════════
+\chapter{Gu\'ia de Desarrollo Local}
+
+\section{Requisitos Previos}
+
+Python 3.11+, Node.js 20+, PostgreSQL 16 con extensiones instaladas, Redis 7,
+cuenta de Clerk (gratuita), cuenta de MercadoPago Sandbox, AWS S3 bucket.
+
+\section{Setup del Backend}
+
+\begin{lstlisting}[language=bash, caption={Iniciar el backend}]
+cd backend
+pip install poetry
+poetry install
+cp .env.example .env
+# Editar .env con tus credenciales
+
+createdb beel_db
+poetry run alembic upgrade head
+poetry run uvicorn app.main:app --reload --port 8000
+\end{lstlisting}
+
+\section{Setup del Frontend}
+
+\begin{lstlisting}[language=bash, caption={Iniciar el frontend}]
+cd frontend
+npm install
+cp .env.local.example .env.local
+# NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+# CLERK_SECRET_KEY=sk_test_...
+# NEXT_PUBLIC_API_URL=http://localhost:8000
+
+npm run dev   # http://localhost:3000
+\end{lstlisting}
+
+% ════════════════════════════════════════════════════════════
+%  CAPÍTULO 14: ROADMAP
+% ════════════════════════════════════════════════════════════
+\chapter{Roadmap}
+
+\section{MVP v1 --- Estado Actual}
+
+\begin{itemize}[leftmargin=*, label=$\checkmark$]
+  \item Autenticaci\'on con Clerk (JWT RS256, webhooks)
+  \item CRUD de propiedades con fotos y amenidades
+  \item B\'usqueda geoespacial con filtros
+  \item Sistema de reservas con anti-doble-booking
+  \item Integraci\'on MercadoPago (checkout + webhooks)
+  \item Mensajer\'ia en tiempo real (SSE)
+  \item Rese\~nas bidireccionales con promedios
+  \item Frontend completo: 6 p\'aginas + 6 componentes + 2 hooks
+  \item Cache Redis con TTL diferenciado
+  \item Rate limiting y monitoreo Sentry
+\end{itemize}
+
+\section{Pr\'oximas Iteraciones}
+
+\begin{description}[leftmargin=*, labelwidth=1.5cm]
+  \item[v1.1] Notificaciones: email (Resend) + WhatsApp Business (360dialog).
+  \item[v1.2] Upload de fotos: S3 presigned URLs, compresi\'on y thumbnails.
+  \item[v1.3] Panel de anfitri\'on: dashboard, calendario visual, precios por temporada.
+  \item[v1.4] Mapa interactivo: Google Maps con clustering de propiedades.
+  \item[v1.5] Verificaci\'on de identidad: KYC (INE/pasaporte + selfie).
+  \item[v2.0] Expansi\'on regional: Valladolid, Izamal, Progreso, Holbox.
+  \item[v2.1] App m\'ovil: React Native con Expo.
+  \item[v3.0] Comisiones: activaci\'on de \texttt{PLATFORM\_FEE\_PERCENTAGE}.
+\end{description}
+
+% ════════════════════════════════════════════════════════════
+%  APÉNDICE A: AMENIDADES
+% ════════════════════════════════════════════════════════════
+\chapter*{Ap\'endice A: Cat\'alogo de Amenidades}
+\addcontentsline{toc}{chapter}{Ap\'endice A: Cat\'alogo de Amenidades}
+
+\begin{multicols}{3}
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+  \item wifi
+  \item piscina
+  \item estacionamiento
+  \item aire\_acondicionado
+  \item cocina
+  \item lavadora
+  \item secadora
+  \item tv
+  \item netflix
+  \item gym
+  \item jacuzzi
+  \item terraza
+  \item balcon
+  \item jardin
+  \item parrilla
+  \item pet\_friendly
+  \item desayuno
+  \item acceso\_discapacitados
+  \item caja\_fuerte
+  \item extintor
+  \item botiquin
+  \item detector\_humo
+\end{itemize}
+\end{multicols}
+
+% ════════════════════════════════════════════════════════════
+%  APÉNDICE B: TIPOS DE PROPIEDAD
+% ════════════════════════════════════════════════════════════
+\chapter*{Ap\'endice B: Tipos de Propiedad}
+\addcontentsline{toc}{chapter}{Ap\'endice B: Tipos de Propiedad}
+
+\begin{center}
+\begin{tabular}{L{4cm} L{8cm}}
+\toprule
+\textbf{C\'odigo} & \textbf{Descripci\'on} \\
+\midrule
+\texttt{casa} & Casa completa \\
+\texttt{departamento} & Apartamento \\
+\texttt{caba\~na} & Caba\~na o chalet \\
+\texttt{villa} & Villa con amenidades premium \\
+\texttt{habitacion} & Habitaci\'on en casa compartida \\
+\texttt{hostal} & Hostel / dormitorio \\
+\texttt{otro} & Tipo especial \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ════════════════════════════════════════════════════════════
+%  COLOFÓN
+% ════════════════════════════════════════════════════════════
+\vfill
+\begin{center}
+\color{beelgray}\small
+Documento generado --- Beel MVP v1.0 $\cdot$ Junio 2026 \\
+\texttt{dev@beel.mx} $\cdot$ \texttt{https://beel.mx} $\cdot$ M\'erida, Yucat\'an, M\'exico \\[8pt]
+\includegraphics[width=4cm]{beel_logo_green_sand.png}
+\end{center}
+
+\end{document}
