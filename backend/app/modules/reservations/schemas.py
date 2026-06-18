@@ -38,14 +38,14 @@ class ReservationOut(BaseModel):
 
     check_in: date
     check_out: date
+    guests_count: int
     nights: int
-    guests: int
 
     price_per_night_snapshot: Decimal
     cleaning_fee_snapshot: Decimal
     security_deposit_snapshot: Decimal
     platform_fee_snapshot: Decimal
-    total_price: Decimal
+    total_amount: Decimal
     currency: str
 
     cancellation_policy_snapshot: str
@@ -56,7 +56,7 @@ class ReservationOut(BaseModel):
     guest_message: Optional[str]
     host_response_deadline: Optional[datetime]
 
-    property: Optional[dict] = None
+    reservation_property: Optional[PropertySnapshotOut] = None
     guest: Optional[dict] = None
     host: Optional[dict] = None
 

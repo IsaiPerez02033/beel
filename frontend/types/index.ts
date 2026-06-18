@@ -139,12 +139,12 @@ export type ReservationStatus =
 
 export interface Reservation {
   id: string;
-  property: Property;
+  reservation_property: Property;
   check_in: string;
   check_out: string;
-  guests: number;
+  guests_count: number;
   nights: number;
-  total_price: number;
+  total_amount: number;
   status: ReservationStatus;
   created_at: string;
 }
