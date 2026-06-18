@@ -140,6 +140,19 @@ app.include_router(reviews_router, prefix=f"{API_PREFIX}/reviews", tags=["review
 app.include_router(clerk_webhook_router, prefix=f"{API_PREFIX}/webhooks", tags=["webhooks"])
 
 
+# ── Root ────────────────────────────────────────────────────────────────────────
+@app.get("/", tags=["root"])
+async def root():
+    return {
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "demo": settings.DEMO_MODE,
+        "docs": "/docs",
+        "health": "/api/v1/health",
+        "api": "/api/v1",
+    }
+
+
 # ── Health check ──────────────────────────────────────────────────────────────
 @app.get(f"{API_PREFIX}/health", tags=["health"])
 async def health_check():
