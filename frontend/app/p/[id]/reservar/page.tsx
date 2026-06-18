@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useSafeAuth";
 import Navbar from "@/components/Navbar";
 import { useApi } from "@/hooks/useApi";
 import { formatPrice, pluralNights } from "@/lib/utils";

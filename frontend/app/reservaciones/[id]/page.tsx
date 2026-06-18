@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useSafeAuth";
 import Navbar from "@/components/Navbar";
 import { useApi } from "@/hooks/useApi";
 import { formatPrice } from "@/lib/utils";
