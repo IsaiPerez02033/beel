@@ -22,7 +22,7 @@ interface Reservation {
   total_price: number;
   currency: string;
   status: string;
-  property: {
+  reservation_property: {
     id: string;
     title: string;
     city: string;
@@ -135,7 +135,7 @@ export default function ReservacionesPage() {
 }
 
 function ReservationCard({ reservation: r }: { reservation: Reservation }) {
-  const photo = r.property.photos?.find((p) => p.is_primary) ?? r.property.photos?.[0];
+  const photo = r.reservation_property.photos?.find((p) => p.is_primary) ?? r.reservation_property.photos?.[0];
   const statusInfo = STATUS_LABELS[r.status] ?? { label: r.status, color: "badge-neutral" };
 
   const checkIn = parseISO(r.check_in);
@@ -146,7 +146,7 @@ function ReservationCard({ reservation: r }: { reservation: Reservation }) {
       {/* Foto */}
       <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[var(--color-primary-light)]">
         {photo?.url && (
-          <Image src={photo.url} alt={r.property.title} fill className="object-cover" />
+          <Image src={photo.url} alt={r.reservation_property.title} fill className="object-cover" />
         )}
       </div>
 
@@ -154,7 +154,7 @@ function ReservationCard({ reservation: r }: { reservation: Reservation }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="text-body font-medium text-[var(--text-primary)] line-clamp-1">
-            {r.property.title}
+            {r.reservation_property.title}
           </p>
           <span className={cn("badge flex-shrink-0", statusInfo.color)}>
             {statusInfo.label}
@@ -163,7 +163,7 @@ function ReservationCard({ reservation: r }: { reservation: Reservation }) {
 
         <div className="flex items-center gap-1.5 mt-1 text-body-sm text-[var(--text-secondary)]">
           <MapPin size={12} />
-          <span>{r.property.neighborhood ?? r.property.city}</span>
+          <span>{r.reservation_property.neighborhood ?? r.reservation_property.city}</span>
         </div>
 
         <div className="flex items-center gap-1.5 mt-1 text-body-sm text-[var(--text-secondary)]">

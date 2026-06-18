@@ -23,7 +23,7 @@ interface ReservationDetail {
   status: string;
   guest_message?: string;
   created_at: string;
-  property: {
+  reservation_property: {
     id: string;
     title: string;
     city: string;
@@ -99,7 +99,7 @@ export default function ReservationDetailPage() {
   }
 
   const st = STATUS[reservation.status] ?? { label: reservation.status, className: "badge-neutral" };
-  const primaryPhoto = reservation.property.photos.find((p) => p.is_primary) ?? reservation.property.photos[0];
+  const primaryPhoto = reservation.reservation_property.photos.find((p) => p.is_primary) ?? reservation.reservation_property.photos[0];
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
@@ -113,7 +113,7 @@ export default function ReservationDetailPage() {
         <div className="card overflow-hidden">
           {primaryPhoto && (
             <div className="relative w-full h-56">
-              <Image src={primaryPhoto.url} alt={reservation.property.title} fill className="object-cover" />
+              <Image src={primaryPhoto.url} alt={reservation.reservation_property.title} fill className="object-cover" />
             </div>
           )}
 
@@ -123,13 +123,13 @@ export default function ReservationDetailPage() {
             </div>
 
             <h1 className="text-heading font-display text-[var(--text-primary)] mt-2">
-              {reservation.property.title}
+              {reservation.reservation_property.title}
             </h1>
 
             <div className="flex items-center gap-1 mt-1 text-body-sm text-[var(--text-secondary)]">
               <MapPin size={14} />
-              {reservation.property.neighborhood && `${reservation.property.neighborhood}, `}
-              {reservation.property.city}
+              {reservation.reservation_property.neighborhood && `${reservation.reservation_property.neighborhood}, `}
+              {reservation.reservation_property.city}
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-4">

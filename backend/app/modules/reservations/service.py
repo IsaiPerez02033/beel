@@ -157,7 +157,7 @@ def _calculate_price(
 
 def _reservation_query():
     return select(Reservation).options(
-        selectinload(Reservation.property),
+        selectinload(Reservation.reservation_property),
         selectinload(Reservation.guest),
         selectinload(Reservation.host),
     )
@@ -354,7 +354,7 @@ async def respond_to_reservation(
             reservation.id,
         )
         # Actualizar contadores
-        reservation.property.total_bookings += 1
+        reservation.reservation_property.total_bookings += 1
         reservation.guest.total_trips += 1
 
     else:  # reject

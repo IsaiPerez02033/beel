@@ -72,7 +72,7 @@ async def create_checkout(
         "items": [
             {
                 "id": str(reservation.id),
-                "title": f"Reserva en {reservation.property.title}",
+                "title": f"Reserva en {reservation.reservation_property.title}",
                 "description": (
                     f"{nights} {'noche' if nights == 1 else 'noches'} | "
                     f"{reservation.check_in} → {reservation.check_out}"

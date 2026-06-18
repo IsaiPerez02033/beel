@@ -142,7 +142,7 @@ class Reservation(Base, TimestampMixin):
     metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB)
 
     # Relaciones
-    property: Mapped["Property"] = relationship(
+    reservation_property: Mapped["Property"] = relationship(
         "Property", foreign_keys=[property_id], lazy="selectin"
     )
     guest: Mapped["User"] = relationship(
@@ -157,8 +157,8 @@ class Reservation(Base, TimestampMixin):
 
     __table_args__ = (
         CheckConstraint("check_out > check_in", name="chk_checkout_after_checkin"),
-        CheckConstraint("guests > 0", name="chk_guests_positive"),
-        CheckConstraint("total_price > 0", name="chk_total_positive"),
+        CheckConstraint("guests_count > 0", name="chk_guests_positive"),
+        CheckConstraint("total_amount > 0", name="chk_total_positive"),
         CheckConstraint(
             "status IN ('pending','confirmed','rejected','cancelled_guest',"
             "'cancelled_host','completed')",
