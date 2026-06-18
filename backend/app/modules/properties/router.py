@@ -46,6 +46,11 @@ async def search_properties(
     db: AsyncSession = Depends(get_db),
 ):
     """Busca propiedades activas con filtros opcionales."""
+    from app.core.config import settings as s
+
+    if s.DEMO_MODE or not s.has_database:
+        return _demo_properties()
+
     from datetime import date as DateType
 
     check_in_date = DateType.fromisoformat(check_in) if check_in else None
@@ -84,6 +89,13 @@ async def get_property(
     db: AsyncSession = Depends(get_db),
 ):
     """Retorna el detalle completo de una propiedad."""
+    from app.core.config import settings as s
+    if s.DEMO_MODE or not s.has_database:
+        demo = next((p for p in _demo_list if p["id"] == str(property_id)), None)
+        if not demo:
+            raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+        return demo
+
     property_ = await service.get_property(db, property_id)
     if not property_ or property_.status not in ("active", "pending_review"):
         raise HTTPException(status_code=404, detail="Propiedad no encontrada")
@@ -200,4 +212,223 @@ async def my_listings(
         page=page,
         per_page=per_page,
         total_pages=math.ceil(total / per_page) if total else 0,
+    )
+
+
+# ── Demo data ──────────────────────────────────────────────────────────────────
+
+_demo_list = [
+    {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "title": "Casa Colonial en el Centro de Mérida",
+        "description": "Hermosa casa colonial restaurada a 5 min del Paseo de Montejo. Patio interior con alberca, cocina equipada y 3 recámaras con aire acondicionado. Ideal para familias.",
+        "property_type": "casa",
+        "status": "active",
+        "address": "Calle 62 #457 entre 53 y 55",
+        "neighborhood": "Centro Histórico",
+        "city": "Mérida",
+        "state": "Yucatán",
+        "latitude_approx": 20.9670,
+        "longitude_approx": -89.6237,
+        "max_guests": 6,
+        "bedrooms": 3,
+        "beds": 4,
+        "bathrooms": 2,
+        "price_per_night": 1800,
+        "currency": "MXN",
+        "cleaning_fee": 300,
+        "min_stay_nights": 2,
+        "cancellation_policy": "flexible",
+        "instant_booking": True,
+        "allows_pets": True,
+        "allows_smoking": False,
+        "allows_events": False,
+        "total_reviews": 24,
+        "avg_rating": 4.8,
+        "total_bookings": 67,
+        "host": {
+            "id": "a0000000-0000-0000-0000-000000000001",
+            "full_name": "María Gómez",
+            "avatar_url": None,
+            "is_identity_verified": True,
+            "host_since": "2023-03-15",
+            "total_listings": 3,
+        },
+        "photos": [
+            {"id": "p1", "url": "https://images.unsplash.com/photo-1615571022219-eb45cf7faa36?w=600", "is_primary": True, "display_order": 1},
+        ],
+        "amenities": [
+            {"amenity": {"id": "a1", "slug": "wifi", "name_es": "WiFi", "category": "basicos", "is_highlight": True, "icon": "📶"}},
+            {"amenity": {"id": "a2", "slug": "piscina", "name_es": "Alberca", "category": "exteriores", "is_highlight": True, "icon": "🏊"}},
+            {"amenity": {"id": "a3", "slug": "aire_acondicionado", "name_es": "Aire acondicionado", "category": "basicos", "is_highlight": True, "icon": "❄️"}},
+            {"amenity": {"id": "a4", "slug": "cocina", "name_es": "Cocina equipada", "category": "cocina", "is_highlight": True, "icon": "🍳"}},
+            {"amenity": {"id": "a5", "slug": "estacionamiento", "name_es": "Estacionamiento", "category": "basicos", "is_highlight": False, "icon": "🚗"}},
+            {"amenity": {"id": "a6", "slug": "lavadora", "name_es": "Lavadora", "category": "basicos", "is_highlight": False, "icon": "🫧"}},
+            {"amenity": {"id": "a7", "slug": "terraza", "name_es": "Terraza", "category": "exteriores", "is_highlight": False, "icon": "🌿"}},
+        ],
+        "created_at": "2024-01-10T12:00:00Z",
+        "updated_at": "2025-06-01T08:30:00Z",
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "title": "Departamento Moderno cerca de Paseo Montejo",
+        "description": "Amplio departamento con vista panorámica. Roof garden con jacuzzi, gym y estacionamiento subterráneo. A pasos de los mejores restaurantes de la ciudad.",
+        "property_type": "departamento",
+        "status": "active",
+        "address": "Paseo de Montejo 512, Depto 7B",
+        "neighborhood": "Zona Paseo Montejo",
+        "city": "Mérida",
+        "state": "Yucatán",
+        "latitude_approx": 20.9825,
+        "longitude_approx": -89.6180,
+        "max_guests": 4,
+        "bedrooms": 2,
+        "beds": 2,
+        "bathrooms": 1,
+        "price_per_night": 1200,
+        "currency": "MXN",
+        "cleaning_fee": 200,
+        "min_stay_nights": 1,
+        "cancellation_policy": "moderada",
+        "instant_booking": True,
+        "allows_pets": False,
+        "allows_smoking": False,
+        "allows_events": False,
+        "total_reviews": 12,
+        "avg_rating": 4.6,
+        "total_bookings": 34,
+        "host": {
+            "id": "a0000000-0000-0000-0000-000000000002",
+            "full_name": "Carlos Rivera",
+            "avatar_url": None,
+            "is_identity_verified": True,
+            "host_since": "2022-08-20",
+            "total_listings": 5,
+        },
+        "photos": [
+            {"id": "p2", "url": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600", "is_primary": True, "display_order": 1},
+        ],
+        "amenities": [
+            {"amenity": {"id": "a1", "slug": "wifi", "name_es": "WiFi", "category": "basicos", "is_highlight": True, "icon": "📶"}},
+            {"amenity": {"id": "a3", "slug": "aire_acondicionado", "name_es": "Aire acondicionado", "category": "basicos", "is_highlight": True, "icon": "❄️"}},
+            {"amenity": {"id": "a5", "slug": "estacionamiento", "name_es": "Estacionamiento", "category": "basicos", "is_highlight": True, "icon": "🚗"}},
+            {"amenity": {"id": "a8", "slug": "jacuzzi", "name_es": "Jacuzzi", "category": "exteriores", "is_highlight": True, "icon": "🛁"}},
+            {"amenity": {"id": "a9", "slug": "gym", "name_es": "Gimnasio", "category": "basicos", "is_highlight": False, "icon": "💪"}},
+        ],
+        "created_at": "2024-03-22T14:00:00Z",
+        "updated_at": "2025-05-15T10:00:00Z",
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "title": "Villa con Piscina en Chuburná",
+        "description": "Espectacular villa con piscina privada, jardín tropical y palapa con hamacas. Perfecta para grupos grandes. A 15 min del centro y 25 de la playa.",
+        "property_type": "villa",
+        "status": "active",
+        "address": "Calle 21 #128 x 16 y 18, Chuburná de Hidalgo",
+        "neighborhood": "Chuburná",
+        "city": "Mérida",
+        "state": "Yucatán",
+        "latitude_approx": 21.0150,
+        "longitude_approx": -89.6300,
+        "max_guests": 10,
+        "bedrooms": 5,
+        "beds": 7,
+        "bathrooms": 4,
+        "price_per_night": 3500,
+        "currency": "MXN",
+        "cleaning_fee": 500,
+        "min_stay_nights": 3,
+        "cancellation_policy": "estricta",
+        "instant_booking": False,
+        "allows_pets": True,
+        "allows_smoking": True,
+        "allows_events": True,
+        "total_reviews": 8,
+        "avg_rating": 4.9,
+        "total_bookings": 22,
+        "host": {
+            "id": "a0000000-0000-0000-0000-000000000003",
+            "full_name": "Ana Sofía Martínez",
+            "avatar_url": None,
+            "is_identity_verified": True,
+            "host_since": "2024-01-05",
+            "total_listings": 2,
+        },
+        "photos": [
+            {"id": "p3", "url": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600", "is_primary": True, "display_order": 1},
+        ],
+        "amenities": [
+            {"amenity": {"id": "a1", "slug": "wifi", "name_es": "WiFi", "category": "basicos", "is_highlight": True, "icon": "📶"}},
+            {"amenity": {"id": "a2", "slug": "piscina", "name_es": "Alberca", "category": "exteriores", "is_highlight": True, "icon": "🏊"}},
+            {"amenity": {"id": "a3", "slug": "aire_acondicionado", "name_es": "Aire acondicionado", "category": "basicos", "is_highlight": True, "icon": "❄️"}},
+            {"amenity": {"id": "a4", "slug": "cocina", "name_es": "Cocina equipada", "category": "cocina", "is_highlight": True, "icon": "🍳"}},
+            {"amenity": {"id": "a5", "slug": "estacionamiento", "name_es": "Estacionamiento", "category": "basicos", "is_highlight": True, "icon": "🚗"}},
+            {"amenity": {"id": "a10", "slug": "parrilla", "name_es": "Parrilla", "category": "exteriores", "is_highlight": False, "icon": "🔥"}},
+            {"amenity": {"id": "a6", "slug": "lavadora", "name_es": "Lavadora", "category": "basicos", "is_highlight": False, "icon": "🫧"}},
+            {"amenity": {"id": "a7", "slug": "terraza", "name_es": "Terraza", "category": "exteriores", "is_highlight": False, "icon": "🌿"}},
+            {"amenity": {"id": "a11", "slug": "mascotas", "name_es": "Pet-friendly", "category": "extras", "is_highlight": False, "icon": "🐾"}},
+        ],
+        "created_at": "2024-06-01T09:00:00Z",
+        "updated_at": "2025-04-10T16:00:00Z",
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000004",
+        "title": "Cabaña Rústica en Dzityá",
+        "description": "Acogedora cabaña rústica rodeada de naturaleza. Ideal para escapada romántica. Fogata al aire libre, hamaca, desayuno artesanal incluido.",
+        "property_type": "cabaña",
+        "status": "active",
+        "address": "Km 12 Carretera Mérida-Progreso, Dzityá",
+        "neighborhood": "Dzityá",
+        "city": "Mérida",
+        "state": "Yucatán",
+        "latitude_approx": 21.0550,
+        "longitude_approx": -89.6700,
+        "max_guests": 2,
+        "bedrooms": 1,
+        "beds": 1,
+        "bathrooms": 1,
+        "price_per_night": 850,
+        "currency": "MXN",
+        "cleaning_fee": 150,
+        "min_stay_nights": 1,
+        "cancellation_policy": "flexible",
+        "instant_booking": True,
+        "allows_pets": False,
+        "allows_smoking": True,
+        "allows_events": False,
+        "total_reviews": 18,
+        "avg_rating": 4.7,
+        "total_bookings": 45,
+        "host": {
+            "id": "a0000000-0000-0000-0000-000000000004",
+            "full_name": "Jorge Ek Pech",
+            "avatar_url": None,
+            "is_identity_verified": True,
+            "host_since": "2023-06-10",
+            "total_listings": 1,
+        },
+        "photos": [
+            {"id": "p4", "url": "https://images.unsplash.com/photo-1587061949409-02df41d5e562?w=600", "is_primary": True, "display_order": 1},
+        ],
+        "amenities": [
+            {"amenity": {"id": "a12", "slug": "desayuno", "name_es": "Desayuno incluido", "category": "extras", "is_highlight": True, "icon": "🍳"}},
+            {"amenity": {"id": "a3", "slug": "aire_acondicionado", "name_es": "Aire acondicionado", "category": "basicos", "is_highlight": True, "icon": "❄️"}},
+            {"amenity": {"id": "a1", "slug": "wifi", "name_es": "WiFi", "category": "basicos", "is_highlight": False, "icon": "📶"}},
+            {"amenity": {"id": "a10", "slug": "parrilla", "name_es": "Parrilla", "category": "exteriores", "is_highlight": False, "icon": "🔥"}},
+        ],
+        "created_at": "2024-02-14T10:00:00Z",
+        "updated_at": "2025-06-01T12:00:00Z",
+    },
+]
+
+
+def _demo_properties():
+    """Retorna datos mock cuando no hay base de datos."""
+    import math
+    return SearchResultOut(
+        properties=_demo_list,  # type: ignore[arg-type]
+        total=len(_demo_list),
+        page=1,
+        per_page=20,
+        total_pages=1,
     )

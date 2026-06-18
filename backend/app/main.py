@@ -56,12 +56,27 @@ if settings.SENTRY_DSN:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 Iniciando Beel API v%s (%s)", settings.APP_VERSION, settings.ENVIRONMENT)
-    await init_db()
-    logger.info("✅ Base de datos conectada")
+
+    if settings.DEMO_MODE:
+        logger.info("🎭 MODO DEMO: sin servicios externos")
+    else:
+        if settings.has_database:
+            await init_db()
+        else:
+            logger.info("⚠️ Sin DATABASE_URL — endpoints dependientes de BD retornarán 503")
+        if settings.has_clerk:
+            logger.info("✅ Clerk configurado")
+        else:
+            logger.info("⚠️ Sin Clerk — auth deshabilitada")
+        if settings.has_redis:
+            logger.info("✅ Redis configurado")
+        else:
+            logger.info("⚠️ Sin Redis — cache deshabilitado")
+
     yield
     logger.info("🛑 Apagando Beel API")
-    await dispose_engine()
-    logger.info("✅ Pool de conexiones liberado")
+    if settings.has_database:
+        await dispose_engine()
 
 
 # ── App ───────────────────────────────────────────────────────────────────────

@@ -27,63 +27,77 @@ logger = logging.getLogger(__name__)
 # Pool de conexiones Redis (inicializado en el primer uso)
 _redis_pool: Optional[aioredis.Redis] = None
 _init_lock = asyncio.Lock()
+_disabled = not settings.REDIS_URL
 
 
-def _get_redis() -> aioredis.Redis:
-    global _redis_pool
-    if _redis_pool is None:
-        _redis_pool = aioredis.from_url(
-            settings.REDIS_URL,
-            encoding="utf-8",
-            decode_responses=True,
-            max_connections=20,
-        )
-    return _redis_pool
-
-
-async def get_cache() -> aioredis.Redis:
-    """Retorna el cliente Redis (thread-safe init)."""
-    global _redis_pool
+async def get_cache() -> Optional[aioredis.Redis]:
+    """Retorna el cliente Redis o None si no está configurado."""
+    global _redis_pool, _disabled
+    if _disabled:
+        return None
     if _redis_pool is not None:
         return _redis_pool
     async with _init_lock:
         if _redis_pool is not None:
             return _redis_pool
-        _redis_pool = aioredis.from_url(
-            settings.REDIS_URL,
-            encoding="utf-8",
-            decode_responses=True,
-            max_connections=20,
-        )
+        try:
+            _redis_pool = aioredis.from_url(
+                settings.REDIS_URL,
+                encoding="utf-8",
+                decode_responses=True,
+                max_connections=20,
+            )
+        except Exception:
+            logger.warning("Redis no disponible — cache deshabilitado")
+            _disabled = True
+            return None
+    return _redis_pool
+
+
+def _get_redis() -> Optional[aioredis.Redis]:
+    """Versión sync wrapper para compatibilidad con código existente."""
+    import asyncio
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        return None
+    if _disabled:
+        return None
     return _redis_pool
 
 
 async def get_cached(key: str) -> Optional[Any]:
     """Retorna el valor cacheado o None si no existe."""
     try:
-        redis = _get_redis()
+        redis = await get_cache()
+        if redis is None:
+            return None
         raw = await redis.get(key)
         if raw is None:
             return None
         return json.loads(raw)
     except Exception as e:
-        logger.warning("Cache GET error [%s]: %s", key, e)
+        logger.debug("Cache GET error [%s]: %s", key, e)
         return None
 
 
 async def set_cached(key: str, value: Any, ttl: int) -> None:
     """Guarda un valor en cache con TTL en segundos."""
     try:
-        redis = _get_redis()
+        redis = await get_cache()
+        if redis is None:
+            return
         await redis.set(key, json.dumps(value, default=str), ex=ttl)
     except Exception as e:
-        logger.warning("Cache SET error [%s]: %s", key, e)
+        logger.debug("Cache SET error [%s]: %s", key, e)
 
 
 async def invalidate(pattern: str) -> int:
-    """Elimina claves que coincidan con el patrón usando SCAN (no bloqueante)."""
+    """Elimina claves que coincidan con el patrón usando SCAN."""
     try:
-        redis = _get_redis()
+        redis = await get_cache()
+        if redis is None:
+            return 0
         cursor = 0
         deleted = 0
         while True:
@@ -94,7 +108,7 @@ async def invalidate(pattern: str) -> int:
                 break
         return deleted
     except Exception as e:
-        logger.warning("Cache INVALIDATE error [%s]: %s", pattern, e)
+        logger.debug("Cache INVALIDATE error [%s]: %s", pattern, e)
         return 0
 
 

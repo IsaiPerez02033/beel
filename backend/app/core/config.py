@@ -1,8 +1,12 @@
 """
 Configuración central de Beel usando Pydantic Settings.
 Lee variables de entorno y del archivo .env automáticamente.
+
+Todos los servicios externos son opcionales: si no se configuran,
+la app arranca en modo demo/degradado sin DB, Redis ni auth.
 """
 
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
@@ -19,91 +23,91 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = False
     ENVIRONMENT: str = "development"  # development | staging | production
-    BACKEND_URL: str = ""  # URL pública del backend (ej. https://api.beel.mx)
-    FRONTEND_URL: str = ""  # URL pública del frontend (ej. https://beel.mx)
+    DEMO_MODE: bool = False  # true = sin servicios externos, datos mock
+    BACKEND_URL: str = ""
+    FRONTEND_URL: str = ""
 
     # ── Base de datos ─────────────────────────────────────────────────────────
-    # Formato: postgresql+asyncpg://user:password@host:port/dbname
-    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/beel"
+    DATABASE_URL: Optional[str] = None
+    DATABASE_ECHO: bool = False  # SQL echo logs
 
     # ── Redis ─────────────────────────────────────────────────────────────────
-    REDIS_URL: str = "redis://localhost:6379/0"
-    # TTL en segundos para diferentes tipos de cache
-    CACHE_TTL_SEARCH: int = 300        # 5 minutos — resultados de búsqueda
-    CACHE_TTL_PROPERTY: int = 120      # 2 minutos — detalle de propiedad
-    CACHE_TTL_USER_PROFILE: int = 600  # 10 minutos — perfil de usuario
-    CACHE_TTL_RANKING: int = 3600      # 1 hora — scores de ranking
+    REDIS_URL: Optional[str] = None
+    CACHE_TTL_SEARCH: int = 300
+    CACHE_TTL_PROPERTY: int = 120
+    CACHE_TTL_USER_PROFILE: int = 600
+    CACHE_TTL_RANKING: int = 3600
 
     # ── Autenticación (Clerk) ─────────────────────────────────────────────────
-    CLERK_SECRET_KEY: str = "sk_test_placeholder"
-    CLERK_PUBLISHABLE_KEY: str = "pk_test_placeholder"
-    CLERK_WEBHOOK_SECRET: str = "whsec_placeholder"
+    CLERK_SECRET_KEY: Optional[str] = None
+    CLERK_PUBLISHABLE_KEY: Optional[str] = None
+    CLERK_WEBHOOK_SECRET: Optional[str] = None
 
-    # ── AWS S3 (almacenamiento de fotos) ──────────────────────────────────────
-    AWS_ACCESS_KEY_ID: str = "placeholder"
-    AWS_SECRET_ACCESS_KEY: str = "placeholder"
+    # ── AWS S3 ───────────────────────────────────────────────────────────────
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
     AWS_REGION: str = "us-east-1"
     S3_BUCKET_NAME: str = "beel-media"
-    S3_BUCKET_URL: str = ""  # CloudFront URL cuando esté configurado
-    # Tamaño máximo de foto en bytes (10MB)
+    S3_BUCKET_URL: str = ""
     MAX_PHOTO_SIZE_BYTES: int = 10 * 1024 * 1024
 
     # ── Google Maps ───────────────────────────────────────────────────────────
-    GOOGLE_MAPS_API_KEY: str = "placeholder"
-    # Radio de ofuscación de coordenadas para mapa público (en metros)
+    GOOGLE_MAPS_API_KEY: Optional[str] = None
     LOCATION_OBFUSCATION_RADIUS_METERS: int = 150
 
     # ── MercadoPago ───────────────────────────────────────────────────────────
-    MERCADOPAGO_ACCESS_TOKEN: str = "placeholder"
-    MERCADOPAGO_PUBLIC_KEY: str = "placeholder"
-    MERCADOPAGO_WEBHOOK_SECRET: str = "placeholder"
-    # Porcentaje de comisión de Beel (0 durante fase de lanzamiento)
+    MERCADOPAGO_ACCESS_TOKEN: Optional[str] = None
+    MERCADOPAGO_PUBLIC_KEY: Optional[str] = None
+    MERCADOPAGO_WEBHOOK_SECRET: Optional[str] = None
     PLATFORM_FEE_PERCENTAGE: float = 0.0
 
     # ── Stripe ───────────────────────────────────────────────────────────────
-    # Configurado pero desactivado en MVP v1
-    STRIPE_SECRET_KEY: str = ""
-    STRIPE_PUBLISHABLE_KEY: str = ""
-    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_PUBLISHABLE_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
 
-    # ── WhatsApp Business (360dialog) ────────────────────────────────────────
-    WHATSAPP_API_KEY: str = "placeholder"
+    # ── WhatsApp ──────────────────────────────────────────────────────────────
+    WHATSAPP_API_KEY: Optional[str] = None
     WHATSAPP_API_URL: str = "https://waba.360dialog.io/v1"
-    WHATSAPP_PHONE_NUMBER_ID: str = "placeholder"
-    # Namespace de plantillas aprobadas por Meta
-    WHATSAPP_TEMPLATE_NAMESPACE: str = "placeholder"
+    WHATSAPP_PHONE_NUMBER_ID: Optional[str] = None
+    WHATSAPP_TEMPLATE_NAMESPACE: Optional[str] = None
 
-    # ── Email (SendGrid o Resend) ─────────────────────────────────────────────
-    EMAIL_PROVIDER: str = "resend"  # resend | sendgrid
-    EMAIL_API_KEY: str = "placeholder"
+    # ── Email ─────────────────────────────────────────────────────────────────
+    EMAIL_PROVIDER: str = "resend"
+    EMAIL_API_KEY: Optional[str] = None
     EMAIL_FROM_ADDRESS: str = "hola@beel.mx"
     EMAIL_FROM_NAME: str = "Beel"
 
-    # ── Sentry (monitoreo de errores) ─────────────────────────────────────────
-    SENTRY_DSN: str = ""
+    # ── Sentry ────────────────────────────────────────────────────────────────
+    SENTRY_DSN: Optional[str] = None
 
     # ── Seguridad ─────────────────────────────────────────────────────────────
-    # Límite de tamaño de request body (bytes)
-    MAX_REQUEST_BODY_SIZE: int = 1 * 1024 * 1024  # 1 MB
-    # Dominios permitidos para CORS
+    MAX_REQUEST_BODY_SIZE: int = 1 * 1024 * 1024
     ALLOWED_ORIGINS: list[str] = [
+        "http://localhost:3000",
         "https://beel.mx",
         "https://www.beel.mx",
     ]
-    # Rate limiting (requests por minuto por IP)
     RATE_LIMIT_PER_MINUTE: int = 60
-    # Rate limiting para endpoints de auth
     RATE_LIMIT_AUTH_PER_MINUTE: int = 10
 
     # ── Negocio ───────────────────────────────────────────────────────────────
-    # Días de calendario a generar hacia adelante para nuevos listings
     AVAILABILITY_HORIZON_DAYS: int = 365
-    # Horas de gracia para que el host responda una solicitud
     RESERVATION_REQUEST_TIMEOUT_HOURS: int = 24
-    # Horas después del check-in para liberar el pago al host
     PAYOUT_DELAY_HOURS: int = 24
-    # Días disponibles para dejar una reseña post check-out
     REVIEW_WINDOW_DAYS: int = 7
+
+    @property
+    def has_database(self) -> bool:
+        return bool(self.DATABASE_URL)
+
+    @property
+    def has_redis(self) -> bool:
+        return bool(self.REDIS_URL)
+
+    @property
+    def has_clerk(self) -> bool:
+        return bool(self.CLERK_PUBLISHABLE_KEY and self.CLERK_SECRET_KEY)
 
     @property
     def is_production(self) -> bool:

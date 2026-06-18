@@ -38,6 +38,11 @@ _jwks_lock = asyncio.Lock()
 async def _get_jwks() -> dict:
     """Descarga y cachea el JWKS de Clerk con lock para concurrencia."""
     global _jwks_cache
+    if not settings.CLERK_PUBLISHABLE_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Autenticación no configurada",
+        )
     if _jwks_cache:
         return _jwks_cache
 
@@ -156,6 +161,11 @@ async def get_current_user(
     Dependency que exige autenticación.
     Levanta 401 si no hay token o es inválido.
     """
+    if not settings.CLERK_PUBLISHABLE_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Autenticación no configurada",
+        )
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
