@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Property } from "@/types";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 // ── Fetch propiedades destacadas ──────────────────────────────────────────────
-async function getFeaturedProperties() {
+async function getFeaturedProperties(): Promise<Property[]> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/v1/properties?status=active&per_page=8`,
