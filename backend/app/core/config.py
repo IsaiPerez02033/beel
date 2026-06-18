@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.1.0"
     DEBUG: bool = False
     ENVIRONMENT: str = "development"  # development | staging | production
-    DEMO_MODE: bool = False  # true = sin servicios externos, datos mock
+    DEMO_MODE: bool = True  # true = sin servicios externos, datos mock (default para deploys sin config)
     BACKEND_URL: str = ""
     FRONTEND_URL: str = ""
 
