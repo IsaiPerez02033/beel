@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import CurrentUser, OptionalUser, get_current_user
+from app.core.auth import CurrentUser, OptionalUser
 from app.core.database import get_db
 from app.modules.properties import service
 from app.modules.properties.schemas import (
@@ -168,9 +168,9 @@ async def delete_property(
 
 @router.get("/host/my-listings", response_model=SearchResultOut)
 async def my_listings(
+    current_user: CurrentUser,
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=50),
-    current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Lista las propiedades del anfitrión autenticado (todos los estados)."""
