@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useSafeAuth";
 
 interface WSOptions {
   onMessage?: (data: any) => void;

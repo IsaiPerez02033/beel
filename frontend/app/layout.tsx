@@ -52,8 +52,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const inner = (
+    <html lang="es" className={`${plusJakarta.variable} ${inter.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+
+  if (!clerkKey) {
+    return inner;
+  }
+
   return (
     <ClerkProvider
+      publishableKey={clerkKey}
       afterSignOutUrl="/"
       appearance={{
         variables: {
@@ -63,9 +75,7 @@ export default function RootLayout({
         },
       }}
     >
-      <html lang="es" className={`${plusJakarta.variable} ${inter.variable}`}>
-        <body>{children}</body>
-      </html>
+      {inner}
     </ClerkProvider>
   );
 }

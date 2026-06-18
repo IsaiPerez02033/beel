@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/hooks/useSafeAuth";
 import { differenceInCalendarDays, parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Star, Info } from "lucide-react";
