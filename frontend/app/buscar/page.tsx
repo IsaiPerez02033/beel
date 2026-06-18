@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
 import SearchFilters from "@/components/SearchFilters";
-import type { SearchParams } from "@/types";
+import type { Property, SearchParams, SearchResult } from "@/types";
 
 export const metadata: Metadata = {
   title: "Explorar hospedajes",
@@ -24,7 +24,7 @@ interface PageProps {
   };
 }
 
-async function getProperties(params: SearchParams) {
+async function getProperties(params: SearchParams): Promise<{ properties: Property[]; total: number }> {
   const query = new URLSearchParams();
   if (params.destino) query.set("destino", params.destino);
   if (params.check_in) query.set("check_in", params.check_in);
