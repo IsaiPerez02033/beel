@@ -1,14 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ============================================================
    Beel — Global CSS
    Design System base styles, CSS variables y utilidades
    ============================================================
    Estructura:
-     1. Fuentes (Plus Jakarta Sans + Inter vía Google Fonts)
-     2. CSS Custom Properties (light mode)
-     3. CSS Custom Properties (dark mode)
-     4. Reset y base
-     5. Componentes base (clases utilitarias de Beel)
-     6. Animaciones
+     1. Tailwind (base + components + utilities)
+     2. Fuentes (Plus Jakarta Sans + Inter vía next/font)
+     3. CSS Custom Properties (light mode)
+     4. CSS Custom Properties (dark mode)
+     5. Reset y base
+     6. Componentes base (clases utilitarias de Beel)
+     7. Animaciones
    ============================================================ */
 
 /* ── 1. Fuentes (via next/font/google en layout.tsx) ────── */
