@@ -1,5 +1,3 @@
-import type { NextConfig } from "next";
-
 const cspHeader = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://js.clerk.services https://www.mercadopago.com.ar https://www.mercadopago.com https://*.mercadopago.com https://*.google.com https://www.googletagmanager.com",
@@ -14,7 +12,8 @@ const cspHeader = [
   "object-src 'none'",
 ].join("; ");
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   experimental: {},
 
   images: {
