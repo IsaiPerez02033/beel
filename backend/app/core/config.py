@@ -24,7 +24,7 @@ class Settings(BaseSettings):
 
     # ── Base de datos ─────────────────────────────────────────────────────────
     # Formato: postgresql+asyncpg://user:password@host:port/dbname
-    DATABASE_URL: str
+    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/beel"
 
     # ── Redis ─────────────────────────────────────────────────────────────────
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -35,13 +35,13 @@ class Settings(BaseSettings):
     CACHE_TTL_RANKING: int = 3600      # 1 hora — scores de ranking
 
     # ── Autenticación (Clerk) ─────────────────────────────────────────────────
-    CLERK_SECRET_KEY: str
-    CLERK_PUBLISHABLE_KEY: str
-    CLERK_WEBHOOK_SECRET: str
+    CLERK_SECRET_KEY: str = "sk_test_placeholder"
+    CLERK_PUBLISHABLE_KEY: str = "pk_test_placeholder"
+    CLERK_WEBHOOK_SECRET: str = "whsec_placeholder"
 
     # ── AWS S3 (almacenamiento de fotos) ──────────────────────────────────────
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
+    AWS_ACCESS_KEY_ID: str = "placeholder"
+    AWS_SECRET_ACCESS_KEY: str = "placeholder"
     AWS_REGION: str = "us-east-1"
     S3_BUCKET_NAME: str = "beel-media"
     S3_BUCKET_URL: str = ""  # CloudFront URL cuando esté configurado
@@ -49,14 +49,14 @@ class Settings(BaseSettings):
     MAX_PHOTO_SIZE_BYTES: int = 10 * 1024 * 1024
 
     # ── Google Maps ───────────────────────────────────────────────────────────
-    GOOGLE_MAPS_API_KEY: str
+    GOOGLE_MAPS_API_KEY: str = "placeholder"
     # Radio de ofuscación de coordenadas para mapa público (en metros)
     LOCATION_OBFUSCATION_RADIUS_METERS: int = 150
 
     # ── MercadoPago ───────────────────────────────────────────────────────────
-    MERCADOPAGO_ACCESS_TOKEN: str
-    MERCADOPAGO_PUBLIC_KEY: str
-    MERCADOPAGO_WEBHOOK_SECRET: str
+    MERCADOPAGO_ACCESS_TOKEN: str = "placeholder"
+    MERCADOPAGO_PUBLIC_KEY: str = "placeholder"
+    MERCADOPAGO_WEBHOOK_SECRET: str = "placeholder"
     # Porcentaje de comisión de Beel (0 durante fase de lanzamiento)
     PLATFORM_FEE_PERCENTAGE: float = 0.0
 
@@ -67,15 +67,15 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str = ""
 
     # ── WhatsApp Business (360dialog) ────────────────────────────────────────
-    WHATSAPP_API_KEY: str
+    WHATSAPP_API_KEY: str = "placeholder"
     WHATSAPP_API_URL: str = "https://waba.360dialog.io/v1"
-    WHATSAPP_PHONE_NUMBER_ID: str
+    WHATSAPP_PHONE_NUMBER_ID: str = "placeholder"
     # Namespace de plantillas aprobadas por Meta
-    WHATSAPP_TEMPLATE_NAMESPACE: str
+    WHATSAPP_TEMPLATE_NAMESPACE: str = "placeholder"
 
     # ── Email (SendGrid o Resend) ─────────────────────────────────────────────
     EMAIL_PROVIDER: str = "resend"  # resend | sendgrid
-    EMAIL_API_KEY: str
+    EMAIL_API_KEY: str = "placeholder"
     EMAIL_FROM_ADDRESS: str = "hola@beel.mx"
     EMAIL_FROM_NAME: str = "Beel"
 
