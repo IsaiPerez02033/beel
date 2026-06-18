@@ -5,7 +5,7 @@ import logging
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser
@@ -66,6 +66,7 @@ async def price_breakdown(
 @router.post("", response_model=ReservationOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/minute")
 async def create_reservation(
+    request: Request,
     data: ReservationCreateIn,
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),

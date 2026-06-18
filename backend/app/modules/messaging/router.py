@@ -5,7 +5,7 @@ import uuid
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -45,6 +45,7 @@ async def list_conversations(
 @router.post("", response_model=ConversationOut, status_code=201)
 @limiter.limit("10/minute")
 async def start_conversation(
+    request: Request,
     data: ConversationStartIn,
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
@@ -89,6 +90,7 @@ async def get_messages(
 @router.post("/{conversation_id}/messages", response_model=MessageOut, status_code=201)
 @limiter.limit("30/minute")
 async def send_message(
+    request: Request,
     conversation_id: uuid.UUID,
     data: MessageCreateIn,
     current_user: CurrentUser,
