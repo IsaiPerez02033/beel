@@ -12,6 +12,8 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.modules.payments import service as payment_service
 from app.modules.payments.schemas import (
+    AdminPaymentListOut,
+    AdminPaymentOut,
     CheckoutOut,
     PaymentOut,
     PayoutApproveIn,
@@ -83,6 +85,28 @@ async def create_checkout(
     payment = await payment_service.create_checkout(db, reservation, back_urls)
     urls = await payment_service.get_checkout_urls(payment)
     return CheckoutOut(**urls)
+
+
+@router.get("/admin/list", response_model=AdminPaymentListOut)
+async def list_payments_admin(
+    admin_user=Depends(_require_admin),
+    payout_status: Optional[str] = None,
+    limit: int = 200,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Lista todos los pagos para el panel de administración de Beel.
+    Solo accesible por usuarios con role='admin'.
+    Soporta filtrado por payout_status y paginación.
+    """
+    payments, total = await payment_service.list_payments_for_admin(
+        db, payout_status=payout_status, limit=limit, offset=offset
+    )
+    return AdminPaymentListOut(
+        payments=[AdminPaymentOut.model_validate(p) for p in payments],
+        total=total,
+    )
 
 
 @router.get("/{reservation_id}", response_model=PaymentOut)
