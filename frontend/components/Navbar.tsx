@@ -55,7 +55,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
 
         <div className="hidden md:flex items-center gap-1">
           <NavLink href="/buscar">Explorar</NavLink>
-          <NavLink href={isSignedIn ? "/anfitrion" : "/iniciar-sesion"}>Ser anfitrión</NavLink>
+          <NavLink href={isSignedIn ? "/anfitrion" : "/ser-anfitrion"}>Ser anfitrión</NavLink>
         </div>
 
         <div className="flex items-center gap-2">
@@ -83,7 +83,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
       {mobileOpen && (
         <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3 space-y-2">
           <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
-          <MobileLink href={isSignedIn ? "/anfitrion" : "/iniciar-sesion"} onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
+          <MobileLink href={isSignedIn ? "/anfitrion" : "/ser-anfitrion"} onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
           <SignedIn>
             <MobileLink href="/mensajes" onClick={() => setMobileOpen(false)}>Mensajes</MobileLink>
             <MobileLink href="/reservaciones" onClick={() => setMobileOpen(false)}>Viajes</MobileLink>
@@ -118,7 +118,7 @@ function NavbarNoAuth({ transparent }: NavbarProps) {
 
         <div className="hidden md:flex items-center gap-1">
           <NavLink href="/buscar">Explorar</NavLink>
-          <NavLink href="/iniciar-sesion">Ser anfitrión</NavLink>
+          <NavLink href="/ser-anfitrion">Ser anfitrión</NavLink>
         </div>
 
         <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ function NavbarNoAuth({ transparent }: NavbarProps) {
       {mobileOpen && (
         <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3 space-y-2">
           <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
-          <MobileLink href="/iniciar-sesion" onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
+          <MobileLink href="/ser-anfitrion" onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
           <MobileLink href="/mensajes" onClick={() => setMobileOpen(false)}>Mensajes</MobileLink>
           <MobileLink href="/reservaciones" onClick={() => setMobileOpen(false)}>Viajes</MobileLink>
         </div>
