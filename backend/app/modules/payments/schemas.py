@@ -21,9 +21,31 @@ class PaymentOut(BaseModel):
     payment_method: Optional[str]
     payout_status: str
     payout_at: Optional[datetime]
+    beel_approved_at: Optional[datetime]
+    beel_approved_by: Optional[str]
+    refund_id: Optional[str]
+    refunded_at: Optional[datetime]
+    refund_reason: Optional[str]
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class PayoutApproveIn(BaseModel):
+    """Body para que el admin de Beel apruebe el payout al anfitrión."""
+    notes: Optional[str] = None
+
+
+class RefundIn(BaseModel):
+    """Body para emitir un reembolso al huésped."""
+    reason: str
+
+
+class RefundOut(BaseModel):
+    """Respuesta tras emitir un reembolso."""
+    refund_id: str
+    status: str
+    amount: Decimal
 
 
 class CheckoutOut(BaseModel):
