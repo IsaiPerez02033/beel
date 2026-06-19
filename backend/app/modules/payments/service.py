@@ -24,8 +24,9 @@ from decimal import Decimal
 from typing import Optional
 
 import mercadopago
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.modules.payments.models import Payment
@@ -323,6 +324,35 @@ async def get_payment_by_reservation(
         .order_by(Payment.created_at.desc())
     )
     return result.scalar_one_or_none()
+
+
+async def list_payments_for_admin(
+    db: AsyncSession,
+    payout_status: Optional[str] = None,
+    limit: int = 200,
+    offset: int = 0,
+) -> tuple[list[Payment], int]:
+    """
+    Lista todos los pagos para el panel de administración.
+    Incluye las relaciones de reserva, huésped, anfitrión y propiedad via selectin.
+    """
+    from app.modules.reservations.models import Reservation
+
+    base_q = (
+        select(Payment)
+        .join(Reservation, Payment.reservation_id == Reservation.id)
+        .options(selectinload(Payment.reservation))
+    )
+    if payout_status:
+        base_q = base_q.where(Payment.payout_status == payout_status)
+
+    count_q = select(func.count()).select_from(base_q.subquery())
+    total = (await db.execute(count_q)).scalar_one()
+
+    result = await db.execute(
+        base_q.order_by(Payment.created_at.desc()).limit(limit).offset(offset)
+    )
+    return result.scalars().all(), total
 
 
 async def get_payment_by_id(
