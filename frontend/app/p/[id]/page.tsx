@@ -4,6 +4,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import BookingWidget from "@/components/BookingWidget";
 import AmenityList from "@/components/AmenityList";
+import PropertyReviews from "@/components/PropertyReviews";
 import { Star, Shield, Zap, PawPrint, ChevronLeft } from "lucide-react";
 import { formatPrice, formatRating } from "@/lib/utils";
 import type { Property } from "@/types";
@@ -263,6 +264,10 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
               </div>
             </div>
           </div>
+
+            {/* Reseñas */}
+            <div className="divider" />
+            <PropertyReviews propertyId={property.id} />
 
           {/* ── Widget de reserva (sticky) ─────────────────────────────── */}
           <div className="hidden lg:block">
