@@ -16,6 +16,7 @@ export async function GET() {
       role: (session.user as any).role,
     },
     secret: process.env.NEXTAUTH_SECRET!,
+    salt: "beel-auth-token",
   });
 
   return NextResponse.json({ token });
