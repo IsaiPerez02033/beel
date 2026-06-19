@@ -31,11 +31,25 @@ export default function RegistroPage() {
     setLoading(true);
     setError("");
 
-    const res = await fetch(`${API}/api/v1/users/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, full_name: fullName }),
-    });
+    let res: Response;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      res = await fetch(`${API}/api/v1/users/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, full_name: fullName }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+    } catch (e: any) {
+      const msg = e?.name === "AbortError"
+        ? "El servidor tardó demasiado. Si es la primera vez que lo usas, espera 30 segundos y reintenta."
+        : "No se pudo conectar con el servidor. Verifica tu conexión.";
+      setError(msg);
+      setLoading(false);
+      return;
+    }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
