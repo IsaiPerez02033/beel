@@ -5,7 +5,7 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser, OptionalUser
@@ -13,9 +13,11 @@ from app.core.database import get_db
 from app.modules.properties import service
 from app.modules.properties.schemas import (
     AmenityOut,
+    PhotoUpdateIn,
     PropertyCardOut,
     PropertyCreateIn,
     PropertyOut,
+    PropertyPhotoOut,
     PropertyUpdateIn,
     SearchResultOut,
 )
@@ -213,6 +215,164 @@ async def my_listings(
         per_page=per_page,
         total_pages=math.ceil(total / per_page) if total else 0,
     )
+
+
+# ── Fotos ────────────────────────────────────────────────────────────────────
+
+@router.post("/{property_id}/photos", response_model=PropertyPhotoOut, status_code=status.HTTP_201_CREATED)
+async def upload_photo(
+    property_id: uuid.UUID,
+    current_user: CurrentUser,
+    file: UploadFile = File(...),
+    caption: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Sube una foto para una propiedad a S3.
+    Acepta: image/jpeg, image/png, image/webp. Máximo 10 MB.
+    """
+    from app.core.storage import upload_photo as s3_upload, s3_configured, ALLOWED_CONTENT_TYPES
+    from app.modules.properties.models import PropertyPhoto
+    from sqlalchemy import select, func
+
+    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    property_ = await service.get_property(db, property_id)
+    if not property_:
+        raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+    if property_.host_id != user.id and not user.is_admin:
+        raise HTTPException(status_code=403, detail="No tienes permiso para subir fotos a esta propiedad")
+
+    if not s3_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="El almacenamiento de fotos (S3) no está configurado. Contacta al administrador.",
+        )
+
+    content_type = file.content_type or ""
+    if content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Formato no válido. Usa JPEG, PNG o WebP.")
+
+    # Contar fotos existentes
+    count = (await db.execute(
+        select(func.count()).where(PropertyPhoto.property_id == property_id)
+    )).scalar_one()
+    if count >= 20:
+        raise HTTPException(status_code=400, detail="Máximo 20 fotos por propiedad")
+
+    file_bytes = await file.read()
+    try:
+        url, s3_key = await s3_upload(
+            file_bytes=file_bytes,
+            content_type=content_type,
+            prefix=f"properties/{property_id}",
+        )
+    except (ValueError, RuntimeError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    is_primary = count == 0  # Primera foto es la principal
+    photo = PropertyPhoto(
+        property_id=property_id,
+        url=url,
+        s3_key=s3_key,
+        display_order=count,
+        is_primary=is_primary,
+        caption=caption,
+    )
+    db.add(photo)
+    await db.flush()
+    await db.commit()
+    logger.info("Foto %s subida para propiedad %s", photo.id, property_id)
+    return photo
+
+
+@router.patch("/{property_id}/photos/{photo_id}", response_model=PropertyPhotoOut)
+async def update_photo(
+    property_id: uuid.UUID,
+    photo_id: uuid.UUID,
+    data: PhotoUpdateIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Actualiza caption, orden o estado primario de una foto."""
+    from app.modules.properties.models import PropertyPhoto
+    from sqlalchemy import select, update
+
+    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    property_ = await service.get_property(db, property_id)
+    if not property_ or (property_.host_id != user.id and not user.is_admin):
+        raise HTTPException(status_code=403, detail="Sin permiso")
+
+    result = await db.execute(
+        select(PropertyPhoto).where(
+            PropertyPhoto.id == photo_id,
+            PropertyPhoto.property_id == property_id,
+        )
+    )
+    photo = result.scalar_one_or_none()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Foto no encontrada")
+
+    if data.is_primary:
+        # Quitar primary de las demás fotos
+        await db.execute(
+            update(PropertyPhoto)
+            .where(PropertyPhoto.property_id == property_id)
+            .values(is_primary=False)
+        )
+    if data.display_order is not None:
+        photo.display_order = data.display_order
+    if data.is_primary is not None:
+        photo.is_primary = data.is_primary
+    if data.caption is not None:
+        photo.caption = data.caption
+
+    await db.flush()
+    await db.commit()
+    return photo
+
+
+@router.delete("/{property_id}/photos/{photo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_photo(
+    property_id: uuid.UUID,
+    photo_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Elimina una foto de la propiedad y de S3."""
+    from app.core.storage import delete_photo as s3_delete
+    from app.modules.properties.models import PropertyPhoto
+    from sqlalchemy import select
+
+    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    property_ = await service.get_property(db, property_id)
+    if not property_ or (property_.host_id != user.id and not user.is_admin):
+        raise HTTPException(status_code=403, detail="Sin permiso")
+
+    result = await db.execute(
+        select(PropertyPhoto).where(
+            PropertyPhoto.id == photo_id,
+            PropertyPhoto.property_id == property_id,
+        )
+    )
+    photo = result.scalar_one_or_none()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Foto no encontrada")
+
+    s3_key = photo.s3_key
+    await db.delete(photo)
+    await db.commit()
+
+    if s3_key:
+        await s3_delete(s3_key)
 
 
 # ── Demo data ──────────────────────────────────────────────────────────────────
