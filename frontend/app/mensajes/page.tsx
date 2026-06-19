@@ -41,7 +41,7 @@ interface Message {
 }
 
 export default function MensajesPage() {
-  const { isSignedIn, isLoaded, userId } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { get, post } = useApi();
@@ -125,9 +125,6 @@ export default function MensajesPage() {
       setSending(false);
     }
   }
-
-  // UI del clerk user ID para distinguir "mis" mensajes
-  const clerkUserId = userId ?? "";
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)] flex flex-col">

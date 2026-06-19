@@ -1,8 +1,7 @@
 "use client";
 
-import { useAuth as useClerkAuth } from "@clerk/nextjs";
-
-const HAS_CLERK = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+import { useSession, signOut as nextSignOut } from "next-auth/react";
+import { useCallback } from "react";
 
 const MOCK_AUTH = {
   isSignedIn: false,
@@ -17,10 +16,34 @@ const MOCK_AUTH = {
   has: () => false,
 };
 
-/**
- * Safe useAuth: si Clerk no está configurado, retorna valores mock.
- */
 export function useAuth() {
-  if (!HAS_CLERK) return MOCK_AUTH;
-  return useClerkAuth();
+  try {
+    const { data: session, status } = useSession();
+    const getToken = useCallback(async (): Promise<string | null> => {
+      if (!session?.user) return null;
+      try {
+        const res = await fetch("/api/auth/token");
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.token ?? null;
+      } catch {
+        return null;
+      }
+    }, [session]);
+
+    return {
+      isSignedIn: !!session?.user,
+      isLoaded: status !== "loading",
+      userId: session?.user?.id ?? null,
+      sessionId: null,
+      getToken,
+      signOut: () => nextSignOut({ callbackUrl: "/" }),
+      orgId: null,
+      orgRole: null,
+      orgSlug: null,
+      has: () => false,
+    };
+  } catch {
+    return MOCK_AUTH;
+  }
 }

@@ -7,7 +7,7 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 /**
  * Hook para hacer llamadas autenticadas a la API de Beel.
- * Incluye JWT de Clerk y AbortController para cancelación.
+ * Incluye JWT de NextAuth y AbortController para cancelación.
  */
 export function useApi() {
   const { getToken } = useAuth();
