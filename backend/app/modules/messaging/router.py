@@ -184,26 +184,23 @@ async def websocket_messages(
         const ws = new WebSocket(`wss://api.beel.mx/api/v1/messaging/${convId}/ws?token=${jwt}`);
     """
     from app.core.auth import _verify_token
-    from app.core.config import settings as cfg
     from app.core.database import AsyncSessionLocal
+    import uuid as _uuid
 
-    # Validar token JWT antes de aceptar la conexión
+    # Validar token JWT (HS256, NextAuth) antes de aceptar la conexión
     try:
-        claims = await _verify_token(
-            token,
-            __import__("app.core.auth")._extract_clerk_domain(cfg.CLERK_PUBLISHABLE_KEY),
-        )
-        clerk_user_id = claims.get("sub")
-        if not clerk_user_id:
+        claims = _verify_token(token)
+        user_id_str = claims.get("sub")
+        if not user_id_str:
             await ws.close(code=4001, reason="Token inválido")
             return
     except Exception:
         await ws.close(code=4001, reason="Token inválido o expirado")
         return
 
-    # Obtener el usuario local desde el clerk_id
+    # Obtener el usuario por su UUID (claim sub del JWT de NextAuth)
     async with AsyncSessionLocal() as db:
-        user = await user_service.get_user_by_clerk_id(db, clerk_user_id)
+        user = await user_service.get_user_by_id(db, _uuid.UUID(user_id_str))
         if not user:
             await ws.close(code=4003, reason="Usuario no encontrado")
             return
