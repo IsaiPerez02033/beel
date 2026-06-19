@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
+from app.core import email as email_service
 from app.modules.reservations.models import Availability, Reservation
 from app.modules.reservations.schemas import (
     PriceBreakdownOut,
@@ -305,6 +306,15 @@ async def create_reservation(
         "Reserva %s creada (%s) | propiedad=%s guest=%s",
         reservation.id, initial_status, property_.id, guest.id,
     )
+
+    # Notificaciones por email (fire-and-forget, nunca rompen el flujo)
+    import asyncio
+    if initial_status == "confirmed":
+        asyncio.ensure_future(email_service.send_reservation_confirmed_guest(reservation))
+        asyncio.ensure_future(email_service.send_reservation_confirmed_host(reservation))
+    else:
+        asyncio.ensure_future(email_service.send_new_request_host(reservation))
+
     return reservation
 
 
@@ -364,6 +374,13 @@ async def respond_to_reservation(
 
     await db.flush()
     logger.info("Reserva %s → %s por host %s", reservation.id, reservation.status, host.id)
+
+    # Notificaciones por email (fire-and-forget)
+    import asyncio
+    if reservation.status == "confirmed":
+        asyncio.ensure_future(email_service.send_host_accepted_guest(reservation))
+        asyncio.ensure_future(email_service.send_reservation_confirmed_host(reservation))
+
     return reservation
 
 
