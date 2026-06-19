@@ -11,18 +11,6 @@ import { useApi } from "@/hooks/useApi";
 
 const HAS_CLERK = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-let ClerkComponents: any = null;
-if (HAS_CLERK) {
-  const clerk = require("@clerk/nextjs");
-  ClerkComponents = {
-    SignedIn: clerk.SignedIn,
-    SignedOut: clerk.SignedOut,
-    UserButton: clerk.UserButton,
-    SignInButton: clerk.SignInButton,
-    SignUpButton: clerk.SignUpButton,
-  };
-}
-
 interface NavbarProps {
   transparent?: boolean;
 }
@@ -32,10 +20,16 @@ export default function Navbar({ transparent = false }: NavbarProps) {
   const isHome = pathname === "/";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  // mounted evita renderizar componentes de Clerk durante SSR
+  const [mounted, setMounted] = useState(false);
 
-  // Todos los hooks se llaman incondicionalmente — cumple Rules of Hooks
-  const { isSignedIn, isLoaded } = useAuth();
+  // Todos los hooks incondicionalmente al inicio
+  const { isSignedIn } = useAuth();
   const { get } = useApi();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isSignedIn || !HAS_CLERK) return;
@@ -44,92 +38,128 @@ export default function Navbar({ transparent = false }: NavbarProps) {
       .catch(() => {});
   }, [isSignedIn]);
 
-  // Sin Clerk: renderizar versión sin auth (los hooks ya fueron llamados arriba)
-  if (!HAS_CLERK || !ClerkComponents) {
-    return (
-      <header className={cn(
-        "sticky top-0 z-50 w-full transition-colors duration-200",
-        transparent && isHome ? "bg-transparent" : "bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)]"
-      )}>
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <Link href="/" className="flex-shrink-0 flex items-center">
-            <Image src="/beel_logo_black_white.png" alt="Beel" width={72} height={28} className="h-7 w-auto" priority />
-          </Link>
-          <div className="hidden md:flex items-center gap-1">
-            <NavLink href="/buscar">Explorar</NavLink>
-            <NavLink href="/ser-anfitrion">Ser anfitrión</NavLink>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="/iniciar-sesion" className="btn btn-outline text-xs px-4 py-2">Iniciar sesión</Link>
-            <Link href="/registro" className="btn btn-primary text-xs px-4 py-2">Registrarse</Link>
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors" aria-label="Menú">
-              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
-        </nav>
-        {mobileOpen && (
-          <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3 space-y-2">
-            <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
-            <MobileLink href="/ser-anfitrion" onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
-          </div>
-        )}
-      </header>
-    );
-  }
-
-  const { SignedIn, SignedOut, UserButton, SignInButton, SignUpButton } = ClerkComponents;
-
   return (
     <header className={cn(
       "sticky top-0 z-50 w-full transition-colors duration-200",
       transparent && isHome ? "bg-transparent" : "bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)]"
     )}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+
+        {/* Logo */}
         <Link href="/" className="flex-shrink-0 flex items-center">
           <Image src="/beel_logo_black_white.png" alt="Beel" width={72} height={28} className="h-7 w-auto" priority />
         </Link>
 
+        {/* Links centro */}
         <div className="hidden md:flex items-center gap-1">
           <NavLink href="/buscar">Explorar</NavLink>
           <NavLink href={isSignedIn ? "/anfitrion" : "/ser-anfitrion"}>Ser anfitrión</NavLink>
         </div>
 
+        {/* Auth — solo renderiza Clerk tras el montaje en cliente */}
         <div className="flex items-center gap-2">
-          <SignedIn>
-            {isAdmin && (
-              <Link href="/admin" className="hidden sm:flex items-center gap-1 btn btn-ghost text-xs px-3 py-2 text-[var(--color-primary)]">
-                <ShieldCheck size={14} />
-                Admin
-              </Link>
-            )}
-            <Link href="/mensajes" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">Mensajes</Link>
-            <Link href="/reservaciones" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">Viajes</Link>
-            <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal"><button className="btn btn-outline text-xs px-4 py-2">Iniciar sesión</button></SignInButton>
-            <SignUpButton mode="modal"><button className="btn btn-primary text-xs px-4 py-2">Registrarse</button></SignUpButton>
-          </SignedOut>
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors" aria-label="Menú">
+          {mounted ? (
+            isSignedIn ? (
+              <AuthSignedIn isAdmin={isAdmin} />
+            ) : (
+              <AuthSignedOut />
+            )
+          ) : (
+            // Placeholder durante SSR — evita flash y errores de Clerk
+            <div className="flex items-center gap-2">
+              <div className="w-24 h-8 rounded-xl bg-[var(--bg-subtle)]" />
+              <div className="w-24 h-8 rounded-xl bg-[var(--bg-subtle)]" />
+            </div>
+          )}
+
+          {/* Botón menú móvil */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors"
+            aria-label="Menú"
+          >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </nav>
 
+      {/* Menú móvil */}
       {mobileOpen && (
         <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3 space-y-2">
           <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
-          <MobileLink href={isSignedIn ? "/anfitrion" : "/ser-anfitrion"} onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
-          <SignedIn>
-            <MobileLink href="/mensajes" onClick={() => setMobileOpen(false)}>Mensajes</MobileLink>
-            <MobileLink href="/reservaciones" onClick={() => setMobileOpen(false)}>Viajes</MobileLink>
-            {isAdmin && (
-              <MobileLink href="/admin" onClick={() => setMobileOpen(false)}>Panel Admin</MobileLink>
-            )}
-          </SignedIn>
+          <MobileLink href={isSignedIn ? "/anfitrion" : "/ser-anfitrion"} onClick={() => setMobileOpen(false)}>
+            Ser anfitrión
+          </MobileLink>
+          {mounted && isSignedIn && (
+            <>
+              <MobileLink href="/mensajes" onClick={() => setMobileOpen(false)}>Mensajes</MobileLink>
+              <MobileLink href="/reservaciones" onClick={() => setMobileOpen(false)}>Viajes</MobileLink>
+              {isAdmin && (
+                <MobileLink href="/admin" onClick={() => setMobileOpen(false)}>Panel Admin</MobileLink>
+              )}
+            </>
+          )}
+          {mounted && !isSignedIn && (
+            <>
+              <MobileLink href="/iniciar-sesion" onClick={() => setMobileOpen(false)}>Iniciar sesión</MobileLink>
+              <MobileLink href="/registro" onClick={() => setMobileOpen(false)}>Registrarse</MobileLink>
+            </>
+          )}
         </div>
       )}
     </header>
+  );
+}
+
+// Componente solo-cliente para usuario autenticado
+function AuthSignedIn({ isAdmin }: { isAdmin: boolean }) {
+  if (!HAS_CLERK) {
+    return (
+      <Link href="/iniciar-sesion" className="btn btn-outline text-xs px-4 py-2">
+        Iniciar sesión
+      </Link>
+    );
+  }
+  const { UserButton } = require("@clerk/nextjs");
+  return (
+    <div className="flex items-center gap-2">
+      {isAdmin && (
+        <Link href="/admin" className="hidden sm:flex items-center gap-1 btn btn-ghost text-xs px-3 py-2 text-[var(--color-primary)]">
+          <ShieldCheck size={14} />
+          Admin
+        </Link>
+      )}
+      <Link href="/mensajes" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
+        Mensajes
+      </Link>
+      <Link href="/reservaciones" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
+        Viajes
+      </Link>
+      <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+    </div>
+  );
+}
+
+// Componente solo-cliente para usuario no autenticado
+function AuthSignedOut() {
+  if (!HAS_CLERK) {
+    return (
+      <div className="flex items-center gap-2">
+        <Link href="/iniciar-sesion" className="btn btn-outline text-xs px-4 py-2">Iniciar sesión</Link>
+        <Link href="/registro" className="btn btn-primary text-xs px-4 py-2">Registrarse</Link>
+      </div>
+    );
+  }
+  const { SignInButton, SignUpButton } = require("@clerk/nextjs");
+  return (
+    <div className="flex items-center gap-2">
+      <SignInButton mode="modal">
+        <button className="btn btn-outline text-xs px-4 py-2">Iniciar sesión</button>
+      </SignInButton>
+      <SignUpButton mode="modal">
+        <button className="btn btn-primary text-xs px-4 py-2">Registrarse</button>
+      </SignUpButton>
+    </div>
   );
 }
 
