@@ -48,6 +48,11 @@ naming_convention = {
 }
 
 # Sobreescribir la URL de BD con la de la configuración de la app
+if not settings.DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL no está configurada. "
+        "Agrégala como variable de entorno en Render."
+    )
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 
