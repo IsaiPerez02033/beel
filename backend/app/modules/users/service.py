@@ -5,6 +5,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
+import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -92,3 +93,93 @@ async def soft_delete_user(db: AsyncSession, user: User) -> None:
     user.is_active = False
     await db.flush()
     logger.info("Usuario %s eliminado (soft delete)", user.id)
+
+
+# ── NextAuth — credentials y OAuth ─────────────────────────────────────────────
+
+
+async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
+    """Busca un usuario por email (activo, no eliminado)."""
+    result = await db.execute(
+        select(User).where(User.email == email, User.deleted_at.is_(None))
+    )
+    return result.scalar_one_or_none()
+
+
+async def verify_password(plain: str, hashed: str) -> bool:
+    """Verifica contraseña contra hash bcrypt."""
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
+
+
+async def create_user_credentials(
+    db: AsyncSession,
+    email: str,
+    password: str,
+    full_name: str,
+) -> User:
+    """Crea un usuario con email y contraseña."""
+    existing = await get_user_by_email(db, email)
+    if existing:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Este correo ya está registrado")
+
+    password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    user = User(
+        email=email,
+        full_name=full_name,
+        password_hash=password_hash,
+        provider="credentials",
+        email_verified=False,
+        role="guest",
+        is_active=True,
+        preferred_language="es",
+    )
+    db.add(user)
+    await db.flush()
+    logger.info("Usuario creado con credentials: %s", user.id)
+    return user
+
+
+async def get_or_create_google_user(
+    db: AsyncSession,
+    email: str,
+    full_name: str,
+    google_id: str,
+    avatar_url: Optional[str] = None,
+) -> User:
+    """Crea o retorna usuario existente desde Google OAuth."""
+    # Buscar por google_id primero
+    result = await db.execute(
+        select(User).where(User.google_id == google_id, User.deleted_at.is_(None))
+    )
+    user = result.scalar_one_or_none()
+    if user:
+        return user
+
+    # Buscar por email
+    user = await get_user_by_email(db, email)
+    if user:
+        user.google_id = google_id
+        user.provider = "google"
+        user.email_verified = True
+        if avatar_url and not user.avatar_url:
+            user.avatar_url = avatar_url
+        await db.flush()
+        return user
+
+    # Crear nuevo
+    user = User(
+        email=email,
+        full_name=full_name,
+        google_id=google_id,
+        avatar_url=avatar_url,
+        provider="google",
+        email_verified=True,
+        role="guest",
+        is_active=True,
+        preferred_language="es",
+    )
+    db.add(user)
+    await db.flush()
+    logger.info("Usuario creado con Google OAuth: %s", user.id)
+    return user

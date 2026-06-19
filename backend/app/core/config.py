@@ -38,10 +38,8 @@ class Settings(BaseSettings):
     CACHE_TTL_USER_PROFILE: int = 600
     CACHE_TTL_RANKING: int = 3600
 
-    # ── Autenticación (Clerk) ─────────────────────────────────────────────────
-    CLERK_SECRET_KEY: Optional[str] = None
-    CLERK_PUBLISHABLE_KEY: Optional[str] = None
-    CLERK_WEBHOOK_SECRET: Optional[str] = None
+    # ── Autenticación (NextAuth) ────────────────────────────────────────────────
+    NEXTAUTH_SECRET: str = ""  # Secreto compartido con el frontend (HS256 para JWT)
 
     # ── AWS S3 ───────────────────────────────────────────────────────────────
     AWS_ACCESS_KEY_ID: Optional[str] = None
@@ -106,8 +104,8 @@ class Settings(BaseSettings):
         return bool(self.REDIS_URL)
 
     @property
-    def has_clerk(self) -> bool:
-        return bool(self.CLERK_PUBLISHABLE_KEY and self.CLERK_SECRET_KEY)
+    def has_nextauth(self) -> bool:
+        return bool(self.NEXTAUTH_SECRET)
 
     @property
     def is_production(self) -> bool:
