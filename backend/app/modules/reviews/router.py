@@ -40,7 +40,7 @@ async def create_review(
     db: AsyncSession = Depends(get_db),
 ):
     """Crea una reseña post-estancia (guest o host)."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return await service.create_review(db, user, data)
@@ -54,7 +54,7 @@ async def respond_to_review(
     db: AsyncSession = Depends(get_db),
 ):
     """El host responde públicamente a una reseña de un guest."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     review = await service.get_review(db, review_id)

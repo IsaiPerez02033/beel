@@ -82,11 +82,12 @@ async def get_current_user(
         )
 
     # Buscar el usuario en la BD
-    from app.modules.users.service import get_user_by_id
-    from uuid import UUID
+    from app.core.database import AsyncSessionLocal
+    from app.modules.users.service import get_user_by_id as fetch_user
+    from uuid import UUID as UuidType
 
     try:
-        uid = UUID(user_id)
+        uid = UuidType(user_id)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -94,7 +95,12 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    db_user = await get_user_by_id(uid)
+    if AsyncSessionLocal:
+        async with AsyncSessionLocal() as session:
+            db_user = await fetch_user(session, uid)
+    else:
+        db_user = None
+
     if not db_user or not db_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -367,7 +367,7 @@ async def get_payment_by_id(
 async def approve_payout(
     db: AsyncSession,
     payment: Payment,
-    admin_clerk_id: str,
+    admin_user_id: str,
     notes: Optional[str] = None,
 ) -> Payment:
     """
@@ -389,12 +389,12 @@ async def approve_payout(
 
     payment.payout_status = "approved"
     payment.beel_approved_at = datetime.now(timezone.utc)
-    payment.beel_approved_by = admin_clerk_id
+    payment.beel_approved_by = admin_user_id
 
     await db.flush()
     logger.info(
         "Payout aprobado por admin %s para payment %s (reserva %s)%s",
-        admin_clerk_id,
+        admin_user_id,
         payment.id,
         payment.reservation_id,
         f" — {notes}" if notes else "",

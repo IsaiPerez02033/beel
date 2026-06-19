@@ -7,7 +7,7 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import CurrentUser, get_current_user, ClerkUser
+from app.core.auth import CurrentUser
 from app.core.config import settings
 from app.core.database import get_db
 from app.modules.payments import service as payment_service
@@ -31,7 +31,7 @@ async def _require_admin(
     db: AsyncSession = Depends(get_db),
 ):
     """Dependency que exige rol admin de Beel."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user or user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores de Beel")
     return user
@@ -52,7 +52,7 @@ async def create_checkout(
     Inicia el proceso de pago para una reserva confirmada.
     Retorna la URL de MercadoPago a la que redirigir al usuario.
     """
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -116,7 +116,7 @@ async def get_payment(
     db: AsyncSession = Depends(get_db),
 ):
     """Retorna el estado del pago de una reserva."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -149,7 +149,7 @@ async def approve_payout(
     if not payment:
         raise HTTPException(status_code=404, detail="Pago no encontrado")
 
-    payment = await payment_service.approve_payout(db, payment, admin_user.clerk_id, body.notes)
+    payment = await payment_service.approve_payout(db, payment, str(admin_user.id), body.notes)
     await db.commit()
     return payment
 
