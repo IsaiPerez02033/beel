@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useApi } from "@/hooks/useApi";
 
 const HAS_CLERK = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -28,6 +29,15 @@ export default function Navbar({ transparent = false }: NavbarProps) {
 
   const { useAuth, SignedIn, SignedOut, UserButton, SignInButton, SignUpButton } = ClerkImports;
   const { isSignedIn } = useAuth();
+  const { get } = useApi();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    get<{ role: string }>("/users/me")
+      .then((d) => setIsAdmin(d.role === "admin"))
+      .catch(() => {});
+  }, [isSignedIn]);
 
   return (
     <header
@@ -50,6 +60,12 @@ export default function Navbar({ transparent = false }: NavbarProps) {
 
         <div className="flex items-center gap-2">
           <SignedIn>
+            {isAdmin && (
+              <Link href="/admin" className="hidden sm:flex items-center gap-1 btn btn-ghost text-xs px-3 py-2 text-[var(--color-primary)]">
+                <ShieldCheck size={14} />
+                Admin
+              </Link>
+            )}
             <Link href="/mensajes" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">Mensajes</Link>
             <Link href="/reservaciones" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">Viajes</Link>
             <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
@@ -71,6 +87,9 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           <SignedIn>
             <MobileLink href="/mensajes" onClick={() => setMobileOpen(false)}>Mensajes</MobileLink>
             <MobileLink href="/reservaciones" onClick={() => setMobileOpen(false)}>Viajes</MobileLink>
+            {isAdmin && (
+              <MobileLink href="/admin" onClick={() => setMobileOpen(false)}>Panel Admin</MobileLink>
+            )}
           </SignedIn>
         </div>
       )}
