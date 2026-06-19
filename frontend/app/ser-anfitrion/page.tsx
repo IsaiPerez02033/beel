@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import { DollarSign, Shield, Star, Home, Clock, HeartHandshake } from "lucide-react";
 
@@ -214,7 +215,7 @@ export default function SerAnfitrionPage() {
       {/* ── Footer mínimo ────────────────────────────────────────────────── */}
       <footer className="border-t border-[var(--border-subtle)] py-8 px-4">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="font-display font-semibold text-[18px] text-[var(--color-primary)]">beel</span>
+          <Image src="/beel_logo_black_sand.png" alt="Beel" width={80} height={32} className="h-7 w-auto" />
           <p className="text-caption text-[var(--text-tertiary)]">
             © {new Date().getFullYear()} Beel. Todos los derechos reservados.
           </p>

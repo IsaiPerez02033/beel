@@ -27,6 +27,11 @@ export const metadata: Metadata = {
   keywords: ["hospedajes", "mérida", "yucatán", "airbnb", "alquiler", "vacaciones"],
   authors: [{ name: "Beel" }],
   creator: "Beel",
+  icons: {
+    icon: "/beel_icon_app.png",
+    apple: "/beel_symbol_app.png",
+    shortcut: "/beel_icon_app.png",
+  },
   openGraph: {
     type: "website",
     locale: "es_MX",
@@ -34,6 +39,13 @@ export const metadata: Metadata = {
     siteName: "Beel",
     title: "Beel — Hospedajes únicos en México",
     description: "Encuentra y reserva hospedajes únicos en Mérida y la Península de Yucatán.",
+    images: [{ url: "/beel_logo_white_green.png", width: 600, height: 600, alt: "Beel" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Beel — Hospedajes únicos en México",
+    description: "Encuentra y reserva hospedajes únicos en Mérida y la Península de Yucatán.",
+    images: ["/beel_logo_white_green.png"],
   },
   robots: {
     index: true,

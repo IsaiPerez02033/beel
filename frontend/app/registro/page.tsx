@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useSafeAuth";
 import Navbar from "@/components/Navbar";
@@ -33,12 +34,14 @@ export default function RegistroPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center justify-center">
-            <span
-              className="font-display font-semibold text-[32px] text-[var(--color-primary)]"
-              style={{ letterSpacing: "-1px" }}
-            >
-              beel
-            </span>
+            <Image
+              src="/beel_logo_green_sand.png"
+              alt="Beel"
+              width={160}
+              height={62}
+              className="h-14 w-auto"
+              priority
+            />
           </Link>
           <p className="text-body text-[var(--text-secondary)] mt-2">
             Crea tu cuenta gratuita
