@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
+import PhotoUploader from "@/components/PhotoUploader";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft, ChevronRight, Home, MapPin, DollarSign,
-  Settings, Check, Loader2, Plus, Minus,
+  Settings, Check, Loader2, Plus, Minus, Camera,
 } from "lucide-react";
 import type { Amenity } from "@/types";
 
@@ -75,6 +76,7 @@ const STEPS = [
   { label: "Ubicación",    icon: <MapPin size={16} /> },
   { label: "Capacidad",    icon: <DollarSign size={16} /> },
   { label: "Detalles",     icon: <Settings size={16} /> },
+  { label: "Fotos",        icon: <Camera size={16} /> },
 ];
 
 // ── Página principal ──────────────────────────────────────────────────────────
@@ -89,6 +91,7 @@ export default function NuevaPropiedadPage() {
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -133,7 +136,8 @@ export default function NuevaPropiedadPage() {
 
   // ── Envío ─────────────────────────────────────────────────────────────────
 
-  async function handleSubmit() {
+  // Paso 3 → 4: crear la propiedad y avanzar a fotos
+  async function handleCreateAndContinue() {
     const err = validate();
     if (err) { setError(err); return; }
     setSaving(true);
@@ -144,16 +148,21 @@ export default function NuevaPropiedadPage() {
         price_per_night: Number(form.price_per_night),
         cleaning_fee: Number(form.cleaning_fee || 0),
         security_deposit: Number(form.security_deposit || 0),
-        // Coordenadas: Mérida por defecto hasta implementar mapa
         latitude: 20.9674,
         longitude: -89.5926,
       };
       const property = await post<{ id: string }>("/properties", payload);
-      router.push(`/anfitrion?nueva=${property.id}`);
+      setCreatedPropertyId(property.id);
+      setStep(4); // avanzar al paso de fotos
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al publicar la propiedad");
+    } finally {
       setSaving(false);
     }
+  }
+
+  function handleFinish() {
+    router.push(`/anfitrion`);
   }
 
   return (
@@ -216,41 +225,56 @@ export default function NuevaPropiedadPage() {
           {step === 1 && <Step2 form={form} set={set} />}
           {step === 2 && <Step3 form={form} set={set} />}
           {step === 3 && <Step4 form={form} set={set} amenities={amenities} />}
+          {step === 4 && createdPropertyId && (
+            <Step5 propertyId={createdPropertyId} />
+          )}
         </div>
 
         {/* Navegación */}
         <div className="flex justify-between mt-6">
-          <button
-            onClick={() => step > 0 ? setStep((s) => s - 1) : router.push("/anfitrion")}
-            className="btn btn-outline flex items-center gap-2"
-          >
-            <ChevronLeft size={16} />
-            {step === 0 ? "Cancelar" : "Atrás"}
-          </button>
+          {step < 4 && (
+            <button
+              onClick={() => step > 0 ? setStep((s) => s - 1) : router.push("/anfitrion")}
+              className="btn btn-outline flex items-center gap-2"
+            >
+              <ChevronLeft size={16} />
+              {step === 0 ? "Cancelar" : "Atrás"}
+            </button>
+          )}
 
-          {step < STEPS.length - 1 ? (
+          {step < 3 && (
             <button onClick={handleNext} className="btn btn-primary flex items-center gap-2">
               Siguiente
               <ChevronRight size={16} />
             </button>
-          ) : (
+          )}
+
+          {step === 3 && (
             <button
-              onClick={handleSubmit}
+              onClick={handleCreateAndContinue}
               disabled={saving}
-              className="btn btn-primary flex items-center gap-2 min-w-[140px] justify-center"
+              className="btn btn-primary flex items-center gap-2 min-w-[160px] justify-center"
             >
               {saving ? (
-                <><Loader2 size={16} className="animate-spin" /> Publicando…</>
+                <><Loader2 size={16} className="animate-spin" /> Creando…</>
               ) : (
-                <><Check size={16} /> Publicar propiedad</>
+                <><ChevronRight size={16} /> Continuar a fotos</>
               )}
+            </button>
+          )}
+
+          {step === 4 && (
+            <button onClick={handleFinish} className="btn btn-primary flex items-center gap-2 w-full justify-center">
+              <Check size={16} /> Finalizar publicación
             </button>
           )}
         </div>
 
-        <p className="text-caption text-[var(--text-tertiary)] text-center mt-4">
-          Tu propiedad quedará en revisión antes de aparecer en búsquedas
-        </p>
+        {step < 4 && (
+          <p className="text-caption text-[var(--text-tertiary)] text-center mt-4">
+            Tu propiedad quedará en revisión antes de aparecer en búsquedas
+          </p>
+        )}
       </main>
     </div>
   );
@@ -663,6 +687,37 @@ function Step4({ form, set, amenities }: StepProps & { amenities: Amenity[] }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Step 5: Fotos ─────────────────────────────────────────────────────────────
+
+function Step5({ propertyId }: { propertyId: string }) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">
+          ¡Propiedad creada! Ahora agrega fotos
+        </h2>
+        <p className="text-body-sm text-[var(--text-secondary)]">
+          Las propiedades con fotos reciben hasta 5× más reservas. Sube al menos 3 fotos de buena calidad.
+        </p>
+      </div>
+
+      <div className="bg-[var(--color-primary-light)] rounded-xl p-4 flex items-start gap-3">
+        <Camera size={18} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
+        <div className="text-body-sm text-[var(--color-primary)]">
+          <p className="font-medium mb-1">Consejos para mejores fotos</p>
+          <ul className="space-y-0.5 text-body-sm opacity-80">
+            <li>· Toma fotos con luz natural (mañana o tarde)</li>
+            <li>· Captura la entrada, sala, cocina, baño y habitaciones</li>
+            <li>· La primera foto será la portada que ven los huéspedes</li>
+          </ul>
+        </div>
+      </div>
+
+      <PhotoUploader propertyId={propertyId} maxPhotos={20} />
     </div>
   );
 }
