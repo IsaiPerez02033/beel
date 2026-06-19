@@ -49,7 +49,7 @@ class UserPublicOut(BaseModel):
 class UserMeOut(BaseModel):
     """Info completa del usuario autenticado (/users/me)."""
     id: uuid.UUID
-    clerk_id: str
+    clerk_id: Optional[str] = None
     email: str
     full_name: str
     avatar_url: Optional[str]
@@ -87,6 +87,26 @@ class BecomeHostIn(BaseModel):
         if not v:
             raise ValueError("Debes aceptar los términos para ser anfitrión")
         return v
+
+
+# ── NextAuth — registro y login ────────────────────────────────────────────────
+
+class UserRegisterIn(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    full_name: str = Field(..., min_length=2)
+
+
+class UserLoginIn(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserGoogleIn(BaseModel):
+    email: EmailStr
+    full_name: str
+    google_id: str
+    avatar_url: Optional[str] = None
 
 
 # ── Webhook de Clerk ──────────────────────────────────────────────────────────

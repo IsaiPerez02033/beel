@@ -1,8 +1,9 @@
 """
 Modelo SQLAlchemy para usuarios de Beel.
 
-Los usuarios se autentican vía Clerk. Este modelo almacena
-la info de perfil sincronizada desde Clerk + datos propios de Beel.
+Los usuarios pueden autenticarse vía NextAuth (credentials/Google)
+o vía Clerk (legacy, en transición). Este modelo almacena
+la info de perfil + datos propios de Beel.
 """
 
 import uuid
@@ -28,10 +29,18 @@ class User(Base, TimestampMixin):
         default=uuid.uuid4,
     )
 
-    # Vínculo con Clerk
-    clerk_id: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False, index=True
+    # Vínculo con Clerk (legacy, nullable para nuevos usuarios NextAuth)
+    clerk_id: Mapped[Optional[str]] = mapped_column(
+        String(255), unique=True, nullable=True, index=True
     )
+
+    # NextAuth — credentials
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255))
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # NextAuth — Google OAuth
+    google_id: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
+    provider: Mapped[str] = mapped_column(String(50), default="credentials")
 
     # Datos básicos
     email: Mapped[str] = mapped_column(
