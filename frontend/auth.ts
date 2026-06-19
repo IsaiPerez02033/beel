@@ -5,7 +5,8 @@ import Google from "next-auth/providers/google";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
+  trustHost: true,  // requerido en Vercel / deploys detrás de proxy
   providers: [
     Credentials({
       credentials: {
