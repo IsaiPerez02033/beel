@@ -6,13 +6,21 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 
 const HAS_CLERK = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-let ClerkImports: any = null;
+let ClerkComponents: any = null;
 if (HAS_CLERK) {
-  ClerkImports = require("@clerk/nextjs");
+  const clerk = require("@clerk/nextjs");
+  ClerkComponents = {
+    SignedIn: clerk.SignedIn,
+    SignedOut: clerk.SignedOut,
+    UserButton: clerk.UserButton,
+    SignInButton: clerk.SignInButton,
+    SignUpButton: clerk.SignUpButton,
+  };
 }
 
 interface NavbarProps {
@@ -23,32 +31,59 @@ export default function Navbar({ transparent = false }: NavbarProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  if (!HAS_CLERK || !ClerkImports) {
-    return <NavbarNoAuth transparent={transparent} />;
-  }
-
-  const { useAuth, SignedIn, SignedOut, UserButton, SignInButton, SignUpButton } = ClerkImports;
-  const { isSignedIn } = useAuth();
-  const { get } = useApi();
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Todos los hooks se llaman incondicionalmente — cumple Rules of Hooks
+  const { isSignedIn, isLoaded } = useAuth();
+  const { get } = useApi();
+
   useEffect(() => {
-    if (!isSignedIn) return;
+    if (!isSignedIn || !HAS_CLERK) return;
     get<{ role: string }>("/users/me")
       .then((d) => setIsAdmin(d.role === "admin"))
       .catch(() => {});
   }, [isSignedIn]);
 
-  return (
-    <header
-      className={cn(
+  // Sin Clerk: renderizar versión sin auth (los hooks ya fueron llamados arriba)
+  if (!HAS_CLERK || !ClerkComponents) {
+    return (
+      <header className={cn(
         "sticky top-0 z-50 w-full transition-colors duration-200",
-        transparent && isHome
-          ? "bg-transparent"
-          : "bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)]"
-      )}
-    >
+        transparent && isHome ? "bg-transparent" : "bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)]"
+      )}>
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <Link href="/" className="flex-shrink-0 flex items-center">
+            <Image src="/beel_logo_black_white.png" alt="Beel" width={72} height={28} className="h-7 w-auto" priority />
+          </Link>
+          <div className="hidden md:flex items-center gap-1">
+            <NavLink href="/buscar">Explorar</NavLink>
+            <NavLink href="/ser-anfitrion">Ser anfitrión</NavLink>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/iniciar-sesion" className="btn btn-outline text-xs px-4 py-2">Iniciar sesión</Link>
+            <Link href="/registro" className="btn btn-primary text-xs px-4 py-2">Registrarse</Link>
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors" aria-label="Menú">
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </nav>
+        {mobileOpen && (
+          <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3 space-y-2">
+            <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
+            <MobileLink href="/ser-anfitrion" onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
+          </div>
+        )}
+      </header>
+    );
+  }
+
+  const { SignedIn, SignedOut, UserButton, SignInButton, SignUpButton } = ClerkComponents;
+
+  return (
+    <header className={cn(
+      "sticky top-0 z-50 w-full transition-colors duration-200",
+      transparent && isHome ? "bg-transparent" : "bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)]"
+    )}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex-shrink-0 flex items-center">
           <Image src="/beel_logo_black_white.png" alt="Beel" width={72} height={28} className="h-7 w-auto" priority />
@@ -92,51 +127,6 @@ export default function Navbar({ transparent = false }: NavbarProps) {
               <MobileLink href="/admin" onClick={() => setMobileOpen(false)}>Panel Admin</MobileLink>
             )}
           </SignedIn>
-        </div>
-      )}
-    </header>
-  );
-}
-
-function NavbarNoAuth({ transparent }: NavbarProps) {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full transition-colors duration-200",
-        transparent && isHome
-          ? "bg-transparent"
-          : "bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)]"
-      )}
-    >
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="flex-shrink-0 flex items-center">
-          <Image src="/beel_logo_black_white.png" alt="Beel" width={72} height={28} className="h-7 w-auto" priority />
-        </Link>
-
-        <div className="hidden md:flex items-center gap-1">
-          <NavLink href="/buscar">Explorar</NavLink>
-          <NavLink href="/ser-anfitrion">Ser anfitrión</NavLink>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Link href="/iniciar-sesion" className="btn btn-outline text-xs px-4 py-2">Iniciar sesión</Link>
-          <Link href="/registro" className="btn btn-primary text-xs px-4 py-2">Registrarse</Link>
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors" aria-label="Menú">
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-      </nav>
-
-      {mobileOpen && (
-        <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3 space-y-2">
-          <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
-          <MobileLink href="/ser-anfitrion" onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
-          <MobileLink href="/mensajes" onClick={() => setMobileOpen(false)}>Mensajes</MobileLink>
-          <MobileLink href="/reservaciones" onClick={() => setMobileOpen(false)}>Viajes</MobileLink>
         </div>
       )}
     </header>
