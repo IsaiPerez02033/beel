@@ -1,34 +1,19 @@
 "use client";
 
 /**
- * Sección de autenticación del Navbar.
- * Se importa con dynamic({ ssr: false }) — NUNCA se renderiza en el servidor.
- * Esto evita todos los errores de Clerk durante SSR/hidratación.
+ * Sección de auth del Navbar — importado con dynamic({ssr:false}).
+ * NUNCA se ejecuta en el servidor, por lo que es seguro importar
+ * directamente de @clerk/nextjs sin causar errores de SSR.
  */
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
+import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
-import { useState, useEffect } from "react";
 
 const HAS_CLERK = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-// Importar componentes de Clerk solo en cliente
-let ClerkUI: {
-  SignInButton: any;
-  SignUpButton: any;
-  UserButton: any;
-} | null = null;
-
-if (HAS_CLERK && typeof window !== "undefined") {
-  const clerk = require("@clerk/nextjs");
-  ClerkUI = {
-    SignInButton: clerk.SignInButton,
-    SignUpButton: clerk.SignUpButton,
-    UserButton: clerk.UserButton,
-  };
-}
 
 export default function NavbarAuth() {
   const { isSignedIn } = useAuth();
@@ -42,7 +27,7 @@ export default function NavbarAuth() {
       .catch(() => {});
   }, [isSignedIn]);
 
-  if (!HAS_CLERK || !ClerkUI) {
+  if (!HAS_CLERK) {
     return (
       <div className="flex items-center gap-2">
         <Link href="/iniciar-sesion" className="btn btn-outline text-xs px-4 py-2">
@@ -73,28 +58,27 @@ export default function NavbarAuth() {
         <Link href="/reservaciones" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
           Viajes
         </Link>
-        <ClerkUI.UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+        <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
       </div>
     );
   }
 
   return (
     <div className="flex items-center gap-2">
-      <ClerkUI.SignInButton mode="modal">
+      <SignInButton mode="modal">
         <button className="btn btn-outline text-xs px-4 py-2">Iniciar sesión</button>
-      </ClerkUI.SignInButton>
-      <ClerkUI.SignUpButton mode="modal">
+      </SignInButton>
+      <SignUpButton mode="modal">
         <button className="btn btn-primary text-xs px-4 py-2">Registrarse</button>
-      </ClerkUI.SignUpButton>
+      </SignUpButton>
     </div>
   );
 }
 
-// Versión móvil
 export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
   const { isSignedIn } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
   const { get } = useApi();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!isSignedIn || !HAS_CLERK) return;
