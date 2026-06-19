@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useSafeAuth";
 import dynamic from "next/dynamic";
 
 // NavbarAuth y NavbarAuthMobile se cargan SOLO en el cliente (ssr: false).
-// Esto elimina cualquier error de Clerk durante SSR o hidratación.
+// Esto elimina cualquier error de auth durante SSR o hidratación.
 const NavbarAuth = dynamic(() => import("./NavbarAuth"), { ssr: false });
 const NavbarAuthMobile = dynamic(
   () => import("./NavbarAuth").then((m) => ({ default: m.NavbarAuthMobile })),

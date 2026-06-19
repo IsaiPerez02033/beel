@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
+import { SessionProvider } from "next-auth/react";
 import "@/styles/globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -64,30 +64,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  const inner = (
-    <html lang="es" className={`${plusJakarta.variable} ${inter.variable}`}>
-      <body>{children}</body>
-    </html>
-  );
-
-  if (!clerkKey) {
-    return inner;
-  }
-
   return (
-    <ClerkProvider
-      publishableKey={clerkKey}
-      afterSignOutUrl="/"
-      appearance={{
-        variables: {
-          colorPrimary: "#147A5C",
-          colorText: "#2C2C2A",
-          colorBackground: "#FFFFFF",
-        },
-      }}
-    >
-      {inner}
-    </ClerkProvider>
+    <SessionProvider>
+      <html lang="es" className={`${plusJakarta.variable} ${inter.variable}`}>
+        <body>{children}</body>
+      </html>
+    </SessionProvider>
   );
 }

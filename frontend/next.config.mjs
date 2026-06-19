@@ -11,14 +11,12 @@ const wsOrigin = apiOrigin.replace(/^http/, "ws");
 
 const cspHeader = [
   "default-src 'self'",
-  // Clerk carga su JS desde *.clerk.accounts.dev (dev) y clerk.com (prod)
-  `script-src 'self' 'unsafe-inline' https://js.clerk.services https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://www.mercadopago.com.ar https://www.mercadopago.com https://*.mercadopago.com https://*.google.com https://www.googletagmanager.com`,
-  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.clerk.accounts.dev https://*.clerk.com`,
-  `img-src 'self' data: blob: ${apiOrigin} https://img.clerk.com https://*.clerk.com https://images.unsplash.com https://beel-media.s3.amazonaws.com https://*.cloudfront.net https://www.mercadopago.com https://www.google.com`,
+  `script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.mercadopago.com.ar https://www.mercadopago.com https://*.mercadopago.com https://*.google.com https://www.googletagmanager.com`,
+  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+  `img-src 'self' data: blob: ${apiOrigin} https://lh3.googleusercontent.com https://images.unsplash.com https://beel-media.s3.amazonaws.com https://*.cloudfront.net https://www.mercadopago.com https://www.google.com`,
   `font-src 'self' https://fonts.gstatic.com`,
-  // Clerk necesita conectarse a sus APIs para verificar sesiones
-  `connect-src 'self' ${apiOrigin} ${wsOrigin} https://api.beel.mx https://clerk.beel.mx wss://api.beel.mx https://js.clerk.services https://*.clerk.accounts.dev https://*.clerk.com https://clerk.com https://clerk-telemetry.com https://www.mercadopago.com https://api.mercadopago.com https://*.google-analytics.com https://*.analytics.google.com`,
-  `frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://www.mercadopago.com https://www.mercadopago.com.ar https://*.mercadopago.com`,
+  `connect-src 'self' ${apiOrigin} ${wsOrigin} https://accounts.google.com https://www.mercadopago.com https://api.mercadopago.com https://*.google-analytics.com https://*.analytics.google.com`,
+  `frame-src 'self' https://accounts.google.com https://www.mercadopago.com https://www.mercadopago.com.ar https://*.mercadopago.com`,
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",
@@ -34,8 +32,8 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "beel-media.s3.amazonaws.com" },
       { protocol: "https", hostname: "*.cloudfront.net" },
-      { protocol: "https", hostname: "img.clerk.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
 
