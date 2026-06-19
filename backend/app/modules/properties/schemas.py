@@ -36,8 +36,16 @@ class PropertyPhotoOut(BaseModel):
     display_order: int
     is_primary: bool
     caption: Optional[str]
+    s3_key: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class PhotoUpdateIn(BaseModel):
+    """Para actualizar orden, estado primario o caption de una foto."""
+    display_order: Optional[int] = None
+    is_primary: Optional[bool] = None
+    caption: Optional[str] = None
 
 
 # ── Host (resumen para incluir en propiedad) ──────────────────────────────────
