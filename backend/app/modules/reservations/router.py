@@ -72,7 +72,7 @@ async def create_reservation(
     db: AsyncSession = Depends(get_db),
 ):
     """Crea una reserva. Si la propiedad es instant_booking, queda confirmada de inmediato."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return await service.create_reservation(db, user, data)
@@ -87,7 +87,7 @@ async def my_trips(
     db: AsyncSession = Depends(get_db),
 ):
     """Lista los viajes del huésped autenticado."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     reservations, total = await service.list_guest_reservations(
@@ -107,7 +107,7 @@ async def host_requests(
     db: AsyncSession = Depends(get_db),
 ):
     """Lista las reservas recibidas por el anfitrión autenticado."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user or not user.is_host:
         raise HTTPException(status_code=403, detail="Solo anfitriones pueden acceder")
     reservations, total = await service.list_host_reservations(
@@ -125,7 +125,7 @@ async def get_reservation(
     db: AsyncSession = Depends(get_db),
 ):
     """Detalle de una reserva. Solo el guest o el host pueden verla."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -147,7 +147,7 @@ async def respond_to_reservation(
     db: AsyncSession = Depends(get_db),
 ):
     """El host acepta o rechaza una solicitud pendiente."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -166,7 +166,7 @@ async def cancel_reservation(
     db: AsyncSession = Depends(get_db),
 ):
     """Cancela una reserva activa."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -187,7 +187,7 @@ async def block_dates(
     db: AsyncSession = Depends(get_db),
 ):
     """El host bloquea fechas en su calendario."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -208,7 +208,7 @@ async def unblock_dates(
     db: AsyncSession = Depends(get_db),
 ):
     """El host desbloquea fechas que él mismo había cerrado."""
-    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
