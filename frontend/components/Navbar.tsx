@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -49,8 +50,8 @@ export default function Navbar({ transparent = false }: NavbarProps) {
       )}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-          <span className="font-display font-semibold text-[20px] text-[var(--color-primary)]" style={{ letterSpacing: "-0.5px" }}>beel</span>
+        <Link href="/" className="flex-shrink-0 flex items-center">
+          <Image src="/beel_logo_black_white.png" alt="Beel" width={72} height={28} className="h-7 w-auto" priority />
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -112,8 +113,8 @@ function NavbarNoAuth({ transparent }: NavbarProps) {
       )}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-          <span className="font-display font-semibold text-[20px] text-[var(--color-primary)]" style={{ letterSpacing: "-0.5px" }}>beel</span>
+        <Link href="/" className="flex-shrink-0 flex items-center">
+          <Image src="/beel_logo_black_white.png" alt="Beel" width={72} height={28} className="h-7 w-auto" priority />
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
