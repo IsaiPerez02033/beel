@@ -2,18 +2,37 @@
 
 import uuid
 import logging
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import CurrentUser
+from app.core.auth import CurrentUser, get_current_user, ClerkUser
 from app.core.config import settings
 from app.core.database import get_db
 from app.modules.payments import service as payment_service
-from app.modules.payments.schemas import CheckoutOut, PaymentOut, WebhookEventIn
+from app.modules.payments.schemas import (
+    CheckoutOut,
+    PaymentOut,
+    PayoutApproveIn,
+    RefundIn,
+    RefundOut,
+    WebhookEventIn,
+)
 from app.modules.reservations import service as reservation_service
 from app.modules.users import service as user_service
 from app.core.limiter import limiter
+
+
+async def _require_admin(
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Dependency que exige rol admin de Beel."""
+    user = await user_service.get_user_by_clerk_id(db, current_user.clerk_id)
+    if not user or user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores de Beel")
+    return user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -89,6 +108,46 @@ async def get_payment(
         raise HTTPException(status_code=404, detail="Pago no encontrado")
 
     return payment
+
+
+@router.post("/{payment_id}/approve-payout", response_model=PaymentOut)
+async def approve_payout(
+    payment_id: uuid.UUID,
+    body: PayoutApproveIn,
+    admin_user=Depends(_require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin de Beel aprueba el payout al anfitrión.
+    Después de aprobar, el admin transfiere manualmente desde el Dashboard de MP.
+    """
+    payment = await payment_service.get_payment_by_id(db, payment_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+
+    payment = await payment_service.approve_payout(db, payment, admin_user.clerk_id, body.notes)
+    await db.commit()
+    return payment
+
+
+@router.post("/{payment_id}/refund", response_model=RefundOut)
+async def issue_refund(
+    payment_id: uuid.UUID,
+    body: RefundIn,
+    admin_user=Depends(_require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin de Beel emite un reembolso al huésped via MercadoPago.
+    Cancela la reserva y desbloquea las fechas automáticamente.
+    """
+    payment = await payment_service.get_payment_by_id(db, payment_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+
+    result = await payment_service.issue_refund(db, payment, body.reason)
+    await db.commit()
+    return RefundOut(**result)
 
 
 @router.post("/webhook/mercadopago", status_code=status.HTTP_200_OK)

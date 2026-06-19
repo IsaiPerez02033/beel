@@ -276,7 +276,6 @@ async def _on_payment_approved(
     1. Confirmar la reserva (si aún está pending) con SELECT FOR UPDATE.
     2. Usar UPDATEs atómicos para contadores (previene double-counting).
     """
-    from datetime import timedelta
     from sqlalchemy import update
 
     result = await db.execute(
@@ -297,9 +296,6 @@ async def _on_payment_approved(
             reservation.check_out,
             reservation.id,
         )
-        reservation.payout_scheduled_at = datetime.now(timezone.utc) + timedelta(
-            hours=settings.PAYOUT_DELAY_HOURS
-        )
 
         # UPDATEs atómicos para contadores
         await db.execute(
@@ -314,7 +310,7 @@ async def _on_payment_approved(
         )
         logger.info("Reserva %s confirmada vía pago aprobado", reservation_id)
 
-    payment.payout_status = "scheduled"
+    payment.payout_status = "awaiting_beel_approval"
     await db.flush()
 
 
@@ -327,3 +323,126 @@ async def get_payment_by_reservation(
         .order_by(Payment.created_at.desc())
     )
     return result.scalar_one_or_none()
+
+
+async def get_payment_by_id(
+    db: AsyncSession, payment_id: uuid.UUID
+) -> Optional[Payment]:
+    result = await db.execute(select(Payment).where(Payment.id == payment_id))
+    return result.scalar_one_or_none()
+
+
+# ── Aprobación de payout por admin de Beel ───────────────────────────────────
+
+async def approve_payout(
+    db: AsyncSession,
+    payment: Payment,
+    admin_clerk_id: str,
+    notes: Optional[str] = None,
+) -> Payment:
+    """
+    Marca el pago como aprobado para payout por el admin de Beel.
+    El admin luego transfiere manualmente en el Dashboard de MercadoPago.
+    """
+    if payment.status != "approved":
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail=f"Solo se pueden aprobar pagos con status 'approved' (actual: '{payment.status}')",
+        )
+    if payment.payout_status not in ("awaiting_beel_approval", "pending"):
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail=f"El payout ya fue procesado (status: '{payment.payout_status}')",
+        )
+
+    payment.payout_status = "approved"
+    payment.beel_approved_at = datetime.now(timezone.utc)
+    payment.beel_approved_by = admin_clerk_id
+
+    await db.flush()
+    logger.info(
+        "Payout aprobado por admin %s para payment %s (reserva %s)%s",
+        admin_clerk_id,
+        payment.id,
+        payment.reservation_id,
+        f" — {notes}" if notes else "",
+    )
+    return payment
+
+
+# ── Reembolso al huésped ─────────────────────────────────────────────────────
+
+async def issue_refund(
+    db: AsyncSession,
+    payment: Payment,
+    reason: str,
+) -> dict:
+    """
+    Emite un reembolso al huésped via MercadoPago y cancela la reserva.
+
+    Solo aplicable si el pago fue aprobado por MP (hay fondos para devolver).
+    El reembolso puede tardar 1-15 días hábiles según el método de pago del huésped.
+    """
+    if payment.status != "approved":
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail=f"Solo se pueden reembolsar pagos aprobados (actual: '{payment.status}')",
+        )
+    if payment.payout_status == "refunded":
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Este pago ya fue reembolsado")
+    if payment.payout_status == "completed":
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail="No se puede reembolsar un pago que ya fue transferido al anfitrión",
+        )
+    if not payment.mp_payment_id:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="El pago no tiene ID de MercadoPago")
+
+    # Emitir reembolso en MP
+    mp = _get_mp()
+    response = mp.payment().refund(payment.mp_payment_id)
+    refund_data = response.get("response", {})
+
+    if response.get("status") not in (200, 201):
+        logger.error("Error al emitir reembolso MP: %s", response)
+        from fastapi import HTTPException
+        raise HTTPException(status_code=502, detail="Error al procesar el reembolso con MercadoPago")
+
+    refund_id = str(refund_data.get("id", ""))
+    refund_status = refund_data.get("status", "")
+
+    # Actualizar el Payment
+    payment.refund_id = refund_id
+    payment.refunded_at = datetime.now(timezone.utc)
+    payment.refund_reason = reason
+    payment.payout_status = "refunded"
+
+    # Cancelar la reserva y desbloquear fechas
+    result = await db.execute(
+        select(Reservation)
+        .where(Reservation.id == payment.reservation_id)
+        .with_for_update()
+    )
+    reservation = result.scalar_one_or_none()
+    if reservation and reservation.status == "confirmed":
+        reservation.status = "cancelled_host"
+        reservation.cancellation_reason = f"Reembolso emitido por Beel: {reason}"
+        from app.modules.reservations.service import _unblock_dates
+        await _unblock_dates(db, reservation.property_id, reservation.id)
+
+    await db.flush()
+    logger.info(
+        "Reembolso emitido: refund_id=%s, payment=%s, reserva=%s, razón=%s",
+        refund_id, payment.id, payment.reservation_id, reason,
+    )
+    return {
+        "refund_id": refund_id,
+        "status": refund_status,
+        "amount": payment.amount,
+    }

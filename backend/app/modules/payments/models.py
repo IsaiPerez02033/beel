@@ -61,6 +61,15 @@ class Payment(Base, TimestampMixin):
     payout_status: Mapped[str] = mapped_column(String(30), default="pending")
     payout_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
+    # Aprobación de payout por admin de Beel
+    beel_approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    beel_approved_by: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Reembolso
+    refund_id: Mapped[Optional[str]] = mapped_column(String(255))
+    refunded_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    refund_reason: Mapped[Optional[str]] = mapped_column(Text)
+
     # Relaciones
     reservation: Mapped["Reservation"] = relationship(
         "Reservation", back_populates="payments", lazy="selectin"
