@@ -31,6 +31,51 @@ class PaymentOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AdminPaymentUserOut(BaseModel):
+    full_name: str
+    email: str
+    model_config = {"from_attributes": True}
+
+
+class AdminPaymentPropertyOut(BaseModel):
+    title: str
+    model_config = {"from_attributes": True}
+
+
+class AdminPaymentReservationOut(BaseModel):
+    check_in: str
+    check_out: str
+    nights: int
+    guest: AdminPaymentUserOut
+    host: AdminPaymentUserOut
+    reservation_property: AdminPaymentPropertyOut
+    model_config = {"from_attributes": True}
+
+
+class AdminPaymentOut(BaseModel):
+    id: uuid.UUID
+    reservation_id: uuid.UUID
+    amount: Decimal
+    currency: str
+    platform_fee: Decimal
+    host_payout: Decimal
+    status: str
+    payout_status: str
+    beel_approved_at: Optional[datetime]
+    beel_approved_by: Optional[str]
+    refund_id: Optional[str]
+    refunded_at: Optional[datetime]
+    refund_reason: Optional[str]
+    created_at: datetime
+    reservation: Optional[AdminPaymentReservationOut]
+    model_config = {"from_attributes": True}
+
+
+class AdminPaymentListOut(BaseModel):
+    payments: list[AdminPaymentOut]
+    total: int
+
+
 class PayoutApproveIn(BaseModel):
     """Body para que el admin de Beel apruebe el payout al anfitrión."""
     notes: Optional[str] = None
