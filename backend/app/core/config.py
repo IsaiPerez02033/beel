@@ -73,8 +73,8 @@ class Settings(BaseSettings):
     WHATSAPP_TEMPLATE_NAMESPACE: Optional[str] = None
 
     # ── Email ─────────────────────────────────────────────────────────────────
-    EMAIL_PROVIDER: str = "resend"
-    EMAIL_API_KEY: Optional[str] = None
+    EMAIL_PROVIDER: str = "sendgrid"
+    EMAIL_API_KEY: Optional[str] = None        # SendGrid API key (SG.xxx...)
     EMAIL_FROM_ADDRESS: str = "hola@beel.mx"
     EMAIL_FROM_NAME: str = "Beel"
 
