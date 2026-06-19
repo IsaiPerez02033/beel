@@ -35,7 +35,12 @@ export default function IniciarSesionPage() {
 
   async function handleGoogle() {
     setGoogleLoading(true);
-    await signIn("google", { callbackUrl: redirectUrl });
+    try {
+      await signIn("google", { callbackUrl: redirectUrl });
+    } catch {
+      setError("No se pudo conectar con Google. Intenta de nuevo.");
+      setGoogleLoading(false);
+    }
   }
 
   return (
