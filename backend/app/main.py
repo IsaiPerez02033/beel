@@ -7,8 +7,7 @@ Estructura de rutas:
   /api/v1/properties          — propiedades y búsqueda
   /api/v1/reservations        — reservas, disponibilidad
   /api/v1/payments            — pagos con MercadoPago
-  /api/v1/messaging           — mensajería en tiempo real (próximo)
-  /api/v1/webhooks/clerk      — webhook de Clerk
+  /api/v1/messaging           — mensajería en tiempo real
   /api/v1/payments/webhook/mercadopago — webhook de MercadoPago
 """
 
@@ -32,7 +31,6 @@ from app.modules.reservations.router import router as reservations_router
 from app.modules.payments.router import router as payments_router
 from app.modules.messaging.router import router as messaging_router
 from app.modules.reviews.router import router as reviews_router
-from app.modules.webhooks.clerk import router as clerk_webhook_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -64,10 +62,10 @@ async def lifespan(app: FastAPI):
             await init_db()
         else:
             logger.info("⚠️ Sin DATABASE_URL — endpoints dependientes de BD retornarán 503")
-        if settings.has_clerk:
-            logger.info("✅ Clerk configurado")
+        if settings.NEXTAUTH_SECRET:
+            logger.info("✅ NextAuth configurado")
         else:
-            logger.info("⚠️ Sin Clerk — auth deshabilitada")
+            logger.info("⚠️ Sin NEXTAUTH_SECRET — auth deshabilitada")
         if settings.has_redis:
             logger.info("✅ Redis configurado")
         else:
@@ -137,7 +135,6 @@ app.include_router(reservations_router, prefix=f"{API_PREFIX}/reservations", tag
 app.include_router(payments_router, prefix=f"{API_PREFIX}/payments", tags=["payments"])
 app.include_router(messaging_router, prefix=f"{API_PREFIX}/messaging", tags=["messaging"])
 app.include_router(reviews_router, prefix=f"{API_PREFIX}/reviews", tags=["reviews"])
-app.include_router(clerk_webhook_router, prefix=f"{API_PREFIX}/webhooks", tags=["webhooks"])
 
 
 # ── Root ────────────────────────────────────────────────────────────────────────

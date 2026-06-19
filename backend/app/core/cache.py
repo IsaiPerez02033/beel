@@ -160,8 +160,8 @@ def search_key(**params) -> str:
     return f"beel:search:{param_str}"
 
 
-def user_key(clerk_id: str) -> str:
-    return f"beel:user:{clerk_id}"
+def user_key(user_id: str) -> str:
+    return f"beel:user:{user_id}"
 
 
 def ranking_key() -> str:
