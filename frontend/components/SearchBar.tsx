@@ -2,9 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, MapPin, Calendar, Users } from "lucide-react";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import DateRangePicker from "@/components/DateRangePicker";
 
 interface SearchBarProps {
   /** Versión compacta para navbar en página de búsqueda */
@@ -89,43 +90,13 @@ export default function SearchBar({
           />
         </div>
 
-        {/* Check-in */}
-        <div
-          className={cn(
-            "search-bar-field flex flex-col justify-center cursor-pointer",
-            activeField === "checkin" && "bg-white ring-1 ring-[var(--color-primary)] ring-inset"
-          )}
-          onClick={() => setActiveField("checkin")}
-        >
-          <span className="search-bar-label">Llegada</span>
-          <input
-            type="date"
-            value={checkIn}
-            min={today}
-            onChange={(e) => setCheckIn(e.target.value)}
-            className="search-bar-value bg-transparent outline-none w-full"
-            onFocus={() => setActiveField("checkin")}
-            onBlur={() => setActiveField(null)}
-          />
-        </div>
-
-        {/* Check-out */}
-        <div
-          className={cn(
-            "search-bar-field flex flex-col justify-center cursor-pointer",
-            activeField === "checkout" && "bg-white ring-1 ring-[var(--color-primary)] ring-inset"
-          )}
-          onClick={() => setActiveField("checkout")}
-        >
-          <span className="search-bar-label">Salida</span>
-          <input
-            type="date"
-            value={checkOut}
-            min={checkIn || tomorrow}
-            onChange={(e) => setCheckOut(e.target.value)}
-            className="search-bar-value bg-transparent outline-none w-full"
-            onFocus={() => setActiveField("checkout")}
-            onBlur={() => setActiveField(null)}
+        {/* Fechas — DateRangePicker personalizado */}
+        <div className="search-bar-field flex items-center cursor-pointer p-0">
+          <DateRangePicker
+            checkIn={checkIn}
+            checkOut={checkOut}
+            onCheckIn={setCheckIn}
+            onCheckOut={setCheckOut}
           />
         </div>
 
