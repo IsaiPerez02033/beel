@@ -45,35 +45,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user, account }) {
       // Primera vez que el usuario inicia sesión (user está definido)
       if (user) {
-        // Credentials: user.id ya es el UUID de la BD de Beel
         token.sub = user.id;
         token.role = (user as any).role ?? "guest";
         token.email = user.email ?? token.email;
         token.name = user.name ?? token.name;
       }
 
-      // Google OAuth: obtener el UUID de Beel desde el backend
-      // Se ejecuta solo en el primer login (account está definido)
-      if (account?.provider === "google" && token.email) {
+      // Patrón UUID válido (lo que emite la BD de Beel)
+      const isBeelUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+      // Google OAuth primer login O tokens rotos donde sub no es UUID de Beel
+      const needsBeelId =
+        (account?.provider === "google") ||
+        (token.email && token.sub && !isBeelUUID.test(token.sub));
+
+      if (needsBeelId && token.email) {
         try {
           const res = await fetch(`${API}/api/v1/users/oauth/google`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               email: token.email,
-              full_name: token.name,
-              google_id: account.providerAccountId,
+              full_name: token.name ?? "",
+              google_id: account?.providerAccountId ?? token.sub,
               avatar_url: (user as any)?.image ?? null,
             }),
           });
           if (res.ok) {
             const beelUser = await res.json();
-            // Sobreescribir sub con el UUID real de la BD de Beel
-            token.sub = beelUser.id;
+            token.sub = beelUser.id;        // UUID real de Beel
             token.role = beelUser.role ?? "guest";
           }
         } catch {
-          // Si falla, el usuario no tendrá UUID de Beel — se bloqueará en el backend
+          // silencioso — el backend rechazará con 401
         }
       }
 
