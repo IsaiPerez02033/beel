@@ -128,7 +128,7 @@ class Property(Base, TimestampMixin):
     )
     reservations: Mapped[list["Reservation"]] = relationship(
         "Reservation",
-        back_populates="property",
+        back_populates="reservation_property",
         lazy="noload",      # no cargar por defecto — puede ser enorme
     )
 
