@@ -90,15 +90,13 @@ export default function SearchBar({
           />
         </div>
 
-        {/* Fechas — DateRangePicker personalizado */}
-        <div className="search-bar-field flex items-center cursor-pointer p-0">
-          <DateRangePicker
-            checkIn={checkIn}
-            checkOut={checkOut}
-            onCheckIn={setCheckIn}
-            onCheckOut={setCheckOut}
-          />
-        </div>
+        {/* Fechas — DateRangePicker personalizado (sin wrapper search-bar-field para que el popover no quede clippeado) */}
+        <DateRangePicker
+          checkIn={checkIn}
+          checkOut={checkOut}
+          onCheckIn={setCheckIn}
+          onCheckOut={setCheckOut}
+        />
 
         {/* Huéspedes + botón */}
         <div
