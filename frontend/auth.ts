@@ -38,10 +38,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       },
     }),
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-    }),
+    // NextAuth v5 lee AUTH_GOOGLE_ID y AUTH_GOOGLE_SECRET automáticamente
+    Google({}),
   ],
   callbacks: {
     async signIn({ user, account }) {
