@@ -75,7 +75,6 @@ export default function RegistroPage() {
     const callback = encodeURIComponent(redirectUrl);
     window.location.href = `/api/auth/signin/google?callbackUrl=${callback}`;
   }
-  }
 
   return (
     <div className="min-h-screen bg-[var(--color-arena)] flex flex-col items-center justify-center px-4 py-12">
