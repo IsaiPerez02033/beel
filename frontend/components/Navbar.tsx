@@ -43,9 +43,9 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           <Image
             src="/beel_logo_black_white.png"
             alt="Beel"
-            width={72}
-            height={28}
-            className="h-7 w-auto"
+            width={110}
+            height={42}
+            className="h-10 w-auto"
             priority
           />
         </Link>
