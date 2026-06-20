@@ -82,7 +82,7 @@ export default function RegistroPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/">
-            <Image src="/beel_logo_green_sand.png" alt="Beel" width={160} height={62} className="h-14 w-auto mx-auto" priority />
+            <span className="font-display font-semibold text-[40px] text-[var(--color-primary)]" style={{ letterSpacing: "-1.5px" }}>beel</span>
           </Link>
           <p className="text-body text-[var(--text-secondary)] mt-2">Crea tu cuenta gratuita</p>
         </div>
