@@ -85,6 +85,7 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "https://beel.mx",
         "https://www.beel.mx",
+        "https://beel-azure.vercel.app",
     ]
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_AUTH_PER_MINUTE: int = 10
