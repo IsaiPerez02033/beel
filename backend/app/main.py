@@ -89,12 +89,12 @@ app = FastAPI(
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 
-# CORS
+# CORS — allow_origins=["*"] es compatible con JWT (Authorization header).
+# No usamos cookies así que allow_credentials puede ser False con wildcard.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # cualquier preview de Vercel
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
