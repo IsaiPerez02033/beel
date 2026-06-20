@@ -46,24 +46,50 @@ export default function SearchBar({
   }
 
   if (compact) {
+    // Barra compacta con búsqueda funcional
     return (
-      <button
-        onClick={() => router.push("/buscar")}
-        className="flex items-center gap-3 bg-white border border-[var(--border-default)] rounded-full px-4 py-2.5 shadow-sm hover:shadow-md transition-shadow"
-      >
-        <Search size={16} className="text-[var(--color-primary)]" />
-        <span className="text-body-sm text-[var(--text-secondary)]">
-          {destino || "¿A dónde vas?"}
-        </span>
-        <span className="text-[var(--border-strong)]">·</span>
-        <span className="text-body-sm text-[var(--text-secondary)]">
-          {checkIn ? checkIn : "Fechas"}
-        </span>
-        <span className="text-[var(--border-strong)]">·</span>
-        <span className="text-body-sm text-[var(--text-secondary)]">
-          {huespedes > 1 ? `${huespedes} huéspedes` : "Huéspedes"}
-        </span>
-      </button>
+      <div className="flex items-center gap-2 bg-white border border-[var(--border-default)] rounded-2xl shadow-sm px-3 py-1.5">
+        <Search size={15} className="text-[var(--color-primary)] flex-shrink-0" />
+
+        {/* Destino */}
+        <input
+          type="text"
+          value={destino}
+          onChange={(e) => setDestino(e.target.value)}
+          placeholder="¿A dónde vas?"
+          className="text-body-sm text-[var(--text-primary)] bg-transparent outline-none w-28 placeholder:text-[var(--text-tertiary)]"
+          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+        />
+
+        <span className="text-[var(--border-strong)] text-body-sm">·</span>
+
+        {/* Fechas compactas */}
+        <DateRangePicker
+          checkIn={checkIn}
+          checkOut={checkOut}
+          onCheckIn={setCheckIn}
+          onCheckOut={setCheckOut}
+          compact
+        />
+
+        <span className="text-[var(--border-strong)] text-body-sm">·</span>
+
+        {/* Huéspedes */}
+        <div className="flex items-center gap-1.5">
+          <button type="button" onClick={() => setHuespedes(Math.max(1, huespedes - 1))}
+            className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-caption hover:border-[var(--text-primary)] transition-colors">−</button>
+          <span className="text-body-sm text-[var(--text-primary)] min-w-[1ch] text-center">{huespedes}</span>
+          <button type="button" onClick={() => setHuespedes(Math.min(16, huespedes + 1))}
+            className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-caption hover:border-[var(--text-primary)] transition-colors">+</button>
+        </div>
+
+        <button
+          onClick={handleSearch}
+          className="ml-1 w-7 h-7 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors flex-shrink-0"
+        >
+          <Search size={13} />
+        </button>
+      </div>
     );
   }
 
