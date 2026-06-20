@@ -433,7 +433,7 @@ input, textarea, select {
   background: var(--bg-elevated);
   border: 0.5px solid var(--color-primary-border);
   border-radius: 14px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--shadow-search);
 }
 .search-bar-field {
