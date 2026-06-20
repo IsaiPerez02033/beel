@@ -69,14 +69,12 @@ export default function RegistroPage() {
     }
   }
 
-  async function handleGoogle() {
+  function handleGoogle() {
     setGoogleLoading(true);
-    try {
-      await signIn("google", { callbackUrl: redirectUrl });
-    } catch {
-      setError("No se pudo conectar con Google. Intenta de nuevo.");
-      setGoogleLoading(false);
-    }
+    // Navegar directamente — más confiable que signIn() en NextAuth v5 beta
+    const callback = encodeURIComponent(redirectUrl);
+    window.location.href = `/api/auth/signin/google?callbackUrl=${callback}`;
+  }
   }
 
   return (

@@ -33,14 +33,10 @@ export default function IniciarSesionPage() {
     }
   }
 
-  async function handleGoogle() {
+  function handleGoogle() {
     setGoogleLoading(true);
-    try {
-      await signIn("google", { callbackUrl: redirectUrl });
-    } catch {
-      setError("No se pudo conectar con Google. Intenta de nuevo.");
-      setGoogleLoading(false);
-    }
+    const callback = encodeURIComponent(redirectUrl);
+    window.location.href = `/api/auth/signin/google?callbackUrl=${callback}`;
   }
 
   return (
