@@ -81,25 +81,28 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Buscar el usuario en la BD
     from app.core.database import AsyncSessionLocal
-    from app.modules.users.service import get_user_by_id as fetch_user
+    from app.modules.users.service import get_user_by_id as fetch_by_id, get_user_by_email
     from uuid import UUID as UuidType
 
-    try:
-        uid = UuidType(user_id)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido: sub no es UUID",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    db_user = None
 
     if AsyncSessionLocal:
-        async with AsyncSessionLocal() as session:
-            db_user = await fetch_user(session, uid)
-    else:
-        db_user = None
+        async with AsyncSessionLocal() as db_session:
+            # Intentar buscar por UUID (caso normal)
+            try:
+                uid = UuidType(user_id)
+                db_user = await fetch_by_id(db_session, uid)
+            except ValueError:
+                # sub no es UUID — probablemente es el sub de Google (número)
+                # Fallback: buscar por email si está en el token
+                email = claims.get("email")
+                if email:
+                    logger.warning(
+                        "sub '%s' no es UUID, buscando usuario por email '%s'",
+                        user_id, email,
+                    )
+                    db_user = await get_user_by_email(db_session, email)
 
     if not db_user or not db_user.is_active:
         raise HTTPException(
