@@ -1,35 +1,35 @@
-import { getToken } from "next-auth/jwt";
+import { auth } from "@/auth";
 import { SignJWT } from "jose";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 /**
  * Genera un JWT HS256 estándar para el backend FastAPI.
  *
- * Usa getToken() de next-auth/jwt en lugar de auth() para leer
- * el cookie de sesión directamente — más confiable y no depende
- * de la cadena completa de callbacks de NextAuth.
+ * Usa auth() que lee la cookie de sesión de NextAuth v5 (authjs.session-token).
+ * El sub puede ser el UUID de Beel o el Google sub — el backend maneja ambos
+ * casos con fallback a búsqueda por email.
+ *
+ * Clave: usamos session.user.email (siempre presente) en vez de user.id
+ * (que puede ser undefined si el session callback no lo seteó).
  */
-export async function GET(req: NextRequest) {
-  const nextAuthToken = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "",
-  });
+export async function GET() {
+  const session = await auth();
 
-  if (!nextAuthToken) {
+  // El email siempre está presente cuando el usuario está autenticado
+  if (!session?.user?.email) {
     return NextResponse.json({ token: null });
   }
 
-  // nextAuthToken.sub puede ser el UUID de Beel o el Google sub (si la sesión es antigua)
-  // El backend maneja ambos casos: busca por UUID y si falla busca por email
   const secret = new TextEncoder().encode(
     process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? ""
   );
 
   const token = await new SignJWT({
-    sub: nextAuthToken.sub,
-    email: nextAuthToken.email,
-    name: nextAuthToken.name,
-    role: (nextAuthToken as any).role ?? "guest",
+    // sub: UUID de Beel si existe, si no el Google sub, si no el email como último recurso
+    sub: session.user.id ?? session.user.email,
+    email: session.user.email,
+    name: session.user.name ?? "",
+    role: (session.user as any).role ?? "guest",
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
