@@ -20,7 +20,9 @@ export function useAuth() {
   try {
     const { data: session, status } = useSession();
     const getToken = useCallback(async (): Promise<string | null> => {
-      if (!session?.user) return null;
+      // No intentar obtener token si la sesión aún está cargando
+      if (status === "loading") return null;
+      if (!session?.user?.id) return null;
       try {
         const res = await fetch("/api/auth/token");
         if (!res.ok) return null;
@@ -29,7 +31,7 @@ export function useAuth() {
       } catch {
         return null;
       }
-    }, [session]);
+    }, [session, status]);
 
     return {
       isSignedIn: !!session?.user,
