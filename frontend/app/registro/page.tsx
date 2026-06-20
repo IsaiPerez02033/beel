@@ -7,7 +7,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Proxy interno para evitar CORS
+const API = typeof window !== "undefined" ? "/api/backend" : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api/v1";
 const HAS_GOOGLE = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
 export default function RegistroPage() {
@@ -35,7 +36,7 @@ export default function RegistroPage() {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
-      res = await fetch(`${API}/api/v1/users/register`, {
+      res = await fetch(`${API}/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, full_name: fullName }),
