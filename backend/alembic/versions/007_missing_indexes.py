@@ -29,7 +29,7 @@ def upgrade() -> None:
         "idx_reservations_overlap",
         "reservations",
         ["property_id", "status", "check_in", "check_out"],
-        postgresql_where=sa.text("status IN ('confirmed', 'pending') AND deleted_at IS NULL"),
+        postgresql_where=sa.text("status IN ('confirmed', 'pending')"),
     )
 
     # Índices para analytics_events
