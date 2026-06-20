@@ -42,41 +42,46 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({}),
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
+    async jwt({ token, user, account }) {
+      // Primera vez que el usuario inicia sesión (user está definido)
+      if (user) {
+        // Credentials: user.id ya es el UUID de la BD de Beel
+        token.sub = user.id;
+        token.role = (user as any).role ?? "guest";
+        token.email = user.email ?? token.email;
+        token.name = user.name ?? token.name;
+      }
+
+      // Google OAuth: obtener el UUID de Beel desde el backend
+      // Se ejecuta solo en el primer login (account está definido)
+      if (account?.provider === "google" && token.email) {
         try {
           const res = await fetch(`${API}/api/v1/users/oauth/google`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              email: user.email,
-              full_name: user.name,
+              email: token.email,
+              full_name: token.name,
               google_id: account.providerAccountId,
-              avatar_url: user.image,
+              avatar_url: (user as any)?.image ?? null,
             }),
           });
-          if (!res.ok) return false;
-          const beelUser = await res.json();
-          user.id = beelUser.id;
-          (user as any).role = beelUser.role;
+          if (res.ok) {
+            const beelUser = await res.json();
+            // Sobreescribir sub con el UUID real de la BD de Beel
+            token.sub = beelUser.id;
+            token.role = beelUser.role ?? "guest";
+          }
         } catch {
-          return false;
+          // Si falla, el usuario no tendrá UUID de Beel — se bloqueará en el backend
         }
       }
-      return true;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id;
-        token.role = (user as any).role ?? "guest";
-        token.email = user.email;
-        token.name = user.name;
-      }
+
       return token;
     },
     async session({ session, token }) {
       session.user.id = token.sub!;
-      (session.user as any).role = token.role;
+      (session.user as any).role = token.role ?? "guest";
       return session;
     },
   },
