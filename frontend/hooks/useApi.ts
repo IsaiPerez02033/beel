@@ -3,7 +3,10 @@
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useCallback, useEffect, useRef } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Proxy interno: el browser llama a /api/backend/* (mismo origen, sin CORS).
+// En local, si no hay proxy disponible, cae al backend directo.
+const IS_BROWSER = typeof window !== "undefined";
+const API_BASE = IS_BROWSER ? "/api/backend" : `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/v1`;
 
 /**
  * Hook para hacer llamadas autenticadas a la API de Beel.
@@ -28,7 +31,7 @@ export function useApi() {
       controllerRef.current = new AbortController();
 
       const token = await getToken();
-      const res = await fetch(`${API}/api/v1${path}`, {
+      const res = await fetch(`${API_BASE}${path}`, {
         ...options,
         signal: controllerRef.current.signal,
         headers: {
