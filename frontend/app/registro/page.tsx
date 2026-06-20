@@ -55,7 +55,17 @@ export default function RegistroPage() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Error al crear la cuenta");
+      const detail = err.detail ?? "Error al crear la cuenta";
+      // Si ya existe, intentar iniciar sesión directamente
+      if (res.status === 400 && detail.includes("ya está registrado")) {
+        const loginResult = await signIn("credentials", { email, password, redirect: false });
+        setLoading(false);
+        if (!loginResult?.error) {
+          router.push(redirectUrl);
+          return;
+        }
+      }
+      setError(detail);
       setLoading(false);
       return;
     }
