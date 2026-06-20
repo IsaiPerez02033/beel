@@ -13,6 +13,7 @@ interface DateRangePickerProps {
   checkOut: string;
   onCheckIn: (val: string) => void;
   onCheckOut: (val: string) => void;
+  compact?: boolean;
 }
 
 function toDate(s: string): Date | undefined {
@@ -29,7 +30,7 @@ function fmtDisplay(s: string): string | null {
 }
 
 export default function DateRangePicker({
-  checkIn, checkOut, onCheckIn, onCheckOut,
+  checkIn, checkOut, onCheckIn, onCheckOut, compact = false,
 }: DateRangePickerProps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -109,46 +110,62 @@ export default function DateRangePicker({
 
   return (
     <>
-      {/* Triggers — estilo idéntico a search-bar-field */}
-      <div ref={triggerRef} className="flex items-stretch" style={{ flex: 2 }}>
-        {/* Llegada */}
-        <div
-          onClick={() => openWithPos("from")}
-          className={cn(
-            "search-bar-field flex flex-col justify-center cursor-pointer",
-            open && selecting === "from" && "bg-white !border-r !border-r-[var(--color-primary)] ring-1 ring-[var(--color-primary)] ring-inset"
-          )}
-        >
-          <span className="search-bar-label">Llegada</span>
-          <span className={cn("search-bar-value", checkIn && "text-[var(--text-primary)] font-medium")}>
-            {fmtDisplay(checkIn) ?? "Añadir fecha"}
-          </span>
-        </div>
-
-        {/* Salida */}
-        <div
-          onClick={() => openWithPos("to")}
-          className={cn(
-            "search-bar-field flex flex-col justify-center cursor-pointer",
-            open && selecting === "to" && "bg-white ring-1 ring-[var(--color-primary)] ring-inset"
-          )}
-        >
-          <span className="search-bar-label">Salida</span>
-          <div className="flex items-center justify-between gap-2">
-            <span className={cn("search-bar-value", checkOut && "text-[var(--text-primary)] font-medium")}>
-              {fmtDisplay(checkOut) ?? "Añadir fecha"}
-            </span>
+      {/* Triggers */}
+      <div ref={triggerRef} className={cn("flex items-stretch", !compact && "flex-[2]")}>
+        {compact ? (
+          // Versión compacta: un solo botón con ambas fechas
+          <button
+            type="button"
+            onClick={() => openWithPos("from")}
+            className="flex items-center gap-1 text-body-sm text-[var(--text-secondary)] cursor-pointer hover:text-[var(--text-primary)] transition-colors"
+          >
+            <span>{fmtDisplay(checkIn) ?? "Llegada"}</span>
+            {checkOut && <><span className="text-[var(--border-strong)]">→</span><span>{fmtDisplay(checkOut)}</span></>}
             {(checkIn || checkOut) && (
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); clear(); }}
-                className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors flex-shrink-0"
-              >
-                <X size={12} />
+              <button type="button" onClick={(e) => { e.stopPropagation(); clear(); }}
+                className="ml-1 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]">
+                <X size={11} />
               </button>
             )}
-          </div>
-        </div>
+          </button>
+        ) : (
+          <>
+            {/* Llegada */}
+            <div
+              onClick={() => openWithPos("from")}
+              className={cn(
+                "search-bar-field flex flex-col justify-center cursor-pointer",
+                open && selecting === "from" && "bg-white !border-r !border-r-[var(--color-primary)] ring-1 ring-[var(--color-primary)] ring-inset"
+              )}
+            >
+              <span className="search-bar-label">Llegada</span>
+              <span className={cn("search-bar-value", checkIn && "text-[var(--text-primary)] font-medium")}>
+                {fmtDisplay(checkIn) ?? "Añadir fecha"}
+              </span>
+            </div>
+            {/* Salida */}
+            <div
+              onClick={() => openWithPos("to")}
+              className={cn(
+                "search-bar-field flex flex-col justify-center cursor-pointer",
+                open && selecting === "to" && "bg-white ring-1 ring-[var(--color-primary)] ring-inset"
+              )}
+            >
+              <span className="search-bar-label">Salida</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className={cn("search-bar-value", checkOut && "text-[var(--text-primary)] font-medium")}>
+                  {fmtDisplay(checkOut) ?? "Añadir fecha"}
+                </span>
+                {(checkIn || checkOut) && (
+                  <button type="button" onClick={(e) => { e.stopPropagation(); clear(); }}
+                    className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors flex-shrink-0">
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Popover — position:fixed para escapar cualquier overflow */}
