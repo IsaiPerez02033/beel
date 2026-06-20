@@ -99,9 +99,13 @@ async def soft_delete_user(db: AsyncSession, user: User) -> None:
 
 
 async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
-    """Busca un usuario por email (activo, no eliminado)."""
+    """Busca un usuario por email (case-insensitive, activo, no eliminado)."""
+    from sqlalchemy import func
     result = await db.execute(
-        select(User).where(User.email == email, User.deleted_at.is_(None))
+        select(User).where(
+            func.lower(User.email) == email.lower(),
+            User.deleted_at.is_(None),
+        )
     )
     return result.scalar_one_or_none()
 
@@ -121,7 +125,12 @@ async def create_user_credentials(
     existing = await get_user_by_email(db, email)
     if existing:
         from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="Este correo ya está registrado")
+        if existing.provider == "google":
+            raise HTTPException(
+                status_code=400,
+                detail="Este correo ya tiene una cuenta con Google. Usa 'Continuar con Google' para iniciar sesión.",
+            )
+        raise HTTPException(status_code=400, detail="Este correo ya está registrado. Inicia sesión.")
 
     password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     user = User(
