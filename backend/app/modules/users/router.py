@@ -38,6 +38,21 @@ async def register(
     return {"id": str(user.id), "email": user.email, "full_name": user.full_name}
 
 
+@router.get("/check-email")
+async def check_email(
+    email: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Verifica si un email ya está registrado y con qué proveedor.
+    Usado por el frontend para redirigir entre registro e inicio de sesión.
+    """
+    user = await service.get_user_by_email(db, email)
+    if not user:
+        return {"exists": False, "provider": None}
+    return {"exists": True, "provider": user.provider}
+
+
 @router.post("/login")
 async def login(
     data: UserLoginIn,
