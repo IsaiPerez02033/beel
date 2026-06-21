@@ -9,29 +9,62 @@ import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 
 const HAS_GOOGLE = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+// Proxy interno para evitar CORS
+const API = typeof window !== "undefined" ? "/api/backend" : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api/v1";
 
 export default function IniciarSesionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect_url") ?? "/";
+  const motivo = searchParams.get("motivo");
+  const emailParam = searchParams.get("email") ?? "";
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice] = useState(
+    motivo === "existe"
+      ? "Esta cuenta ya existe. Inicia sesión con tu contraseña."
+      : ""
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     const result = await signIn("credentials", { email, password, redirect: false });
-    setLoading(false);
-    if (result?.error) {
-      setError("Correo o contraseña incorrectos");
-    } else {
+
+    if (!result?.error) {
+      setLoading(false);
       router.push(redirectUrl);
+      return;
     }
+
+    // Login falló — averiguar si la cuenta existe para redirigir correctamente
+    try {
+      const res = await fetch(`${API}/users/check-email?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (!data.exists) {
+        // No existe → redirigir a registro con aviso
+        const params = new URLSearchParams();
+        params.set("email", email);
+        params.set("motivo", "nuevo");
+        if (redirectUrl !== "/") params.set("redirect_url", redirectUrl);
+        router.push(`/registro?${params.toString()}`);
+        return;
+      }
+      if (data.provider === "google") {
+        setError("Esta cuenta usa Google. Usa el botón 'Continuar con Google'.");
+      } else {
+        setError("Contraseña incorrecta. Intenta de nuevo.");
+      }
+    } catch {
+      setError("Correo o contraseña incorrectos");
+    }
+    setLoading(false);
   }
 
   function handleGoogle() {
@@ -73,6 +106,12 @@ export default function IniciarSesionPage() {
                 <div className="flex-1 h-px bg-[var(--border-subtle)]" />
               </div>
             </>
+          )}
+
+          {notice && (
+            <div className="bg-[var(--color-primary-light)] border border-[var(--color-primary)] text-[var(--color-primary-dark)] rounded-xl p-3 text-body-sm mb-4">
+              {notice}
+            </div>
           )}
 
           {error && (

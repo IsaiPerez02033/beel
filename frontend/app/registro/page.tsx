@@ -16,14 +16,22 @@ export default function RegistroPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect_url") ?? "/";
+  // Si viene redirigido desde login porque la cuenta no existe
+  const motivo = searchParams.get("motivo");
+  const emailParam = searchParams.get("email") ?? "";
 
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice] = useState(
+    motivo === "nuevo"
+      ? "No encontramos una cuenta con ese correo. Crea una nueva aquí."
+      : ""
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,14 +64,14 @@ export default function RegistroPage() {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const detail = err.detail ?? "Error al crear la cuenta";
-      // Si ya existe, intentar iniciar sesión directamente
-      if (res.status === 400 && detail.includes("ya está registrado")) {
-        const loginResult = await signIn("credentials", { email, password, redirect: false });
-        setLoading(false);
-        if (!loginResult?.error) {
-          router.push(redirectUrl);
-          return;
-        }
+      // Si la cuenta ya existe → redirigir a iniciar sesión con aviso
+      if (res.status === 400 && (detail.includes("ya está registrado") || detail.includes("ya tiene una cuenta"))) {
+        const params = new URLSearchParams();
+        params.set("email", email);
+        params.set("motivo", "existe");
+        if (redirectUrl !== "/") params.set("redirect_url", redirectUrl);
+        router.push(`/iniciar-sesion?${params.toString()}`);
+        return;
       }
       setError(detail);
       setLoading(false);
@@ -120,6 +128,10 @@ export default function RegistroPage() {
                 <div className="flex-1 h-px bg-[var(--border-subtle)]" />
               </div>
             </>
+          )}
+
+          {notice && (
+            <div className="bg-[var(--color-primary-light)] border border-[var(--color-primary)] text-[var(--color-primary-dark)] rounded-xl p-3 text-body-sm mb-4">{notice}</div>
           )}
 
           {error && (
