@@ -42,6 +42,9 @@ class BeelUser:
     """Datos del usuario extraídos del JWT de NextAuth + consulta a BD."""
 
     def __init__(self, claims: dict, db_user):
+        # id = UUID real del usuario en la BD de Beel (funciona para credentials Y Google).
+        # NO usar 'sub' del token como UUID — para Google es un número, no un UUID.
+        self.id = db_user.id if db_user else None
         self.sub: str = claims.get("sub", "")
         self.email: Optional[str] = db_user.email if db_user else claims.get("email")
         self.full_name: Optional[str] = db_user.full_name if db_user else claims.get("name")

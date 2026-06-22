@@ -3,7 +3,7 @@
 import uuid
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser, get_current_user
@@ -104,7 +104,7 @@ async def get_me(
 ):
     """Retorna el perfil completo del usuario autenticado."""
     import uuid as uuid_mod
-    user_id = uuid_mod.UUID(current_user.sub)
+    user_id = current_user.id
     user = await service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
@@ -121,12 +121,49 @@ async def update_me(
     db: AsyncSession = Depends(get_db),
 ):
     """Actualiza el perfil del usuario autenticado."""
-    user_id = uuid_mod.UUID(current_user.sub)
+    user_id = current_user.id
     user = await service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     updated = await service.update_user(db, user, data)
     return updated
+
+
+@router.post("/me/avatar", response_model=UserMeOut)
+async def upload_avatar(
+    current_user: CurrentUser,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Sube una foto de perfil del usuario a S3 y actualiza avatar_url."""
+    from app.core.storage import upload_photo as s3_upload, s3_configured, ALLOWED_CONTENT_TYPES
+
+    user = await service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    if not s3_configured():
+        raise HTTPException(status_code=503, detail="El almacenamiento de fotos no está configurado.")
+
+    content_type = file.content_type or ""
+    if content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Formato no válido. Usa JPEG, PNG o WebP.")
+
+    file_bytes = await file.read()
+    try:
+        url, _ = await s3_upload(
+            file_bytes=file_bytes,
+            content_type=content_type,
+            prefix=f"avatars/{user.id}",
+        )
+    except (ValueError, RuntimeError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    user.avatar_url = url
+    await db.flush()
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 @router.post("/me/become-host", response_model=UserMeOut)
@@ -136,7 +173,7 @@ async def become_host(
     db: AsyncSession = Depends(get_db),
 ):
     """Convierte al usuario en anfitrión."""
-    user_id = uuid_mod.UUID(current_user.sub)
+    user_id = current_user.id
     user = await service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")

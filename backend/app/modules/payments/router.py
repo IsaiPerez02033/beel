@@ -31,7 +31,7 @@ async def _require_admin(
     db: AsyncSession = Depends(get_db),
 ):
     """Dependency que exige rol admin de Beel."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user or user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores de Beel")
     return user
@@ -52,7 +52,7 @@ async def create_checkout(
     Inicia el proceso de pago para una reserva confirmada.
     Retorna la URL de MercadoPago a la que redirigir al usuario.
     """
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -116,7 +116,7 @@ async def get_payment(
     db: AsyncSession = Depends(get_db),
 ):
     """Retorna el estado del pago de una reserva."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 

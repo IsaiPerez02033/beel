@@ -111,7 +111,7 @@ async def create_property(
     db: AsyncSession = Depends(get_db),
 ):
     """Crea una nueva propiedad. El usuario debe ser anfitrión."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     if not user.is_host:
@@ -131,7 +131,7 @@ async def update_property(
     db: AsyncSession = Depends(get_db),
 ):
     """Actualiza una propiedad. Solo el anfitrión propietario puede hacerlo."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -152,7 +152,7 @@ async def delete_property(
     db: AsyncSession = Depends(get_db),
 ):
     """Elimina (soft-delete) una propiedad."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -176,7 +176,7 @@ async def my_listings(
     db: AsyncSession = Depends(get_db),
 ):
     """Lista las propiedades del anfitrión autenticado (todos los estados)."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -235,7 +235,7 @@ async def upload_photo(
     from app.modules.properties.models import PropertyPhoto
     from sqlalchemy import select, func
 
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -300,7 +300,7 @@ async def update_photo(
     from app.modules.properties.models import PropertyPhoto
     from sqlalchemy import select, update
 
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -349,7 +349,7 @@ async def delete_photo(
     from app.modules.properties.models import PropertyPhoto
     from sqlalchemy import select
 
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 

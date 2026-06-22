@@ -12,12 +12,18 @@ export default function NavbarAuth() {
   const { isSignedIn, signOut } = useAuth();
   const { get } = useApi();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string>("");
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     if (!isSignedIn) return;
-    get<{ role: string }>("/users/me")
-      .then((d) => setIsAdmin(d.role === "admin"))
+    get<{ role: string; avatar_url: string | null; full_name: string }>("/users/me")
+      .then((d) => {
+        setIsAdmin(d.role === "admin");
+        setAvatarUrl(d.avatar_url ?? null);
+        setFullName(d.full_name ?? "");
+      })
       .catch(() => {});
   }, [isSignedIn, get]);
 
@@ -54,9 +60,17 @@ export default function NavbarAuth() {
       <div className="relative">
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-body-sm font-medium hover:bg-[var(--color-primary-dark)] transition-colors"
+          className="w-8 h-8 rounded-full overflow-hidden bg-[var(--color-primary)] text-white flex items-center justify-center text-body-sm font-medium hover:opacity-90 transition-opacity"
+          title={fullName}
         >
-          <User size={16} />
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+          ) : fullName ? (
+            <span>{fullName.charAt(0).toUpperCase()}</span>
+          ) : (
+            <User size={16} />
+          )}
         </button>
         {showMenu && (
           <>

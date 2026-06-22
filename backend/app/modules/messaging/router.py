@@ -35,7 +35,7 @@ async def list_conversations(
     db: AsyncSession = Depends(get_db),
 ):
     """Lista todas las conversaciones del usuario autenticado."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     convs = await service.list_conversations(db, user.id)
@@ -51,7 +51,7 @@ async def start_conversation(
     db: AsyncSession = Depends(get_db),
 ):
     """Inicia una nueva conversación con un anfitrión."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     if user.id == data.host_id:
@@ -71,7 +71,7 @@ async def get_messages(
     db: AsyncSession = Depends(get_db),
 ):
     """Lista los mensajes de una conversación (más recientes al final)."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -97,7 +97,7 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
 ):
     """Envía un mensaje en una conversación."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -117,7 +117,7 @@ async def mark_read(
     db: AsyncSession = Depends(get_db),
 ):
     """Marca como leídos los mensajes no leídos."""
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -148,7 +148,7 @@ async def stream_messages(
         es.addEventListener('message', e => console.log(JSON.parse(e.data)));
         es.addEventListener('ping', () => {}); // keepalive
     """
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 

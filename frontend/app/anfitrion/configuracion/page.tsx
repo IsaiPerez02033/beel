@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, User, Bell, Shield, CreditCard, ChevronRight, Check } from "lucide-react";
+import { ChevronLeft, User, Bell, Shield, CreditCard, ChevronRight, Check, Camera, Loader2 } from "lucide-react";
+
+const API_BASE = typeof window !== "undefined" ? "/api/backend" : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api/v1";
 
 interface UserProfile {
   id: string;
@@ -32,9 +34,10 @@ const SECTIONS: { key: Section; label: string; icon: React.ReactNode; descriptio
 ];
 
 export default function ConfiguracionAnfitrionPage() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const router = useRouter();
   const { get, patch } = useApi();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [section, setSection] = useState<Section>("perfil");
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -47,6 +50,7 @@ export default function ConfiguracionAnfitrionPage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [language, setLanguage] = useState("es");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Notification prefs (UI only — backend a futuro)
   const [notifReservations, setNotifReservations] = useState(true);
@@ -88,6 +92,45 @@ export default function ConfiguracionAnfitrionPage() {
       setError(err instanceof Error ? err.message : "Error al guardar");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setError("Solo se permiten imágenes JPEG, PNG o WebP");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("La imagen debe pesar menos de 10 MB");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setError("");
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${API_BASE}/users/me/avatar`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail ?? "Error al subir la foto");
+      }
+      const updated = await res.json();
+      setProfile(updated);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al subir la foto");
+    } finally {
+      setUploadingAvatar(false);
     }
   }
 
@@ -154,6 +197,46 @@ export default function ConfiguracionAnfitrionPage() {
                     {error}
                   </div>
                 )}
+
+                {/* Foto de perfil */}
+                <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[var(--border-subtle)]">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden bg-[var(--color-primary-light)] flex-shrink-0">
+                    {profile?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profile.avatar_url} alt="Foto de perfil" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[var(--color-primary)] text-h1 font-semibold">
+                        {(fullName || "?").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    {uploadingAvatar && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <Loader2 size={22} className="text-white animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="btn btn-outline text-body-sm flex items-center gap-2 px-4 py-2"
+                    >
+                      <Camera size={15} />
+                      {uploadingAvatar ? "Subiendo…" : "Cambiar foto"}
+                    </button>
+                    <p className="text-caption text-[var(--text-tertiary)] mt-1.5">
+                      JPEG, PNG o WebP · Máximo 10 MB
+                    </p>
+                  </div>
+                </div>
 
                 <form onSubmit={handleSaveProfile} className="space-y-5">
                   <div>
