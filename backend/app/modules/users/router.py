@@ -283,24 +283,35 @@ async def identity_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """Webhook de Didit — recibe el resultado de la verificación de identidad."""
+    """
+    Webhook de Didit v3 — resultado de la verificación de identidad.
+    Verifica firma (X-Signature-V2/X-Signature/Simple) y timestamp antes de procesar.
+    Responde 2xx rápido e idempotente.
+    """
     from datetime import datetime, timezone
     import json as _json
-    from app.core.identity import verify_webhook_signature, parse_webhook_result
+    from app.core.identity import verify_webhook, parse_webhook_result
+    from app.core.config import settings as s
 
     body = await request.body()
-    signature = request.headers.get("x-signature", "") or request.headers.get("x-didit-signature", "")
-    timestamp = request.headers.get("x-timestamp", "")
 
-    # Validar firma si hay secret configurado (no bloquear si no hay, para sandbox)
-    from app.core.config import settings as s
-    if s.DIDIT_WEBHOOK_SECRET and not verify_webhook_signature(body, signature, timestamp):
-        raise HTTPException(status_code=401, detail="Firma de webhook inválida")
+    # 1. Verificar firma + timestamp (solo si hay secret configurado)
+    if s.DIDIT_WEBHOOK_SECRET:
+        ok, reason = verify_webhook(body, dict(request.headers))
+        if not ok:
+            logger.warning("Webhook Didit rechazado (%s). Body: %s", reason, body[:300])
+            raise HTTPException(status_code=401, detail="Firma de webhook inválida")
 
+    # 2. Parsear
     try:
         payload = _json.loads(body)
     except Exception:
         raise HTTPException(status_code=400, detail="JSON inválido")
+
+    webhook_type = payload.get("webhook_type", "")
+    # Solo nos interesan los cambios de estado de sesión
+    if webhook_type and webhook_type not in ("status.updated", "user.status.updated"):
+        return {"received": True, "ignored": webhook_type}
 
     user_id, status = parse_webhook_result(payload)
     if not user_id:
@@ -312,12 +323,14 @@ async def identity_webhook(
         return {"received": True, "note": "vendor_data inválido"}
 
     if user:
-        user.identity_status = status
-        if status == "approved":
-            user.is_identity_verified = True
-            user.identity_verified_at = datetime.now(timezone.utc)
-        await db.commit()
-        logger.info("Identidad %s para usuario %s", status, user_id)
+        # Idempotente: si ya está aprobado, no reprocesar
+        if not (user.is_identity_verified and status == "approved"):
+            user.identity_status = status
+            if status == "approved":
+                user.is_identity_verified = True
+                user.identity_verified_at = datetime.now(timezone.utc)
+            await db.commit()
+        logger.info("Identidad '%s' (%s) para usuario %s", status, webhook_type or "?", user_id)
 
     return {"received": True, "status": status}
 

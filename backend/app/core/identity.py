@@ -18,7 +18,9 @@ Config (.env):
 
 import hashlib
 import hmac
+import json
 import logging
+import time
 from typing import Optional
 
 import httpx
@@ -68,26 +70,78 @@ async def create_session(user_id: str, callback_url: str) -> dict:
     }
 
 
-def verify_webhook_signature(body: bytes, signature: str, timestamp: str = "") -> bool:
+def verify_webhook(
+    raw_body: bytes,
+    headers: dict,
+) -> tuple[bool, str]:
     """
-    Valida la firma HMAC-SHA256 del webhook de Didit.
-    Didit firma el body crudo con el webhook secret (hex en header x-signature).
-    Acepta también el esquema con timestamp por compatibilidad.
+    Valida un webhook de Didit v3 según la especificación oficial.
+
+    Verifica (en orden):
+      1. X-Timestamp fresco (≤ 300 s)
+      2. Firma HMAC-SHA256 — soporta los 3 esquemas de Didit:
+         - X-Signature-V2: sobre el JSON canónico ordenado (recomendado)
+         - X-Signature: sobre los bytes crudos del body
+         - X-Signature-Simple: sobre "{ts}:{session_id}:{status}:{webhook_type}"
+
+    Retorna (válido, motivo). Comparación en tiempo constante.
     """
     if not settings.DIDIT_WEBHOOK_SECRET:
-        return False
+        return False, "secret no configurado"
+
     secret = settings.DIDIT_WEBHOOK_SECRET.encode()
-    # Esquema principal de Didit: HMAC del body crudo
-    sig_body = hmac.new(secret, body, hashlib.sha256).hexdigest()
-    if hmac.compare_digest(sig_body, signature):
-        return True
-    # Fallback: esquema con timestamp.body
-    if timestamp:
-        msg = f"{timestamp}.{body.decode('utf-8')}".encode()
-        sig_ts = hmac.new(secret, msg, hashlib.sha256).hexdigest()
-        if hmac.compare_digest(sig_ts, signature):
-            return True
-    return False
+
+    # Headers case-insensitive
+    h = {k.lower(): v for k, v in headers.items()}
+    ts = h.get("x-timestamp", "")
+    sig_v2 = h.get("x-signature-v2", "")
+    sig_raw = h.get("x-signature", "")
+    sig_simple = h.get("x-signature-simple", "")
+
+    # 1. Validar frescura del timestamp (anti-replay)
+    if ts:
+        try:
+            if abs(time.time() - int(ts)) > 300:
+                return False, "timestamp expirado"
+        except (ValueError, TypeError):
+            return False, "timestamp inválido"
+
+    def _hmac(msg: bytes) -> str:
+        return hmac.new(secret, msg, hashlib.sha256).hexdigest()
+
+    # 2a. X-Signature-V2 — JSON canónico ordenado, Unicode preservado
+    if sig_v2:
+        try:
+            parsed = json.loads(raw_body)
+            canonical = json.dumps(
+                parsed, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+            ).encode("utf-8")
+            if hmac.compare_digest(_hmac(canonical), sig_v2):
+                return True, "v2"
+        except Exception:
+            pass
+
+    # 2b. X-Signature — bytes crudos (Didit → backend directo, sin re-encode)
+    if sig_raw and hmac.compare_digest(_hmac(raw_body), sig_raw):
+        return True, "raw"
+
+    # 2c. X-Signature-Simple — fallback
+    if sig_simple:
+        try:
+            p = json.loads(raw_body)
+            msg = f"{ts}:{p.get('session_id','')}:{p.get('status','')}:{p.get('webhook_type','')}"
+            if hmac.compare_digest(_hmac(msg.encode()), sig_simple):
+                return True, "simple"
+        except Exception:
+            pass
+
+    return False, "firma inválida"
+
+
+# Compat: función anterior (mantener por si algo la referencia)
+def verify_webhook_signature(body: bytes, signature: str, timestamp: str = "") -> bool:
+    ok, _ = verify_webhook(body, {"x-signature": signature, "x-timestamp": timestamp})
+    return ok
 
 
 def parse_webhook_result(payload: dict) -> tuple[Optional[str], str]:
