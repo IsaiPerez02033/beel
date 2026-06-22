@@ -41,13 +41,18 @@ class Settings(BaseSettings):
     # ── Autenticación (NextAuth) ────────────────────────────────────────────────
     NEXTAUTH_SECRET: str = ""  # Secreto compartido con el frontend (HS256 para JWT)
 
-    # ── AWS S3 ───────────────────────────────────────────────────────────────
+    # ── Almacenamiento de fotos (Supabase Storage) ────────────────────────────
+    SUPABASE_URL: Optional[str] = None          # https://xxxxx.supabase.co
+    SUPABASE_SERVICE_KEY: Optional[str] = None  # service_role key (NO el anon)
+    SUPABASE_STORAGE_BUCKET: str = "beel-media"  # bucket público
+    MAX_PHOTO_SIZE_BYTES: int = 10 * 1024 * 1024
+
+    # ── AWS S3 (legacy, ya no se usa — reemplazado por Supabase Storage) ───────
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
     AWS_REGION: str = "us-east-1"
     S3_BUCKET_NAME: str = "beel-media"
     S3_BUCKET_URL: str = ""
-    MAX_PHOTO_SIZE_BYTES: int = 10 * 1024 * 1024
 
     # ── Google Maps ───────────────────────────────────────────────────────────
     GOOGLE_MAPS_API_KEY: Optional[str] = None

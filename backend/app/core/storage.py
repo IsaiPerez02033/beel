@@ -1,25 +1,30 @@
 """
-Servicio de almacenamiento de archivos en AWS S3 para Beel.
+Servicio de almacenamiento de archivos en Supabase Storage para Beel.
+
+Usa la API REST de Supabase Storage vía httpx (sin dependencias extra).
+Mantiene la misma interfaz que la versión anterior de S3 para no romper callers.
 
 Uso:
     from app.core.storage import upload_photo, delete_photo
 
-    url = await upload_photo(file_bytes, "image/jpeg", "properties/uuid/")
-    await delete_photo(s3_key)
+    url, key = await upload_photo(file_bytes, "image/jpeg", "properties/uuid/")
+    await delete_photo(key)
+
+Configuración requerida (.env):
+    SUPABASE_URL=https://xxxxx.supabase.co
+    SUPABASE_SERVICE_KEY=eyJhbGci...   (service_role key, NO el anon key)
+    SUPABASE_STORAGE_BUCKET=beel-media (bucket público)
 """
 
 import logging
 import uuid
 from typing import Optional
 
-import boto3
-from botocore.exceptions import ClientError
+import httpx
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
-
-_s3_client = None
 
 ALLOWED_CONTENT_TYPES = {
     "image/jpeg": "jpg",
@@ -30,30 +35,21 @@ ALLOWED_CONTENT_TYPES = {
 }
 
 
-def _get_s3():
-    global _s3_client
-    if _s3_client is not None:
-        return _s3_client
-    if not settings.AWS_ACCESS_KEY_ID or not settings.AWS_SECRET_ACCESS_KEY:
-        return None
-    try:
-        _s3_client = boto3.client(
-            "s3",
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION,
-        )
-        return _s3_client
-    except Exception as e:
-        logger.error("Error inicializando cliente S3: %s", e)
-        return None
+def storage_configured() -> bool:
+    """Retorna True si Supabase Storage está configurado."""
+    return bool(settings.SUPABASE_URL and settings.SUPABASE_SERVICE_KEY)
+
+
+# Alias retrocompatible (los routers llaman s3_configured)
+def s3_configured() -> bool:
+    return storage_configured()
 
 
 def _public_url(key: str) -> str:
-    """Construye la URL pública de un objeto en S3."""
-    if settings.S3_BUCKET_URL:
-        return f"{settings.S3_BUCKET_URL.rstrip('/')}/{key}"
-    return f"https://{settings.S3_BUCKET_NAME}.s3.{settings.AWS_REGION}.amazonaws.com/{key}"
+    """URL pública de un objeto en un bucket público de Supabase Storage."""
+    base = settings.SUPABASE_URL.rstrip("/")
+    bucket = settings.SUPABASE_STORAGE_BUCKET
+    return f"{base}/storage/v1/object/public/{bucket}/{key}"
 
 
 async def upload_photo(
@@ -63,17 +59,11 @@ async def upload_photo(
     filename: Optional[str] = None,
 ) -> tuple[str, str]:
     """
-    Sube una foto a S3 y retorna (url_publica, s3_key).
-
-    Args:
-        file_bytes: Contenido del archivo
-        content_type: MIME type (image/jpeg, image/png, image/webp)
-        prefix: Carpeta en S3 (ej. "properties/uuid/")
-        filename: Nombre de archivo (se genera UUID si no se provee)
+    Sube una foto a Supabase Storage y retorna (url_publica, key).
 
     Raises:
-        ValueError: Si el content_type no es permitido o el archivo es muy grande
-        RuntimeError: Si S3 no está configurado
+        ValueError: formato no permitido o archivo muy grande
+        RuntimeError: storage no configurado o error de subida
     """
     if content_type not in ALLOWED_CONTENT_TYPES:
         raise ValueError(f"Formato no permitido: {content_type}. Usa JPEG, PNG o WebP.")
@@ -82,41 +72,51 @@ async def upload_photo(
         max_mb = settings.MAX_PHOTO_SIZE_BYTES // (1024 * 1024)
         raise ValueError(f"El archivo excede el tamaño máximo de {max_mb} MB.")
 
-    s3 = _get_s3()
-    if not s3:
-        raise RuntimeError("S3 no está configurado. Agrega AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY al .env")
+    if not storage_configured():
+        raise RuntimeError(
+            "Supabase Storage no está configurado. "
+            "Agrega SUPABASE_URL y SUPABASE_SERVICE_KEY al .env"
+        )
 
     ext = ALLOWED_CONTENT_TYPES[content_type]
     key = f"{prefix.rstrip('/')}/{filename or uuid.uuid4()}.{ext}"
 
+    base = settings.SUPABASE_URL.rstrip("/")
+    bucket = settings.SUPABASE_STORAGE_BUCKET
+    url = f"{base}/storage/v1/object/{bucket}/{key}"
+
+    headers = {
+        "Authorization": f"Bearer {settings.SUPABASE_SERVICE_KEY}",
+        "Content-Type": content_type,
+        "Cache-Control": "public, max-age=31536000",
+        # upsert para permitir reemplazar la misma ruta (ej. avatar)
+        "x-upsert": "true",
+    }
+
     try:
-        s3.put_object(
-            Bucket=settings.S3_BUCKET_NAME,
-            Key=key,
-            Body=file_bytes,
-            ContentType=content_type,
-            CacheControl="public, max-age=31536000",  # 1 año
-        )
-        url = _public_url(key)
-        logger.info("Foto subida a S3: %s", key)
-        return url, key
-    except ClientError as e:
-        logger.error("Error subiendo foto a S3: %s", e)
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(url, content=file_bytes, headers=headers)
+        if resp.status_code not in (200, 201):
+            logger.error("Error subiendo a Supabase Storage [%s]: %s", resp.status_code, resp.text)
+            raise RuntimeError("Error al subir la foto. Intenta de nuevo.")
+        logger.info("Foto subida a Supabase Storage: %s", key)
+        return _public_url(key), key
+    except httpx.HTTPError as e:
+        logger.error("Error de red subiendo a Supabase Storage: %s", e)
         raise RuntimeError("Error al subir la foto. Intenta de nuevo.") from e
 
 
-async def delete_photo(s3_key: str) -> None:
-    """Elimina un objeto de S3 por su key. Falla silenciosamente si no existe."""
-    s3 = _get_s3()
-    if not s3 or not s3_key:
+async def delete_photo(key: str) -> None:
+    """Elimina un objeto de Supabase Storage. Falla silenciosamente si no existe."""
+    if not storage_configured() or not key:
         return
+    base = settings.SUPABASE_URL.rstrip("/")
+    bucket = settings.SUPABASE_STORAGE_BUCKET
+    url = f"{base}/storage/v1/object/{bucket}/{key}"
+    headers = {"Authorization": f"Bearer {settings.SUPABASE_SERVICE_KEY}"}
     try:
-        s3.delete_object(Bucket=settings.S3_BUCKET_NAME, Key=s3_key)
-        logger.info("Foto eliminada de S3: %s", s3_key)
-    except ClientError as e:
-        logger.warning("Error eliminando foto de S3 %s: %s", s3_key, e)
-
-
-def s3_configured() -> bool:
-    """Retorna True si S3 está configurado."""
-    return bool(settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and settings.S3_BUCKET_NAME)
+        async with httpx.AsyncClient(timeout=15) as client:
+            await client.delete(url, headers=headers)
+        logger.info("Foto eliminada de Supabase Storage: %s", key)
+    except httpx.HTTPError as e:
+        logger.warning("Error eliminando foto %s: %s", key, e)

@@ -13,7 +13,7 @@ const cspHeader = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.mercadopago.com.ar https://www.mercadopago.com https://*.mercadopago.com https://*.google.com https://www.googletagmanager.com`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-  `img-src 'self' data: blob: ${apiOrigin} https://lh3.googleusercontent.com https://*.googleusercontent.com https://images.unsplash.com https://beel-media.s3.amazonaws.com https://*.s3.amazonaws.com https://*.s3.us-east-1.amazonaws.com https://*.cloudfront.net https://www.mercadopago.com https://www.google.com`,
+  `img-src 'self' data: blob: ${apiOrigin} https://lh3.googleusercontent.com https://*.googleusercontent.com https://images.unsplash.com https://*.supabase.co https://*.cloudfront.net https://www.mercadopago.com https://www.google.com`,
   `font-src 'self' https://fonts.gstatic.com`,
   `connect-src 'self' ${apiOrigin} ${wsOrigin} https://accounts.google.com https://www.mercadopago.com https://api.mercadopago.com https://*.google-analytics.com https://*.analytics.google.com`,
   `frame-src 'self' https://accounts.google.com https://www.mercadopago.com https://www.mercadopago.com.ar https://*.mercadopago.com`,
@@ -30,7 +30,7 @@ const nextConfig = {
 
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "beel-media.s3.amazonaws.com" },
+      { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "*.cloudfront.net" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
