@@ -92,17 +92,33 @@ def verify_webhook_signature(body: bytes, signature: str, timestamp: str = "") -
 
 def parse_webhook_result(payload: dict) -> tuple[Optional[str], str]:
     """
-    Extrae (vendor_data/user_id, status) del payload del webhook.
+    Extrae (vendor_data/user_id, status) del payload del webhook de Didit v3.
     status normalizado: 'approved' | 'declined' | 'pending'
-    """
-    user_id = payload.get("vendor_data")
-    raw_status = (payload.get("status") or payload.get("decision") or "").lower()
 
-    if raw_status in ("approved", "approve", "verified", "completed"):
+    En v3 el payload trae 'vendor_data' y 'status' a nivel raíz; algunos
+    eventos lo anidan en 'session'. Buscamos en ambos lugares.
+    """
+    session = payload.get("session") or {}
+
+    user_id = (
+        payload.get("vendor_data")
+        or session.get("vendor_data")
+        or payload.get("metadata", {}).get("vendor_data")
+    )
+
+    raw = (
+        payload.get("status")
+        or session.get("status")
+        or payload.get("decision")
+        or ""
+    )
+    raw_status = str(raw).strip().lower()
+
+    if raw_status in ("approved", "approve", "verified", "completed", "success"):
         status = "approved"
-    elif raw_status in ("declined", "rejected", "denied", "failed"):
+    elif raw_status in ("declined", "rejected", "denied", "failed", "abandoned", "expired", "kyc expired"):
         status = "declined"
     else:
-        status = "pending"
+        status = "pending"  # not started, in progress, in review
 
     return user_id, status
