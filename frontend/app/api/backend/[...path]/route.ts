@@ -31,12 +31,21 @@ async function proxy(req: NextRequest, params: { path: string[] }): Promise<Next
 
   try {
     const res = await fetch(url, { method, headers, body });
-    const resHeaders = new Headers(res.headers);
-    // Eliminar content-encoding para evitar problemas de descompresión doble
-    resHeaders.delete("content-encoding");
-    resHeaders.delete("transfer-encoding");
 
-    return new NextResponse(res.body, {
+    // Bufferear la respuesta completa. fetch() ya descomprimió el body,
+    // pero los headers content-encoding/content-length corresponden al
+    // body comprimido — si los reenviamos, el browser trunca la respuesta.
+    const buffer = await res.arrayBuffer();
+
+    const resHeaders = new Headers();
+    res.headers.forEach((value, key) => {
+      const k = key.toLowerCase();
+      // Omitir headers de longitud/codificación — NextResponse los recalcula
+      if (k === "content-encoding" || k === "content-length" || k === "transfer-encoding") return;
+      resHeaders.set(key, value);
+    });
+
+    return new NextResponse(buffer, {
       status: res.status,
       headers: resHeaders,
     });
