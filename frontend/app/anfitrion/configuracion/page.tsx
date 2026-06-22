@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, User, Bell, Shield, CreditCard, ChevronRight, Check, Camera, Loader2 } from "lucide-react";
+import { ChevronLeft, User, Bell, Shield, CreditCard, ChevronRight, Check, Camera, Loader2, Phone, BadgeCheck, ShieldCheck, MessageCircle } from "lucide-react";
 
 const API_BASE = typeof window !== "undefined" ? "/api/backend" : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api/v1";
 
@@ -16,9 +16,11 @@ interface UserProfile {
   full_name: string;
   email: string;
   phone?: string;
+  phone_country_code?: string;
   avatar_url?: string;
   is_phone_verified: boolean;
   is_identity_verified: boolean;
+  identity_status?: string;
   preferred_language: string;
   host_since?: string;
   total_listings: number;
@@ -346,31 +348,9 @@ export default function ConfiguracionAnfitrionPage() {
                 </p>
               </div>
             ) : section === "seguridad" ? (
-              <div className="card p-6">
-                <h2 className="text-h2 font-semibold text-[var(--text-primary)] mb-6">Seguridad</h2>
-                <div className="space-y-4">
-                  <VerificationRow
-                    label="Verificación de identidad"
-                    description="Sube una identificación oficial para aumentar la confianza de los huéspedes"
-                    verified={profile?.is_identity_verified ?? false}
-                    action="Verificar identidad"
-                    onAction={() => {}}
-                    disabled
-                  />
-                  <div className="divider" />
-                  <VerificationRow
-                    label="Número de teléfono"
-                    description="Verifica tu número para mayor seguridad"
-                    verified={profile?.is_phone_verified ?? false}
-                    action="Verificar teléfono"
-                    onAction={() => {}}
-                    disabled
-                  />
-                </div>
-                <p className="text-caption text-[var(--text-tertiary)] mt-6">
-                  La verificación de identidad estará disponible próximamente
-                </p>
-              </div>
+              <SeguridadSection profile={profile} onRefresh={() => {
+                get<UserProfile>("/users/me").then(setProfile).catch(() => {});
+              }} />
             ) : (
               <div className="card p-6">
                 <h2 className="text-h2 font-semibold text-[var(--text-primary)] mb-2">Pagos</h2>
@@ -485,6 +465,234 @@ function VerificationRow({
           {action}
         </button>
       )}
+    </div>
+  );
+}
+
+// ── Sección de Seguridad: verificación de teléfono e identidad ────────────────
+
+function SeguridadSection({
+  profile, onRefresh,
+}: {
+  profile: UserProfile | null;
+  onRefresh: () => void;
+}) {
+  const { post } = useApi();
+
+  // Teléfono
+  const [phone, setPhone] = useState(profile?.phone ?? "");
+  const [countryCode, setCountryCode] = useState(profile?.phone_country_code ?? "+52");
+  const [channel, setChannel] = useState<"sms" | "whatsapp">("sms");
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [phoneLoading, setPhoneLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+
+  // Identidad
+  const [identityLoading, setIdentityLoading] = useState(false);
+  const [identityError, setIdentityError] = useState("");
+
+  const phoneVerified = profile?.is_phone_verified ?? false;
+  const identityVerified = profile?.is_identity_verified ?? false;
+  const identityStatus = profile?.identity_status ?? "none";
+
+  async function sendCode() {
+    setPhoneLoading(true);
+    setPhoneError("");
+    try {
+      await post("/users/me/phone/send", { phone, country_code: countryCode, channel });
+      setCodeSent(true);
+    } catch (e) {
+      setPhoneError(e instanceof Error ? e.message : "Error al enviar el código");
+    } finally {
+      setPhoneLoading(false);
+    }
+  }
+
+  async function verifyCode() {
+    setPhoneLoading(true);
+    setPhoneError("");
+    try {
+      await post("/users/me/phone/verify", { code });
+      setCodeSent(false);
+      setCode("");
+      onRefresh();
+    } catch (e) {
+      setPhoneError(e instanceof Error ? e.message : "Código incorrecto");
+    } finally {
+      setPhoneLoading(false);
+    }
+  }
+
+  async function startIdentity() {
+    setIdentityLoading(true);
+    setIdentityError("");
+    try {
+      const res = await post<{ url: string }>("/users/me/identity/start", {});
+      if (res.url) {
+        window.location.href = res.url; // Redirigir a la página de Didit
+      } else {
+        setIdentityError("No se pudo iniciar la verificación.");
+        setIdentityLoading(false);
+      }
+    } catch (e) {
+      setIdentityError(e instanceof Error ? e.message : "Error al iniciar verificación");
+      setIdentityLoading(false);
+    }
+  }
+
+  return (
+    <div className="card p-6">
+      <h2 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">Seguridad</h2>
+      <p className="text-body-sm text-[var(--text-secondary)] mb-6">
+        Verifica tu teléfono e identidad para reservar y publicar propiedades.
+      </p>
+
+      {/* ── Verificación de teléfono ── */}
+      <div className="border border-[var(--border-subtle)] rounded-2xl p-5 mb-5">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <Phone size={18} className="text-[var(--color-primary)]" />
+            <div>
+              <p className="text-body font-medium text-[var(--text-primary)]">Número de teléfono</p>
+              <p className="text-caption text-[var(--text-secondary)]">Te enviamos un código por SMS o WhatsApp</p>
+            </div>
+          </div>
+          {phoneVerified && (
+            <span className="badge badge-verified flex items-center gap-1 flex-shrink-0">
+              <BadgeCheck size={12} /> Verificado
+            </span>
+          )}
+        </div>
+
+        {!phoneVerified && (
+          <>
+            {!codeSent ? (
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    className="input w-20"
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    placeholder="+52"
+                  />
+                  <input
+                    className="input flex-1"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="999 000 0000"
+                    type="tel"
+                  />
+                </div>
+                {/* Canal */}
+                <div className="flex gap-2">
+                  {(["sms", "whatsapp"] as const).map((ch) => (
+                    <button
+                      key={ch}
+                      type="button"
+                      onClick={() => setChannel(ch)}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-body-sm font-medium transition-all",
+                        channel === ch
+                          ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)]"
+                          : "border-[var(--border-subtle)] text-[var(--text-secondary)]"
+                      )}
+                    >
+                      {ch === "sms" ? <MessageCircle size={15} /> : <MessageCircle size={15} />}
+                      {ch === "sms" ? "SMS" : "WhatsApp"}
+                    </button>
+                  ))}
+                </div>
+                {phoneError && <p className="text-caption text-red-600">{phoneError}</p>}
+                <button
+                  onClick={sendCode}
+                  disabled={phoneLoading || !phone}
+                  className="btn btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  {phoneLoading ? <Loader2 size={15} className="animate-spin" /> : "Enviar código"}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-body-sm text-[var(--text-secondary)]">
+                  Ingresa el código que enviamos a {countryCode} {phone}
+                </p>
+                <input
+                  className="input w-full text-center text-h3 tracking-[0.3em]"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="000000"
+                  maxLength={6}
+                  inputMode="numeric"
+                />
+                {phoneError && <p className="text-caption text-red-600">{phoneError}</p>}
+                <div className="flex gap-2">
+                  <button onClick={() => { setCodeSent(false); setPhoneError(""); }} className="btn btn-outline flex-1">
+                    Cambiar número
+                  </button>
+                  <button
+                    onClick={verifyCode}
+                    disabled={phoneLoading || code.length < 4}
+                    className="btn btn-primary flex-1 flex items-center justify-center gap-2"
+                  >
+                    {phoneLoading ? <Loader2 size={15} className="animate-spin" /> : "Verificar"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ── Verificación de identidad ── */}
+      <div className="border border-[var(--border-subtle)] rounded-2xl p-5">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={18} className="text-[var(--color-primary)]" />
+            <div>
+              <p className="text-body font-medium text-[var(--text-primary)]">Verificación de identidad</p>
+              <p className="text-caption text-[var(--text-secondary)]">
+                Escanea tu identificación oficial (INE o pasaporte) y verifica tu rostro
+              </p>
+            </div>
+          </div>
+          {identityVerified && (
+            <span className="badge badge-verified flex items-center gap-1 flex-shrink-0">
+              <BadgeCheck size={12} /> Verificado
+            </span>
+          )}
+        </div>
+
+        {!identityVerified && (
+          <>
+            {identityStatus === "pending" && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3 text-body-sm mb-3">
+                Tu verificación está en revisión. Te avisaremos cuando se complete.
+              </div>
+            )}
+            {identityStatus === "declined" && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-body-sm mb-3">
+                Tu verificación fue rechazada. Puedes intentarlo de nuevo.
+              </div>
+            )}
+            {identityError && <p className="text-caption text-red-600 mb-2">{identityError}</p>}
+            <button
+              onClick={startIdentity}
+              disabled={identityLoading}
+              className="btn btn-primary w-full flex items-center justify-center gap-2"
+            >
+              {identityLoading ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <><ShieldCheck size={15} /> {identityStatus === "declined" ? "Reintentar verificación" : "Verificar mi identidad"}</>
+              )}
+            </button>
+            <p className="text-caption text-[var(--text-tertiary)] mt-3 text-center">
+              Se abrirá una verificación segura. Necesitas tu documento y la cámara.
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

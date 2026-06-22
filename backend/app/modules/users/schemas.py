@@ -54,9 +54,11 @@ class UserMeOut(BaseModel):
     full_name: str
     avatar_url: Optional[str]
     phone: Optional[str]
+    phone_country_code: Optional[str] = None
     role: str
     is_phone_verified: bool
     is_identity_verified: bool
+    identity_status: str = "none"
     is_active: bool
     preferred_language: str
     host_since: Optional[datetime]
@@ -77,6 +79,18 @@ class UserUpdateIn(BaseModel):
     phone_country_code: Optional[str] = Field(None, max_length=5)
     preferred_language: Optional[str] = Field(None, pattern="^(es|en|pt)$")
     avatar_url: Optional[str] = Field(None, max_length=1000)
+
+
+class PhoneSendIn(BaseModel):
+    """Solicitud para enviar código de verificación de teléfono."""
+    phone: str = Field(..., min_length=8, max_length=20)        # número local o E.164
+    country_code: str = Field("+52", max_length=5)
+    channel: str = Field("sms", pattern="^(sms|whatsapp)$")
+
+
+class PhoneVerifyIn(BaseModel):
+    """Solicitud para verificar el código del teléfono."""
+    code: str = Field(..., min_length=4, max_length=10)
 
 
 class BecomeHostIn(BaseModel):
