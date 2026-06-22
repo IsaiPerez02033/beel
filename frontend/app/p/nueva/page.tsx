@@ -92,6 +92,8 @@ export default function NuevaPropiedadPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
+  // Gate de verificación: null = cargando, true/false = resultado
+  const [verified, setVerified] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -99,6 +101,10 @@ export default function NuevaPropiedadPage() {
       router.push("/iniciar-sesion?redirect_url=/p/nueva");
       return;
     }
+    // Verificar que el usuario tenga teléfono e identidad verificados
+    get<{ is_phone_verified: boolean; is_identity_verified: boolean }>("/users/me")
+      .then((u) => setVerified(!!u.is_phone_verified && !!u.is_identity_verified))
+      .catch(() => setVerified(false));
     get<{ amenities: Amenity[] }>("/properties/amenities")
       .then((d) => setAmenities(d.amenities ?? []))
       .catch(() => {});
@@ -163,6 +169,66 @@ export default function NuevaPropiedadPage() {
 
   function handleFinish() {
     router.push(`/anfitrion`);
+  }
+
+  // Gate: mientras carga el estado de verificación
+  if (verified === null) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)]">
+        <Navbar />
+        <main className="max-w-2xl mx-auto px-4 py-8">
+          <div className="card p-6 animate-pulse space-y-3">
+            <div className="skeleton h-6 w-1/2 rounded" />
+            <div className="skeleton h-10 w-full rounded-xl" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Gate: usuario no verificado → pedir verificación antes de publicar
+  if (!verified) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)]">
+        <Navbar />
+        <main className="max-w-lg mx-auto px-4 py-16">
+          <div className="card p-8 text-center">
+            <div className="w-14 h-14 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mx-auto mb-4">
+              <Settings size={26} className="text-[var(--color-primary)]" />
+            </div>
+            <h1 className="text-h1 font-display font-medium text-[var(--text-primary)] mb-2">
+              Verifica tu cuenta para ser anfitrión
+            </h1>
+            <p className="text-body text-[var(--text-secondary)] mb-6">
+              Para publicar una propiedad necesitas verificar tu número de teléfono
+              y tu identidad. Es rápido y solo se hace una vez.
+            </p>
+            <div className="space-y-2 text-left mb-6">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-subtle)]">
+                <span className="text-xl">📱</span>
+                <div>
+                  <p className="text-body-sm font-medium text-[var(--text-primary)]">Verificación de teléfono</p>
+                  <p className="text-caption text-[var(--text-secondary)]">Código por SMS o WhatsApp</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-subtle)]">
+                <span className="text-xl">🪪</span>
+                <div>
+                  <p className="text-body-sm font-medium text-[var(--text-primary)]">Verificación de identidad</p>
+                  <p className="text-caption text-[var(--text-secondary)]">Documento oficial + verificación facial</p>
+                </div>
+              </div>
+            </div>
+            <Link href="/anfitrion/configuracion?seccion=seguridad" className="btn btn-primary w-full">
+              Verificar mi cuenta
+            </Link>
+            <Link href="/anfitrion" className="block text-body-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mt-4">
+              Volver al panel
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
