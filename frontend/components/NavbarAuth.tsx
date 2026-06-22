@@ -8,6 +8,17 @@ import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
 
+// Extrae primer nombre + primer apellido de un nombre completo.
+// "Isai Aram Perez Flores" → "Isai Perez" | "Ana López" → "Ana López"
+function shortName(full: string): string {
+  const words = full.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "";
+  if (words.length === 1) return words[0];
+  // 4+ palabras = 2 nombres + 2 apellidos → nombre[0] + apellido[2]
+  const surname = words.length >= 4 ? words[2] : words[1];
+  return `${words[0]} ${surname}`;
+}
+
 export default function NavbarAuth() {
   const { isSignedIn, signOut } = useAuth();
   const { get } = useApi();
@@ -57,6 +68,11 @@ export default function NavbarAuth() {
       <Link href="/reservaciones" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
         Viajes
       </Link>
+      {fullName && (
+        <span className="hidden md:block text-body-sm text-[var(--text-secondary)] ml-1">
+          Hola, <span className="font-medium text-[var(--text-primary)]">{shortName(fullName)}</span>
+        </span>
+      )}
       <div className="relative">
         <button
           onClick={() => setShowMenu(!showMenu)}
