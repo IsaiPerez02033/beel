@@ -41,7 +41,12 @@ export default function ConfiguracionAnfitrionPage() {
   const { get, patch } = useApi();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [section, setSection] = useState<Section>("perfil");
+  // Sección inicial desde ?seccion=seguridad (al venir del gate de anfitrión)
+  const initialSection =
+    typeof window !== "undefined"
+      ? (new URLSearchParams(window.location.search).get("seccion") as Section) || "perfil"
+      : "perfil";
+  const [section, setSection] = useState<Section>(initialSection);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
