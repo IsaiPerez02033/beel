@@ -74,7 +74,9 @@ class UserUpdateIn(BaseModel):
     """Campos que el usuario puede actualizar en su perfil."""
     full_name: Optional[str] = Field(None, min_length=2, max_length=255)
     phone: Optional[str] = Field(None, max_length=30)
+    phone_country_code: Optional[str] = Field(None, max_length=5)
     preferred_language: Optional[str] = Field(None, pattern="^(es|en|pt)$")
+    avatar_url: Optional[str] = Field(None, max_length=1000)
 
 
 class BecomeHostIn(BaseModel):

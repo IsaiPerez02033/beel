@@ -59,6 +59,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (account?.provider === "google") ||
         (token.email && token.sub && !isBeelUUID.test(token.sub));
 
+      // Foto de Google: user.image (primer login) o token.picture (refresh)
+      const googlePicture = (user as any)?.image ?? (token as any).picture ?? null;
+
       if (needsBeelId && token.email) {
         try {
           const res = await fetch(`${API}/api/v1/users/oauth/google`, {
@@ -68,13 +71,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email: token.email,
               full_name: token.name ?? "",
               google_id: account?.providerAccountId ?? token.sub,
-              avatar_url: (user as any)?.image ?? null,
+              avatar_url: googlePicture,
             }),
           });
           if (res.ok) {
             const beelUser = await res.json();
             token.sub = beelUser.id;        // UUID real de Beel
             token.role = beelUser.role ?? "guest";
+            // Usar el avatar de la BD (puede ser el de Google o uno subido)
+            (token as any).picture = beelUser.avatar_url ?? googlePicture;
           }
         } catch {
           // silencioso — el backend rechazará con 401
@@ -86,6 +91,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       session.user.id = token.sub!;
       (session.user as any).role = token.role ?? "guest";
+      session.user.image = (token as any).picture ?? session.user.image ?? null;
       return session;
     },
   },
