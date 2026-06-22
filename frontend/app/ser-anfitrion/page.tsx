@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
+import HostCTAs from "@/components/HostCTAs";
 import { DollarSign, Shield, Star, Home, Clock, HeartHandshake } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -106,14 +107,7 @@ export default function SerAnfitrionPage() {
             Publica tu propiedad en Beel y empieza a recibir huéspedes en Mérida y
             la Península de Yucatán. Sin comisión. Sin complicaciones.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/registro?redirect_url=/anfitrion" className="btn btn-primary text-body px-8 py-3">
-              Publicar mi propiedad
-            </Link>
-            <Link href="/iniciar-sesion?redirect_url=/anfitrion" className="btn btn-outline text-body px-8 py-3">
-              Ya tengo cuenta
-            </Link>
-          </div>
+          <HostCTAs variant="hero" />
         </div>
       </section>
 
@@ -174,9 +168,7 @@ export default function SerAnfitrionPage() {
             Durante los primeros años, Beel no cobra ningún porcentaje sobre tus reservas.
             Publicas, recibes huéspedes y cobras el 100% del precio que tú defines.
           </p>
-          <Link href="/registro?redirect_url=/anfitrion" className="btn btn-primary text-body px-8 py-3">
-            Empezar gratis
-          </Link>
+          <HostCTAs variant="single" />
         </div>
       </section>
 
@@ -207,9 +199,7 @@ export default function SerAnfitrionPage() {
         <p className="text-body text-[var(--text-secondary)] mb-8">
           Crea tu cuenta en minutos y publica tu primer hospedaje hoy.
         </p>
-        <Link href="/registro?redirect_url=/anfitrion" className="btn btn-primary text-body px-8 py-3">
-          Crear cuenta gratis
-        </Link>
+        <HostCTAs variant="single" />
       </section>
 
       {/* ── Footer mínimo ────────────────────────────────────────────────── */}
