@@ -68,16 +68,26 @@ async def create_session(user_id: str, callback_url: str) -> dict:
     }
 
 
-def verify_webhook_signature(body: bytes, signature: str, timestamp: str) -> bool:
-    """Valida la firma HMAC del webhook de Didit."""
+def verify_webhook_signature(body: bytes, signature: str, timestamp: str = "") -> bool:
+    """
+    Valida la firma HMAC-SHA256 del webhook de Didit.
+    Didit firma el body crudo con el webhook secret (hex en header x-signature).
+    Acepta también el esquema con timestamp por compatibilidad.
+    """
     if not settings.DIDIT_WEBHOOK_SECRET:
-        logger.warning("DIDIT_WEBHOOK_SECRET no configurado — webhook sin verificar")
         return False
-    message = f"{timestamp}.{body.decode('utf-8')}".encode()
-    expected = hmac.new(
-        settings.DIDIT_WEBHOOK_SECRET.encode(), message, hashlib.sha256
-    ).hexdigest()
-    return hmac.compare_digest(expected, signature)
+    secret = settings.DIDIT_WEBHOOK_SECRET.encode()
+    # Esquema principal de Didit: HMAC del body crudo
+    sig_body = hmac.new(secret, body, hashlib.sha256).hexdigest()
+    if hmac.compare_digest(sig_body, signature):
+        return True
+    # Fallback: esquema con timestamp.body
+    if timestamp:
+        msg = f"{timestamp}.{body.decode('utf-8')}".encode()
+        sig_ts = hmac.new(secret, msg, hashlib.sha256).hexdigest()
+        if hmac.compare_digest(sig_ts, signature):
+            return True
+    return False
 
 
 def parse_webhook_result(payload: dict) -> tuple[Optional[str], str]:
