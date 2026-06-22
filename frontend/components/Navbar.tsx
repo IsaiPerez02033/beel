@@ -24,6 +24,8 @@ interface NavbarProps {
 export default function Navbar({ transparent = false }: NavbarProps) {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  // Área de anfitrión: el navbar cambia a modo anfitrión
+  const isHostArea = pathname.startsWith("/anfitrion") || pathname.startsWith("/p/nueva") || pathname.includes("/editar");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isSignedIn } = useAuth();
 
@@ -50,12 +52,19 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           />
         </Link>
 
-        {/* Links centro */}
+        {/* Links centro — cambian según el modo */}
         <div className="hidden md:flex items-center gap-1">
-          <NavLink href="/buscar">Explorar</NavLink>
-          <NavLink href="/ser-anfitrion">
-            Ser anfitrión
-          </NavLink>
+          {isHostArea ? (
+            <>
+              <NavLink href="/anfitrion">Panel</NavLink>
+              <NavLink href="/anfitrion/configuracion">Configuración</NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink href="/buscar">Explorar</NavLink>
+              <NavLink href="/ser-anfitrion">Ser anfitrión</NavLink>
+            </>
+          )}
         </div>
 
         {/* Auth — solo cliente, sin SSR */}
@@ -76,15 +85,17 @@ export default function Navbar({ transparent = false }: NavbarProps) {
       {/* Menú móvil */}
       {mobileOpen && (
         <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3 space-y-2">
-          <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>
-            Explorar
-          </MobileLink>
-          <MobileLink
-            href="/ser-anfitrion"
-            onClick={() => setMobileOpen(false)}
-          >
-            Ser anfitrión
-          </MobileLink>
+          {isHostArea ? (
+            <>
+              <MobileLink href="/anfitrion" onClick={() => setMobileOpen(false)}>Panel</MobileLink>
+              <MobileLink href="/anfitrion/configuracion" onClick={() => setMobileOpen(false)}>Configuración</MobileLink>
+            </>
+          ) : (
+            <>
+              <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
+              <MobileLink href="/ser-anfitrion" onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
+            </>
+          )}
           <NavbarAuthMobile onClose={() => setMobileOpen(false)} />
         </div>
       )}

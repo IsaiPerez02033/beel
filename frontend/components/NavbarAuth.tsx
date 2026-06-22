@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ShieldCheck, LogOut, Settings, User } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { ShieldCheck, LogOut, Settings, User, Home, Briefcase } from "lucide-react";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
@@ -22,21 +22,40 @@ function shortName(full: string): string {
 export default function NavbarAuth() {
   const { isSignedIn, signOut } = useAuth();
   const { get } = useApi();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string>("");
+  const [verified, setVerified] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+
+  // Modo anfitrión cuando estamos en su área
+  const isHostArea =
+    pathname.startsWith("/anfitrion") || pathname.startsWith("/p/nueva") || pathname.includes("/editar");
 
   useEffect(() => {
     if (!isSignedIn) return;
-    get<{ role: string; avatar_url: string | null; full_name: string }>("/users/me")
+    get<{ role: string; avatar_url: string | null; full_name: string; is_phone_verified: boolean; is_identity_verified: boolean }>("/users/me")
       .then((d) => {
         setIsAdmin(d.role === "admin");
         setAvatarUrl(d.avatar_url ?? null);
         setFullName(d.full_name ?? "");
+        setVerified(!!d.is_phone_verified && !!d.is_identity_verified);
       })
       .catch(() => {});
   }, [isSignedIn, get]);
+
+  // Toggle de modo: entrar a anfitrión requiere verificación
+  function toggleMode() {
+    if (isHostArea) {
+      router.push("/");
+    } else if (verified) {
+      router.push("/anfitrion");
+    } else {
+      router.push("/anfitrion/configuracion?seccion=seguridad&motivo=anfitrion");
+    }
+  }
 
   if (!isSignedIn) {
     return (
@@ -62,12 +81,27 @@ export default function NavbarAuth() {
           Admin
         </Link>
       )}
+
+      {/* Toggle de modo anfitrión / huésped */}
+      <button
+        onClick={toggleMode}
+        className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2 font-medium"
+      >
+        {isHostArea ? (
+          <><Home size={14} /> Usar como huésped</>
+        ) : (
+          <><Briefcase size={14} /> Modo anfitrión</>
+        )}
+      </button>
+
       <Link href="/mensajes" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
         Mensajes
       </Link>
-      <Link href="/reservaciones" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
-        Viajes
-      </Link>
+      {!isHostArea && (
+        <Link href="/reservaciones" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
+          Viajes
+        </Link>
+      )}
       {fullName && (
         <span className="hidden md:block text-body-sm text-[var(--text-secondary)] ml-1">
           Hola, <span className="font-medium text-[var(--text-primary)]">{shortName(fullName)}</span>
@@ -118,11 +152,22 @@ export default function NavbarAuth() {
 export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
   const { isSignedIn, signOut } = useAuth();
   const { get } = useApi();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [verified, setVerified] = useState(false);
+
+  const isHostArea =
+    pathname.startsWith("/anfitrion") || pathname.startsWith("/p/nueva") || pathname.includes("/editar");
 
   useEffect(() => {
     if (!isSignedIn) return;
-    get<{ role: string }>("/users/me").then((d) => setIsAdmin(d.role === "admin")).catch(() => {});
+    get<{ role: string; is_phone_verified: boolean; is_identity_verified: boolean }>("/users/me")
+      .then((d) => {
+        setIsAdmin(d.role === "admin");
+        setVerified(!!d.is_phone_verified && !!d.is_identity_verified);
+      })
+      .catch(() => {});
   }, [isSignedIn, get]);
 
   if (!isSignedIn) {
@@ -134,10 +179,23 @@ export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
     );
   }
 
+  function toggleMode() {
+    onClose();
+    if (isHostArea) router.push("/");
+    else if (verified) router.push("/anfitrion");
+    else router.push("/anfitrion/configuracion?seccion=seguridad&motivo=anfitrion");
+  }
+
   return (
     <>
+      <button
+        onClick={toggleMode}
+        className="w-full text-left block px-4 py-3 rounded-lg text-body font-medium text-[var(--color-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+      >
+        {isHostArea ? "Usar como huésped" : "Modo anfitrión"}
+      </button>
       <MobileLink href="/mensajes" onClick={onClose}>Mensajes</MobileLink>
-      <MobileLink href="/reservaciones" onClick={onClose}>Viajes</MobileLink>
+      {!isHostArea && <MobileLink href="/reservaciones" onClick={onClose}>Viajes</MobileLink>}
       {isAdmin && <MobileLink href="/admin" onClick={onClose}>Panel Admin</MobileLink>}
       <button
         onClick={() => { onClose(); signOut(); }}
