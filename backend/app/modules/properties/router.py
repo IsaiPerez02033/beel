@@ -110,10 +110,14 @@ async def create_property(
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
-    """Crea una nueva propiedad. El usuario debe ser anfitrión."""
+    """Crea una nueva propiedad. El usuario debe ser anfitrión y estar verificado."""
+    from app.core.auth import require_verified
+
     user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    # Verificación obligatoria de teléfono e identidad
+    require_verified(user)
     if not user.is_host:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

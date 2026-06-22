@@ -7,10 +7,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser, get_current_user
+from app.core.config import settings
 from app.core.database import get_db
 from app.modules.users import service
 from app.modules.users.schemas import (
     BecomeHostIn,
+    PhoneSendIn,
+    PhoneVerifyIn,
     UserGoogleIn,
     UserLoginIn,
     UserMeOut,
@@ -179,6 +182,144 @@ async def become_host(
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     updated = await service.become_host(db, user)
     return updated
+
+
+# ── Verificación de teléfono (Twilio Verify) ───────────────────────────────────
+
+@router.post("/me/phone/send")
+async def phone_send_code(
+    data: PhoneSendIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Envía un código de verificación al teléfono por SMS o WhatsApp."""
+    from app.core.sms import send_code, twilio_configured
+
+    user = await service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not twilio_configured():
+        raise HTTPException(status_code=503, detail="La verificación por teléfono no está configurada.")
+
+    # Construir E.164: country_code + número (quitar espacios y signos)
+    local = "".join(c for c in data.phone if c.isdigit())
+    cc = data.country_code if data.country_code.startswith("+") else f"+{data.country_code}"
+    phone_e164 = f"{cc}{local}"
+
+    try:
+        await send_code(phone_e164, data.channel)  # type: ignore[arg-type]
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    # Guardar el teléfono (aún no verificado) para la verificación posterior
+    user.phone = local
+    user.phone_country_code = cc
+    await db.commit()
+    return {"sent": True, "channel": data.channel, "to": phone_e164}
+
+
+@router.post("/me/phone/verify", response_model=UserMeOut)
+async def phone_verify_code(
+    data: PhoneVerifyIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Verifica el código del teléfono. Si es correcto, marca el teléfono como verificado."""
+    from datetime import datetime, timezone
+    from app.core.sms import check_code
+
+    user = await service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not user.phone:
+        raise HTTPException(status_code=400, detail="Primero solicita un código de verificación.")
+
+    phone_e164 = f"{user.phone_country_code}{user.phone}"
+    ok = await check_code(phone_e164, data.code)
+    if not ok:
+        raise HTTPException(status_code=400, detail="Código incorrecto o expirado.")
+
+    user.is_phone_verified = True
+    user.phone_verified_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+# ── Verificación de identidad (Didit KYC) ──────────────────────────────────────
+
+@router.post("/me/identity/start")
+async def identity_start(
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Inicia una sesión de verificación de identidad. Retorna la URL de Didit."""
+    from app.core.identity import create_session, didit_configured
+
+    user = await service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not didit_configured():
+        raise HTTPException(status_code=503, detail="La verificación de identidad no está configurada.")
+
+    frontend = settings.FRONTEND_URL or (settings.ALLOWED_ORIGINS[-1] if settings.ALLOWED_ORIGINS else "")
+    callback_url = f"{frontend}/anfitrion/configuracion?identidad=ok"
+
+    try:
+        result = await create_session(str(user.id), callback_url)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    user.identity_session_id = result["session_id"]
+    user.identity_status = "pending"
+    await db.commit()
+    return {"url": result["url"], "session_id": result["session_id"]}
+
+
+@router.post("/identity/webhook")
+async def identity_webhook(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Webhook de Didit — recibe el resultado de la verificación de identidad."""
+    from datetime import datetime, timezone
+    import json as _json
+    from app.core.identity import verify_webhook_signature, parse_webhook_result
+
+    body = await request.body()
+    signature = request.headers.get("x-signature", "") or request.headers.get("x-didit-signature", "")
+    timestamp = request.headers.get("x-timestamp", "")
+
+    # Validar firma si hay secret configurado (no bloquear si no hay, para sandbox)
+    from app.core.config import settings as s
+    if s.DIDIT_WEBHOOK_SECRET and not verify_webhook_signature(body, signature, timestamp):
+        raise HTTPException(status_code=401, detail="Firma de webhook inválida")
+
+    try:
+        payload = _json.loads(body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="JSON inválido")
+
+    user_id, status = parse_webhook_result(payload)
+    if not user_id:
+        return {"received": True, "note": "sin vendor_data"}
+
+    try:
+        user = await service.get_user_by_id(db, uuid.UUID(user_id))
+    except (ValueError, TypeError):
+        return {"received": True, "note": "vendor_data inválido"}
+
+    if user:
+        user.identity_status = status
+        if status == "approved":
+            user.is_identity_verified = True
+            user.identity_verified_at = datetime.now(timezone.utc)
+        await db.commit()
+        logger.info("Identidad %s para usuario %s", status, user_id)
+
+    return {"received": True, "status": status}
 
 
 @router.get("/{user_id}", response_model=UserPublicOut)

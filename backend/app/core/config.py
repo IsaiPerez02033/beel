@@ -54,6 +54,17 @@ class Settings(BaseSettings):
     S3_BUCKET_NAME: str = "beel-media"
     S3_BUCKET_URL: str = ""
 
+    # ── Verificación de teléfono (Twilio Verify) ──────────────────────────────
+    TWILIO_ACCOUNT_SID: Optional[str] = None
+    TWILIO_AUTH_TOKEN: Optional[str] = None
+    TWILIO_VERIFY_SERVICE_SID: Optional[str] = None  # VAxxxxx
+
+    # ── Verificación de identidad (Didit KYC) ─────────────────────────────────
+    DIDIT_API_KEY: Optional[str] = None
+    DIDIT_WORKFLOW_ID: Optional[str] = None          # workflow configurado en Didit
+    DIDIT_WEBHOOK_SECRET: Optional[str] = None       # para validar webhooks
+    DIDIT_BASE_URL: str = "https://verification.didit.me"
+
     # ── Google Maps ───────────────────────────────────────────────────────────
     GOOGLE_MAPS_API_KEY: Optional[str] = None
     LOCATION_OBFUSCATION_RADIUS_METERS: int = 150

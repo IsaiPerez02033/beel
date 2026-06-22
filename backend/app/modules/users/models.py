@@ -57,6 +57,12 @@ class User(Base, TimestampMixin):
     is_identity_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
+    # Verificación de identidad (Didit) y teléfono
+    identity_session_id: Mapped[Optional[str]] = mapped_column(String(255))
+    identity_status: Mapped[str] = mapped_column(String(30), default="none")  # none|pending|approved|declined
+    identity_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    phone_verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
     # Preferencias
     preferred_language: Mapped[str] = mapped_column(String(5), default="es")
 
