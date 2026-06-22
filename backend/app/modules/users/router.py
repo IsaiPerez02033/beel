@@ -201,10 +201,24 @@ async def phone_send_code(
     if not twilio_configured():
         raise HTTPException(status_code=503, detail="La verificación por teléfono no está configurada.")
 
-    # Construir E.164: country_code + número (quitar espacios y signos)
-    local = "".join(c for c in data.phone if c.isdigit())
-    cc = data.country_code if data.country_code.startswith("+") else f"+{data.country_code}"
-    phone_e164 = f"{cc}{local}"
+    # Construir E.164 robusto:
+    # - Si el usuario ya incluyó el "+" (número completo), usarlo tal cual.
+    # - Si no, anteponer el código de país.
+    raw = data.phone.strip()
+    if raw.startswith("+"):
+        digits = "".join(c for c in raw if c.isdigit())
+        phone_e164 = f"+{digits}"
+        cc = ""
+        local = digits
+    else:
+        local = "".join(c for c in raw if c.isdigit())
+        cc = data.country_code if data.country_code.startswith("+") else f"+{data.country_code}"
+        cc_digits = "".join(c for c in cc if c.isdigit())
+        # Evitar doble código de país si el número local ya lo incluye
+        if cc_digits and local.startswith(cc_digits):
+            phone_e164 = f"+{local}"
+        else:
+            phone_e164 = f"{cc}{local}"
 
     try:
         await send_code(phone_e164, data.channel)  # type: ignore[arg-type]
@@ -213,9 +227,9 @@ async def phone_send_code(
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
 
-    # Guardar el teléfono (aún no verificado) para la verificación posterior
-    user.phone = local
-    user.phone_country_code = cc
+    # Guardar el E.164 completo para que la verificación use exactamente el mismo número
+    user.phone = phone_e164          # formato +525645915734
+    user.phone_country_code = "+"    # marcador: el phone ya incluye el +
     await db.commit()
     return {"sent": True, "channel": data.channel, "to": phone_e164}
 
@@ -236,7 +250,8 @@ async def phone_verify_code(
     if not user.phone:
         raise HTTPException(status_code=400, detail="Primero solicita un código de verificación.")
 
-    phone_e164 = f"{user.phone_country_code}{user.phone}"
+    # user.phone se guardó como E.164 completo (+525...). Usarlo tal cual.
+    phone_e164 = user.phone if user.phone.startswith("+") else f"{user.phone_country_code}{user.phone}"
     ok = await check_code(phone_e164, data.code)
     if not ok:
         raise HTTPException(status_code=400, detail="Código incorrecto o expirado.")
