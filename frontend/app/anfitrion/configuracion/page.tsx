@@ -479,9 +479,8 @@ function SeguridadSection({
 }) {
   const { post } = useApi();
 
-  // Teléfono
-  const [phone, setPhone] = useState(profile?.phone ?? "");
-  const [countryCode, setCountryCode] = useState(profile?.phone_country_code ?? "+52");
+  // Teléfono — número completo con código de país (E.164)
+  const [phone, setPhone] = useState(profile?.phone ?? "+52 ");
   const [channel, setChannel] = useState<"sms" | "whatsapp">("sms");
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState("");
@@ -497,10 +496,17 @@ function SeguridadSection({
   const identityStatus = profile?.identity_status ?? "none";
 
   async function sendCode() {
+    // Normalizar a E.164: dejar solo dígitos y un "+" al inicio
+    const digits = phone.replace(/[^\d]/g, "");
+    const e164 = phone.trim().startsWith("+") ? `+${digits}` : `+${digits}`;
+    if (digits.length < 10) {
+      setPhoneError("Ingresa un número válido con código de país (ej. +52 999 123 4567)");
+      return;
+    }
     setPhoneLoading(true);
     setPhoneError("");
     try {
-      await post("/users/me/phone/send", { phone, country_code: countryCode, channel });
+      await post("/users/me/phone/send", { phone: e164, country_code: "", channel });
       setCodeSent(true);
     } catch (e) {
       setPhoneError(e instanceof Error ? e.message : "Error al enviar el código");
@@ -569,21 +575,16 @@ function SeguridadSection({
           <>
             {!codeSent ? (
               <div className="space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    className="input w-20"
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    placeholder="+52"
-                  />
-                  <input
-                    className="input flex-1"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="999 000 0000"
-                    type="tel"
-                  />
-                </div>
+                <input
+                  className="input w-full"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+52 999 000 0000"
+                  type="tel"
+                />
+                <p className="text-caption text-[var(--text-tertiary)]">
+                  Incluye el código de país (ej. +52 para México)
+                </p>
                 {/* Canal */}
                 <div className="flex gap-2">
                   {(["sms", "whatsapp"] as const).map((ch) => (
@@ -605,8 +606,9 @@ function SeguridadSection({
                 </div>
                 {phoneError && <p className="text-caption text-red-600">{phoneError}</p>}
                 <button
+                  type="button"
                   onClick={sendCode}
-                  disabled={phoneLoading || !phone}
+                  disabled={phoneLoading}
                   className="btn btn-primary w-full flex items-center justify-center gap-2"
                 >
                   {phoneLoading ? <Loader2 size={15} className="animate-spin" /> : "Enviar código"}
@@ -615,7 +617,7 @@ function SeguridadSection({
             ) : (
               <div className="space-y-3">
                 <p className="text-body-sm text-[var(--text-secondary)]">
-                  Ingresa el código que enviamos a {countryCode} {phone}
+                  Ingresa el código que enviamos a {phone}
                 </p>
                 <input
                   className="input w-full text-center text-h3 tracking-[0.3em]"
