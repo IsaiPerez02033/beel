@@ -53,7 +53,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
         {/* Links centro */}
         <div className="hidden md:flex items-center gap-1">
           <NavLink href="/buscar">Explorar</NavLink>
-          <NavLink href={isSignedIn ? "/anfitrion" : "/ser-anfitrion"}>
+          <NavLink href="/ser-anfitrion">
             Ser anfitrión
           </NavLink>
         </div>
@@ -80,7 +80,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
             Explorar
           </MobileLink>
           <MobileLink
-            href={isSignedIn ? "/anfitrion" : "/ser-anfitrion"}
+            href="/ser-anfitrion"
             onClick={() => setMobileOpen(false)}
           >
             Ser anfitrión
