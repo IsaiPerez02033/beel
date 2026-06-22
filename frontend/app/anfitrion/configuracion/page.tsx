@@ -552,12 +552,22 @@ function SeguridadSection({
     }
   }
 
+  const fromHost =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("motivo") === "anfitrion";
+
   return (
     <div className="card p-6">
       <h2 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">Seguridad</h2>
-      <p className="text-body-sm text-[var(--text-secondary)] mb-6">
+      <p className="text-body-sm text-[var(--text-secondary)] mb-4">
         Verifica tu teléfono e identidad para reservar y publicar propiedades.
       </p>
+
+      {fromHost && !(phoneVerified && identityVerified) && (
+        <div className="bg-[var(--color-primary-light)] border border-[var(--color-primary)] text-[var(--color-primary-dark)] rounded-xl p-3 text-body-sm mb-6">
+          Para activar el <strong>modo anfitrión</strong> necesitas completar las dos verificaciones de abajo.
+        </div>
+      )}
 
       {/* ── Verificación de teléfono ── */}
       <div className="border border-[var(--border-subtle)] rounded-2xl p-5 mb-5">
