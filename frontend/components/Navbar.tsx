@@ -62,12 +62,20 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           ) : (
             <Link
               href="/buscar"
-              className="group flex items-center gap-3 pl-5 pr-2 py-2 rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-shadow"
+              className="group flex items-center rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-shadow py-1.5 pl-2 pr-1.5"
             >
-              <span className="text-body-sm font-medium text-[var(--text-primary)]">
-                Explorar hospedajes
+              <span className="px-4 py-1 text-body-sm font-medium text-[var(--text-primary)] rounded-full group-hover:bg-[var(--bg-subtle)] transition-colors">
+                Cualquier lugar
               </span>
-              <span className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center group-hover:scale-105 transition-transform">
+              <span className="w-px h-5 bg-[var(--border-default)]" />
+              <span className="px-4 py-1 text-body-sm font-medium text-[var(--text-primary)] rounded-full group-hover:bg-[var(--bg-subtle)] transition-colors">
+                Cualquier fecha
+              </span>
+              <span className="w-px h-5 bg-[var(--border-default)]" />
+              <span className="px-4 py-1 text-body-sm text-[var(--text-secondary)]">
+                ¿Cuántos?
+              </span>
+              <span className="ml-1 w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Search size={15} strokeWidth={2.5} />
               </span>
             </Link>
