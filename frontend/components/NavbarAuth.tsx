@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ShieldCheck, LogOut, Settings, User, Home, Briefcase } from "lucide-react";
+import { ShieldCheck, LogOut, Settings, User, Home, Briefcase, MessageSquare, Map, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
@@ -96,14 +96,6 @@ export default function NavbarAuth() {
         )}
       </button>
 
-      <Link href="/mensajes" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
-        Mensajes
-      </Link>
-      {!isHostArea && (
-        <Link href="/reservaciones" className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2">
-          Viajes
-        </Link>
-      )}
       {fullName && (
         <span className="hidden md:block text-body-sm text-[var(--text-secondary)] ml-1">
           Hola, <span className="font-medium text-[var(--text-primary)]">{shortName(fullName)}</span>
@@ -112,7 +104,7 @@ export default function NavbarAuth() {
       <div className="relative">
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="w-8 h-8 rounded-full overflow-hidden bg-[var(--color-primary)] text-white flex items-center justify-center text-body-sm font-medium hover:opacity-90 transition-opacity"
+          className="w-9 h-9 rounded-full overflow-hidden bg-[var(--color-primary)] text-white flex items-center justify-center text-body-sm font-medium hover:opacity-90 transition-opacity ring-1 ring-[var(--border-subtle)]"
           title={fullName}
         >
           {avatarUrl ? (
@@ -127,20 +119,70 @@ export default function NavbarAuth() {
         {showMenu && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-            <div className="absolute right-0 top-10 z-20 bg-white rounded-xl shadow-lg border border-[var(--border-subtle)] py-1 min-w-[160px]">
-              <Link
-                href="/anfitrion/configuracion"
-                className="flex items-center gap-2 px-4 py-2.5 text-body-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
-                onClick={() => setShowMenu(false)}
-              >
-                <Settings size={14} />
-                Configuración
-              </Link>
+            <div className="absolute right-0 top-12 z-20 bg-white rounded-2xl shadow-xl border border-[var(--border-subtle)] py-2 min-w-[260px] overflow-hidden">
+              {/* Encabezado */}
+              {fullName && (
+                <div className="px-4 py-2 mb-1">
+                  <p className="text-body-sm text-[var(--text-tertiary)]">Hola,</p>
+                  <p className="text-body font-semibold text-[var(--text-primary)] truncate">{shortName(fullName)}</p>
+                </div>
+              )}
+              <Divider />
+
+              {/* Grupo principal */}
+              <MenuLink href="/reservaciones" icon={<Map size={17} />} onClick={() => setShowMenu(false)}>
+                Viajes
+              </MenuLink>
+              <MenuLink href="/mensajes" icon={<MessageSquare size={17} />} onClick={() => setShowMenu(false)}>
+                Mensajes
+              </MenuLink>
+              <MenuLink href="/anfitrion/configuracion" icon={<User size={17} />} onClick={() => setShowMenu(false)}>
+                Perfil
+              </MenuLink>
+
+              <Divider />
+
+              <MenuLink href="/anfitrion/configuracion" icon={<Settings size={17} />} onClick={() => setShowMenu(false)}>
+                Configuración de la cuenta
+              </MenuLink>
+              <MenuLink href="/ayuda" icon={<HelpCircle size={17} />} onClick={() => setShowMenu(false)}>
+                Centro de ayuda
+              </MenuLink>
+              {isAdmin && (
+                <MenuLink href="/admin" icon={<ShieldCheck size={17} />} onClick={() => setShowMenu(false)}>
+                  Panel de administración
+                </MenuLink>
+              )}
+
+              <Divider />
+
+              {/* Conviértete en anfitrión (bloque destacado) */}
+              {!isHostArea && (
+                <button
+                  onClick={() => { setShowMenu(false); toggleMode(); }}
+                  className="w-full text-left px-4 py-2.5 hover:bg-[var(--bg-subtle)] transition-colors"
+                >
+                  <p className="text-body-sm font-semibold text-[var(--text-primary)]">
+                    {verified ? "Ir a mi panel de anfitrión" : "Conviértete en anfitrión"}
+                  </p>
+                  <p className="text-caption text-[var(--text-tertiary)] mt-0.5">
+                    {verified ? "Gestiona tus propiedades y reservas." : "Es fácil empezar a hospedar y ganar dinero extra."}
+                  </p>
+                </button>
+              )}
+              {isHostArea && (
+                <MenuLink href="/" icon={<Home size={17} />} onClick={() => setShowMenu(false)}>
+                  Usar como huésped
+                </MenuLink>
+              )}
+
+              <Divider />
+
               <button
                 onClick={() => { setShowMenu(false); signOut(); }}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-body-sm text-red-600 hover:bg-red-50"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-body-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
               >
-                <LogOut size={14} />
+                <LogOut size={17} className="text-[var(--text-secondary)]" />
                 Cerrar sesión
               </button>
             </div>
@@ -199,8 +241,10 @@ export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
       >
         {isHostArea ? "Usar como huésped" : "Modo anfitrión"}
       </button>
+      <MobileLink href="/reservaciones" onClick={onClose}>Viajes</MobileLink>
       <MobileLink href="/mensajes" onClick={onClose}>Mensajes</MobileLink>
-      {!isHostArea && <MobileLink href="/reservaciones" onClick={onClose}>Viajes</MobileLink>}
+      <MobileLink href="/anfitrion/configuracion" onClick={onClose}>Configuración de la cuenta</MobileLink>
+      <MobileLink href="/ayuda" onClick={onClose}>Centro de ayuda</MobileLink>
       {isAdmin && <MobileLink href="/admin" onClick={onClose}>Panel Admin</MobileLink>}
       <button
         onClick={() => { onClose(); signOut(); }}
@@ -210,6 +254,24 @@ export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
       </button>
     </>
   );
+}
+
+// Ítem del menú desplegable (estilo Airbnb)
+function MenuLink({ href, icon, onClick, children }: { href: string; icon: React.ReactNode; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-3 px-4 py-2.5 text-body-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+    >
+      <span className="text-[var(--text-secondary)]">{icon}</span>
+      {children}
+    </Link>
+  );
+}
+
+function Divider() {
+  return <div className="my-1.5 border-t border-[var(--border-subtle)]" />;
 }
 
 function MobileLink({ href, onClick, children }: { href: string; onClick: () => void; children: React.ReactNode }) {
