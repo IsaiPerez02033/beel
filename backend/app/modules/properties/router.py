@@ -45,7 +45,12 @@ async def admin_seed_demo(
     """Inserta las propiedades demo (idempotente)."""
     from app.modules.properties.demo_seed import seed_demo_data
     _check_seed_key(key)
-    return await seed_demo_data(db)
+    try:
+        return await seed_demo_data(db)
+    except Exception as e:  # debug temporal: superficie del error (protegido por llave)
+        import traceback
+        logger.error("seed-demo falló: %s", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
 
 
 @router.post("/admin/delete-demo")
