@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -28,6 +28,19 @@ export default function Navbar({ transparent = false }: NavbarProps) {
   const isHostArea = pathname.startsWith("/anfitrion") || pathname.startsWith("/p/nueva") || pathname.includes("/editar");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isSignedIn } = useAuth();
+
+  // En la home, la barra compacta del navbar aparece SOLO al scrollear
+  // (cuando la barra grande del hero ya salió de vista). En otras páginas
+  // siempre se muestra.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    if (!isHome) return;
+    const onScroll = () => setScrolled(window.scrollY > 280);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isHome]);
+  const showSearch = !isHome || scrolled;
 
   return (
     <header
@@ -62,7 +75,12 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           ) : (
             <Link
               href="/buscar"
-              className="group flex items-center rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-shadow py-1.5 pl-2 pr-1.5"
+              className={cn(
+                "group flex items-center rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-all duration-300 py-1.5 pl-2 pr-1.5",
+                showSearch
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 -translate-y-2 pointer-events-none"
+              )}
             >
               <span className="px-4 py-1 text-body-sm font-medium text-[var(--text-primary)] rounded-full group-hover:bg-[var(--bg-subtle)] transition-colors">
                 Cualquier lugar
