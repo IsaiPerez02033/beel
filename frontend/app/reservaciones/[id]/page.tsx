@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useSafeAuth";
 import Navbar from "@/components/Navbar";
 import { useApi } from "@/hooks/useApi";
-import { formatPrice } from "@/lib/utils";
+import Price from "@/components/Price";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar, MapPin, ArrowLeft } from "lucide-react";
@@ -160,7 +160,7 @@ export default function ReservationDetailPage() {
             <div className="flex items-center justify-between">
               <p className="text-body text-[var(--text-secondary)]">Total pagado</p>
               <p className="text-heading font-semibold text-[var(--text-primary)]">
-                {formatPrice(reservation.total_price, reservation.currency)}
+                {<Price amount={reservation.total_price} />}
               </p>
             </div>
           </div>

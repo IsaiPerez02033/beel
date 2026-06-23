@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
-import { formatPrice } from "@/lib/utils";
+import Price from "@/components/Price";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -278,7 +278,7 @@ export default function AdminPage() {
             </h3>
             <p className="text-body text-[var(--text-secondary)] mb-4">
               Se reembolsarán <span className="font-semibold text-[var(--text-primary)]">
-                {formatPrice(refundModal.amount)}
+                {<Price amount={refundModal.amount} />}
               </span> al huésped a través de MercadoPago.
               La reserva quedará cancelada.
             </p>
@@ -398,11 +398,11 @@ function PaymentRow({
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[var(--border-subtle)]">
             <div>
               <p className="text-caption text-[var(--text-tertiary)]">Total pagado</p>
-              <p className="text-body font-semibold text-[var(--text-primary)]">{formatPrice(p.amount)}</p>
+              <p className="text-body font-semibold text-[var(--text-primary)]">{<Price amount={p.amount} />}</p>
             </div>
             <div>
               <p className="text-caption text-[var(--text-tertiary)]">Al anfitrión</p>
-              <p className="text-body font-semibold text-[var(--color-primary)]">{formatPrice(p.host_payout)}</p>
+              <p className="text-body font-semibold text-[var(--color-primary)]">{<Price amount={p.host_payout} />}</p>
             </div>
             {p.beel_approved_at && (
               <div>

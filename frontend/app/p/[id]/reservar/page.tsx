@@ -5,7 +5,8 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useSafeAuth";
 import Navbar from "@/components/Navbar";
 import { useApi } from "@/hooks/useApi";
-import { formatPrice, pluralNights } from "@/lib/utils";
+import { pluralNights } from "@/lib/utils";
+import Price from "@/components/Price";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { Shield, ChevronLeft, Loader2 } from "lucide-react";
@@ -292,24 +293,24 @@ export default function ReservarPage() {
               <h3 className="text-h3 text-[var(--text-primary)] mb-3">Detalle del precio</h3>
               <div className="space-y-0">
                 <div className="price-row">
-                  <span>{formatPrice(breakdown.price_per_night)} × {pluralNights(breakdown.nights)}</span>
-                  <span>{formatPrice(breakdown.subtotal)}</span>
+                  <span>{<Price amount={breakdown.price_per_night} />} × {pluralNights(breakdown.nights)}</span>
+                  <span>{<Price amount={breakdown.subtotal} />}</span>
                 </div>
                 {breakdown.cleaning_fee > 0 && (
                   <div className="price-row">
                     <span>Limpieza</span>
-                    <span>{formatPrice(breakdown.cleaning_fee)}</span>
+                    <span>{<Price amount={breakdown.cleaning_fee} />}</span>
                   </div>
                 )}
                 {breakdown.platform_fee > 0 && (
                   <div className="price-row">
                     <span>Cargo por servicio</span>
-                    <span>{formatPrice(breakdown.platform_fee)}</span>
+                    <span>{<Price amount={breakdown.platform_fee} />}</span>
                   </div>
                 )}
                 <div className="price-row total">
                   <span>Total</span>
-                  <span>{formatPrice(breakdown.total)}</span>
+                  <span>{<Price amount={breakdown.total} />}</span>
                 </div>
               </div>
             </div>
