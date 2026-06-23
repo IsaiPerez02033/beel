@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
+import BecomeHostModal from "@/components/BecomeHostModal";
 import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
@@ -62,6 +63,9 @@ export default function AnfitrionPage() {
   const [stats, setStats] = useState<HostStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  // Gate de verificación: null = cargando, true/false = resultado
+  const [verified, setVerified] = useState<boolean | null>(null);
+  const [showHostModal, setShowHostModal] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -69,7 +73,15 @@ export default function AnfitrionPage() {
       router.push("/iniciar-sesion?redirect_url=/anfitrion");
       return;
     }
-    fetchData();
+    // Verificar que el usuario esté verificado antes de mostrar el panel
+    get<{ is_phone_verified: boolean; is_identity_verified: boolean }>("/users/me")
+      .then((u) => {
+        const ok = !!u.is_phone_verified && !!u.is_identity_verified;
+        setVerified(ok);
+        if (ok) fetchData();
+        else setLoading(false);
+      })
+      .catch(() => { setVerified(false); setLoading(false); });
   }, [isSignedIn, isLoaded]);
 
   async function fetchData() {
@@ -126,6 +138,36 @@ export default function AnfitrionPage() {
   const pendingRes = reservations.filter((r) => r.status === "pending");
   const upcomingRes = reservations.filter((r) => r.status === "confirmed");
   const pastRes = reservations.filter((r) => ["completed", "cancelled_guest", "cancelled_host", "rejected"].includes(r.status));
+
+  // Gate: usuario no verificado → no mostrar el panel
+  if (verified === false) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)]">
+        <Navbar />
+        <BecomeHostModal open={showHostModal} onClose={() => setShowHostModal(false)} />
+        <main className="max-w-lg mx-auto px-4 py-16">
+          <div className="card p-8 text-center">
+            <div className="w-14 h-14 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mx-auto mb-4">
+              <Settings size={26} className="text-[var(--color-primary)]" />
+            </div>
+            <h1 className="text-h1 font-display font-medium text-[var(--text-primary)] mb-2">
+              Verifica tu cuenta para ser anfitrión
+            </h1>
+            <p className="text-body text-[var(--text-secondary)] mb-6">
+              Para acceder al panel de anfitrión necesitas verificar tu teléfono
+              y tu identidad. Es rápido y solo se hace una vez.
+            </p>
+            <button onClick={() => setShowHostModal(true)} className="btn btn-primary w-full">
+              Verificar mi cuenta
+            </button>
+            <Link href="/" className="block text-body-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mt-4">
+              Volver al inicio
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
