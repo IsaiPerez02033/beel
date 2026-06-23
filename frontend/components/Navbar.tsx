@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useSafeAuth";
 import dynamic from "next/dynamic";
@@ -60,7 +60,17 @@ export default function Navbar({ transparent = false }: NavbarProps) {
               <NavLink href="/anfitrion/configuracion">Configuración</NavLink>
             </>
           ) : (
-            <NavLink href="/buscar">Explorar</NavLink>
+            <Link
+              href="/buscar"
+              className="group flex items-center gap-3 pl-5 pr-2 py-2 rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-shadow"
+            >
+              <span className="text-body-sm font-medium text-[var(--text-primary)]">
+                Explorar hospedajes
+              </span>
+              <span className="w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Search size={15} strokeWidth={2.5} />
+              </span>
+            </Link>
           )}
         </div>
 
