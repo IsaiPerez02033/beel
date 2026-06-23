@@ -7,6 +7,7 @@ import { ShieldCheck, LogOut, Settings, User, Home, Briefcase } from "lucide-rea
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
+import BecomeHostModal from "@/components/BecomeHostModal";
 
 // Extrae primer nombre + primer apellido de un nombre completo.
 // "Isai Aram Perez Flores" → "Isai Perez" | "Ana López" → "Ana López"
@@ -29,6 +30,7 @@ export default function NavbarAuth() {
   const [fullName, setFullName] = useState<string>("");
   const [verified, setVerified] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showHostModal, setShowHostModal] = useState(false);
 
   // Modo anfitrión cuando estamos en su área
   const isHostArea =
@@ -53,7 +55,7 @@ export default function NavbarAuth() {
     } else if (verified) {
       router.push("/anfitrion");
     } else {
-      router.push("/anfitrion/configuracion?seccion=seguridad&motivo=anfitrion");
+      setShowHostModal(true); // modal con los pasos de verificación
     }
   }
 
@@ -145,6 +147,8 @@ export default function NavbarAuth() {
           </>
         )}
       </div>
+
+      <BecomeHostModal open={showHostModal} onClose={() => setShowHostModal(false)} />
     </div>
   );
 }
@@ -156,6 +160,7 @@ export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [showHostModal, setShowHostModal] = useState(false);
 
   const isHostArea =
     pathname.startsWith("/anfitrion") || pathname.startsWith("/p/nueva") || pathname.includes("/editar");
@@ -180,14 +185,14 @@ export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
   }
 
   function toggleMode() {
-    onClose();
-    if (isHostArea) router.push("/");
-    else if (verified) router.push("/anfitrion");
-    else router.push("/anfitrion/configuracion?seccion=seguridad&motivo=anfitrion");
+    if (isHostArea) { onClose(); router.push("/"); }
+    else if (verified) { onClose(); router.push("/anfitrion"); }
+    else { setShowHostModal(true); } // abre el modal (no cierra el menú aún)
   }
 
   return (
     <>
+      <BecomeHostModal open={showHostModal} onClose={() => { setShowHostModal(false); onClose(); }} />
       <button
         onClick={toggleMode}
         className="w-full text-left block px-4 py-3 rounded-lg text-body font-medium text-[var(--color-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
