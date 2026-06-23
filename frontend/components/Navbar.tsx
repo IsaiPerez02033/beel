@@ -51,22 +51,24 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           : "bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)]"
       )}
     >
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
 
-        {/* Logo */}
-        <Link href="/" className="flex-shrink-0 flex items-center">
-          <Image
-            src="/beel_logo_black_white.png"
-            alt="Beel"
-            width={110}
-            height={42}
-            className="h-10 w-auto"
-            priority
-          />
-        </Link>
+        {/* Logo (zona izquierda, mismo peso que la derecha) */}
+        <div className="flex-1 flex items-center min-w-0">
+          <Link href="/" className="flex-shrink-0 flex items-center">
+            <Image
+              src="/beel_logo_black_white.png"
+              alt="Beel"
+              width={110}
+              height={42}
+              className="h-10 w-auto"
+              priority
+            />
+          </Link>
+        </div>
 
-        {/* Links centro — cambian según el modo */}
-        <div className="hidden md:flex items-center gap-1">
+        {/* Barra de búsqueda — centrada */}
+        <div className="hidden md:flex items-center justify-center gap-1 flex-shrink-0">
           {isHostArea ? (
             <>
               <NavLink href="/anfitrion">Panel</NavLink>
@@ -100,8 +102,8 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           )}
         </div>
 
-        {/* Auth — solo cliente, sin SSR */}
-        <div className="flex items-center gap-2">
+        {/* Auth — solo cliente, sin SSR (zona derecha, mismo peso que izquierda) */}
+        <div className="flex-1 flex items-center justify-end gap-2">
           <div className="hidden sm:block">
             <NavbarAuth />
           </div>
