@@ -136,14 +136,14 @@ export default function NavbarAuth() {
               <MenuLink href="/mensajes" icon={<MessageSquare size={17} />} onClick={() => setShowMenu(false)}>
                 Mensajes
               </MenuLink>
-              <MenuLink href="/anfitrion/configuracion" icon={<User size={17} />} onClick={() => setShowMenu(false)}>
-                Perfil
-              </MenuLink>
 
               <Divider />
 
-              <MenuLink href="/anfitrion/configuracion" icon={<Settings size={17} />} onClick={() => setShowMenu(false)}>
-                Configuración de la cuenta
+              <MenuLink href="/anfitrion/configuracion?seccion=perfil" icon={<User size={17} />} onClick={() => setShowMenu(false)}>
+                Perfil
+              </MenuLink>
+              <MenuLink href="/anfitrion/configuracion?seccion=seguridad" icon={<Settings size={17} />} onClick={() => setShowMenu(false)}>
+                Configuración y seguridad
               </MenuLink>
               <MenuLink href="/ayuda" icon={<HelpCircle size={17} />} onClick={() => setShowMenu(false)}>
                 Centro de ayuda
@@ -243,7 +243,8 @@ export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
       </button>
       <MobileLink href="/reservaciones" onClick={onClose}>Viajes</MobileLink>
       <MobileLink href="/mensajes" onClick={onClose}>Mensajes</MobileLink>
-      <MobileLink href="/anfitrion/configuracion" onClick={onClose}>Configuración de la cuenta</MobileLink>
+      <MobileLink href="/anfitrion/configuracion?seccion=perfil" onClick={onClose}>Perfil</MobileLink>
+      <MobileLink href="/anfitrion/configuracion?seccion=seguridad" onClick={onClose}>Configuración y seguridad</MobileLink>
       <MobileLink href="/ayuda" onClick={onClose}>Centro de ayuda</MobileLink>
       {isAdmin && <MobileLink href="/admin" onClick={onClose}>Panel Admin</MobileLink>}
       <button
