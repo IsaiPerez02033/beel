@@ -60,10 +60,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
               <NavLink href="/anfitrion/configuracion">Configuración</NavLink>
             </>
           ) : (
-            <>
-              <NavLink href="/buscar">Explorar</NavLink>
-              <NavLink href="/ser-anfitrion">Ser anfitrión</NavLink>
-            </>
+            <NavLink href="/buscar">Explorar</NavLink>
           )}
         </div>
 
@@ -91,10 +88,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
               <MobileLink href="/anfitrion/configuracion" onClick={() => setMobileOpen(false)}>Configuración</MobileLink>
             </>
           ) : (
-            <>
-              <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
-              <MobileLink href="/ser-anfitrion" onClick={() => setMobileOpen(false)}>Ser anfitrión</MobileLink>
-            </>
+            <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
           )}
           <NavbarAuthMobile onClose={() => setMobileOpen(false)} />
         </div>

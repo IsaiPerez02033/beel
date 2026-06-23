@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import HostCTAs from "@/components/HostCTAs";
+import Footer from "@/components/Footer";
 import { DollarSign, Shield, Star, Home, Clock, HeartHandshake } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -202,19 +202,7 @@ export default function SerAnfitrionPage() {
         <HostCTAs variant="single" />
       </section>
 
-      {/* ── Footer mínimo ────────────────────────────────────────────────── */}
-      <footer className="border-t border-[var(--border-subtle)] py-8 px-4">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Image src="/beel_logo_black_sand.png" alt="Beel" width={80} height={32} className="h-7 w-auto" />
-          <p className="text-caption text-[var(--text-tertiary)]">
-            © {new Date().getFullYear()} Beel. Todos los derechos reservados.
-          </p>
-          <div className="flex gap-4 text-caption text-[var(--text-secondary)]">
-            <Link href="/buscar" className="hover:text-[var(--text-primary)] transition-colors">Explorar</Link>
-            <Link href="/ser-anfitrion" className="hover:text-[var(--text-primary)] transition-colors">Ser anfitrión</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
