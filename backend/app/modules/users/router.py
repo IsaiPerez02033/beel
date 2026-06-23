@@ -262,6 +262,7 @@ async def phone_verify_code(
 
     user.is_phone_verified = True
     user.phone_verified_at = datetime.now(timezone.utc)
+    await service.maybe_promote_to_host(db, user)
     await db.commit()
     await db.refresh(user)
     return user
@@ -348,6 +349,7 @@ async def identity_webhook(
             if status == "approved":
                 user.is_identity_verified = True
                 user.identity_verified_at = datetime.now(timezone.utc)
+                await service.maybe_promote_to_host(db, user)
             await db.commit()
         logger.info("Identidad '%s' (%s) para usuario %s", status, webhook_type or "?", user_id)
 
