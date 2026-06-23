@@ -8,7 +8,7 @@ import { DollarSign, Shield, Star, Home, Clock, HeartHandshake } from "lucide-re
 export const metadata: Metadata = {
   title: "Conviértete en anfitrión — Beel",
   description:
-    "Publica tu propiedad en Beel y empieza a recibir huéspedes en Mérida y la Península de Yucatán. Sin comisión durante los primeros años.",
+    "Publica tu propiedad en Beel y empieza a recibir huéspedes en todo México. Sin comisión durante los primeros años.",
 };
 
 const PASOS = [
@@ -58,12 +58,12 @@ const BENEFICIOS = [
   {
     icon: <HeartHandshake size={22} className="text-[var(--color-primary)]" />,
     titulo: "Soporte local",
-    desc: "Equipo en Mérida listo para ayudarte. No somos un call center internacional.",
+    desc: "Equipo en México listo para ayudarte. No somos un call center internacional.",
   },
   {
     icon: <Home size={22} className="text-[var(--color-primary)]" />,
-    titulo: "Enfocado en Yucatán",
-    desc: "Plataforma hecha para el mercado local, con búsquedas y precios en MXN.",
+    titulo: "Hecho para México",
+    desc: "Plataforma pensada para el mercado mexicano, con búsquedas y precios en MXN.",
   },
 ];
 
@@ -104,8 +104,8 @@ export default function SerAnfitrionPage() {
             <span className="text-[var(--color-primary)]">ingresos</span>
           </h1>
           <p className="text-body-lg text-[var(--text-secondary)] mb-8 max-w-xl mx-auto">
-            Publica tu propiedad en Beel y empieza a recibir huéspedes en Mérida y
-            la Península de Yucatán. Sin comisión. Sin complicaciones.
+            Publica tu propiedad en Beel y empieza a recibir huéspedes en todo
+            México. Sin comisión. Sin complicaciones.
           </p>
           <HostCTAs variant="hero" />
         </div>

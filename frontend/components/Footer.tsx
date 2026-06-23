@@ -24,7 +24,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     title: "Explorar",
     links: [
       { label: "Buscar hospedajes", href: "/buscar" },
-      { label: "Mérida, Yucatán", href: "/buscar?destino=Mérida" },
+      { label: "Destinos en México", href: "/buscar" },
       { label: "Casas", href: "/buscar?tipo=casa" },
       { label: "Villas con alberca", href: "/buscar?tipo=villa" },
     ],
@@ -75,7 +75,7 @@ export default function Footer() {
               beel
             </span>
             <span className="text-caption text-[var(--text-tertiary)]">
-              © {year} Beel · Mérida, Yucatán, México
+              © {year} Beel · México
             </span>
           </div>
           <div className="flex items-center gap-4 text-caption text-[var(--text-secondary)]">

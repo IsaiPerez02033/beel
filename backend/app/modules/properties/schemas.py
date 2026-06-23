@@ -167,8 +167,8 @@ class PropertyCreateIn(BaseModel):
 
     address: str = Field(..., min_length=5, max_length=500)
     neighborhood: Optional[str] = Field(None, max_length=255)
-    city: str = "Mérida"
-    state: str = "Yucatán"
+    city: str = Field(..., min_length=2, max_length=100)
+    state: str = Field(..., min_length=2, max_length=100)
     country: str = "México"
     postal_code: Optional[str] = None
     latitude: Decimal = Field(..., ge=-90, le=90)

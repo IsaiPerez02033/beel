@@ -24,8 +24,8 @@ export default function PrivacidadPage() {
             <p>
               Beel ("nosotros", "la plataforma") es responsable del tratamiento de tus
               datos personales conforme a la Ley Federal de Protección de Datos Personales
-              en Posesión de los Particulares (LFPDPPP) de México. Domicilio: Mérida,
-              Yucatán, México. Contacto: <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel.mx">hola@beel.mx</a>.
+              en Posesión de los Particulares (LFPDPPP) de México. Domicilio: México.
+              Contacto: <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel.mx">hola@beel.mx</a>.
             </p>
           </Section>
 

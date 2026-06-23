@@ -58,8 +58,8 @@ class Property(Base, TimestampMixin):
     # Ubicación
     address: Mapped[str] = mapped_column(String(500), nullable=False)
     neighborhood: Mapped[Optional[str]] = mapped_column(String(255))
-    city: Mapped[str] = mapped_column(String(100), nullable=False, default="Mérida")
-    state: Mapped[str] = mapped_column(String(100), nullable=False, default="Yucatán")
+    city: Mapped[str] = mapped_column(String(100), nullable=False)
+    state: Mapped[str] = mapped_column(String(100), nullable=False)
     country: Mapped[str] = mapped_column(String(100), nullable=False, default="México")
     country_code: Mapped[str] = mapped_column(String(3), default="MX")
     postal_code: Mapped[Optional[str]] = mapped_column(String(20))

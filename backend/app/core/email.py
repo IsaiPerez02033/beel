@@ -110,7 +110,7 @@ _BASE = """
         <!-- Footer -->
         <tr><td style="padding:24px 0;text-align:center;">
           <p style="margin:0;font-size:12px;color:#9C9A96;">
-            © 2025 Beel · Mérida, Yucatán · México<br>
+            © 2025 Beel · México<br>
             <a href="https://beel.mx" style="color:#147A5C;text-decoration:none;">beel.mx</a>
           </p>
         </td></tr>

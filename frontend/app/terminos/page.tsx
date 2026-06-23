@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Términos y Condiciones",
-  description: "Términos y Condiciones de uso de Beel — plataforma de hospedaje en Yucatán, México.",
+  description: "Términos y Condiciones de uso de Beel — plataforma de hospedaje en México.",
 };
 
 export default function TerminosPage() {
@@ -30,9 +30,9 @@ export default function TerminosPage() {
           <Section title="2. Descripción del servicio">
             <p>
               Beel es una plataforma que conecta a personas que ofrecen hospedaje
-              ("anfitriones") con personas que buscan reservarlo ("huéspedes") en Mérida y
-              la Península de Yucatán. Beel actúa como intermediario tecnológico; no es
-              propietario, administrador ni operador de las propiedades publicadas.
+              ("anfitriones") con personas que buscan reservarlo ("huéspedes") en México.
+              Beel actúa como intermediario tecnológico; no es propietario, administrador
+              ni operador de las propiedades publicadas.
             </p>
           </Section>
 
@@ -122,8 +122,8 @@ export default function TerminosPage() {
           <Section title="12. Ley aplicable y jurisdicción">
             <p>
               Estos Términos se rigen por las leyes de los Estados Unidos Mexicanos.
-              Cualquier controversia se someterá a los tribunales competentes de Mérida,
-              Yucatán, renunciando a cualquier otro fuero.
+              Cualquier controversia se someterá a los tribunales competentes de la
+              Ciudad de México, renunciando a cualquier otro fuero.
             </p>
           </Section>
 

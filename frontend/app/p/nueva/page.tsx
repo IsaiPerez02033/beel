@@ -51,7 +51,7 @@ interface FormData {
 
 const INITIAL: FormData = {
   title: "", description: "", property_type: "casa",
-  address: "", neighborhood: "", city: "Mérida", state: "Yucatán",
+  address: "", neighborhood: "", city: "", state: "",
   max_guests: 2, bedrooms: 1, beds: 1, bathrooms: 1,
   price_per_night: "", cleaning_fee: "", security_deposit: "",
   min_stay_nights: 1,
@@ -385,7 +385,7 @@ function Step1({ form, set }: StepProps) {
         </label>
         <input
           className="input w-full"
-          placeholder="Ej: Casa colonial con piscina en el centro de Mérida"
+          placeholder="Ej: Casa colonial con piscina en el centro"
           value={form.title}
           onChange={(e) => set("title", e.target.value)}
           maxLength={100}
@@ -458,6 +458,7 @@ function Step2({ form, set }: StepProps) {
           </label>
           <input
             className="input w-full"
+            placeholder="Ej: Guadalajara"
             value={form.city}
             onChange={(e) => set("city", e.target.value)}
           />
@@ -467,6 +468,7 @@ function Step2({ form, set }: StepProps) {
           <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">Estado</label>
           <input
             className="input w-full"
+            placeholder="Ej: Jalisco"
             value={form.state}
             onChange={(e) => set("state", e.target.value)}
           />

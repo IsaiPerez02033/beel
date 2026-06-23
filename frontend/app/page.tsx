@@ -8,7 +8,7 @@ import { Suspense } from "react";
 import { Shield, Star, MessageCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Beel — Hospedajes únicos en Mérida y Yucatán",
+  title: "Beel — Hospedajes únicos en México",
 };
 
 // ── Fetch propiedades destacadas ──────────────────────────────────────────────
@@ -38,7 +38,7 @@ export default async function HomePage() {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-display font-display font-medium text-[var(--text-primary)] mb-2">
             Tu próxima escapada en{" "}
-            <span className="text-[var(--color-primary)]">Yucatán</span>
+            <span className="text-[var(--color-primary)]">México</span>
           </h1>
           <p className="text-body-lg text-[var(--text-secondary)] mb-8">
             Casas, villas y departamentos con anfitriones locales
@@ -52,7 +52,7 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-h1 text-[var(--text-primary)]">
-            Hospedajes en Mérida
+            Hospedajes destacados
           </h2>
           <a
             href="/buscar"

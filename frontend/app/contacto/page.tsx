@@ -5,7 +5,7 @@ import { Mail, MapPin, Clock, HelpCircle, Home } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Contacto",
-  description: "Contacta al equipo de Beel. Soporte para huéspedes y anfitriones en Mérida y la Península de Yucatán.",
+  description: "Contacta al equipo de Beel. Soporte para huéspedes y anfitriones en todo México.",
 };
 
 export default function ContactoPage() {
@@ -32,8 +32,8 @@ export default function ContactoPage() {
           <ContactCard
             icon={<MapPin size={20} className="text-[var(--color-primary)]" />}
             titulo="Ubicación"
-            desc="Operamos desde el corazón de la Península."
-            action={<span className="text-body-sm font-medium text-[var(--text-primary)]">Mérida, Yucatán, México</span>}
+            desc="Operamos en todo México."
+            action={<span className="text-body-sm font-medium text-[var(--text-primary)]">México</span>}
           />
           <ContactCard
             icon={<Clock size={20} className="text-[var(--color-primary)]" />}
