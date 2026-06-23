@@ -16,8 +16,8 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Conviértete en anfitrión", href: "/ser-anfitrion" },
       { label: "Verificación de identidad", href: "/anfitrion/configuracion?seccion=seguridad" },
-      { label: "Cómo funcionan los pagos", href: "/ser-anfitrion" },
-      { label: "Recursos para anfitriones", href: "#" },
+      { label: "Cómo funcionan los pagos", href: "/como-funciona" },
+      { label: "Recursos para anfitriones", href: "/ayuda" },
     ],
   },
   {
