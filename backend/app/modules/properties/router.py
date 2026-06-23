@@ -27,6 +27,39 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+# ── Admin: sembrar/borrar datos demo (protegido por llave) ──────────────────────
+# Alternativa al Shell de Render (de pago). Se activa con la variable de entorno
+# DEMO_SEED_KEY y se llama con esa llave. Borra solo lo del usuario demo@beel.mx.
+
+def _check_seed_key(key: Optional[str]) -> None:
+    from app.core.config import settings as s
+    if not s.DEMO_SEED_KEY or key != s.DEMO_SEED_KEY:
+        raise HTTPException(status_code=403, detail="Llave inválida o seed deshabilitado")
+
+
+@router.post("/admin/seed-demo")
+async def admin_seed_demo(
+    key: str = Query(..., description="DEMO_SEED_KEY"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Inserta las propiedades demo (idempotente)."""
+    from app.modules.properties.demo_seed import seed_demo_data
+    _check_seed_key(key)
+    return await seed_demo_data(db)
+
+
+@router.post("/admin/delete-demo")
+async def admin_delete_demo(
+    key: str = Query(..., description="DEMO_SEED_KEY"),
+    purge_host: bool = Query(False, description="También borrar el usuario demo"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Borra TODAS las propiedades del usuario demo (no afecta usuarios reales)."""
+    from app.modules.properties.demo_seed import delete_demo_data
+    _check_seed_key(key)
+    return await delete_demo_data(db, purge_host=purge_host)
+
+
 # ── Búsqueda y listado ────────────────────────────────────────────────────────
 
 @router.get("/search", response_model=SearchResultOut)

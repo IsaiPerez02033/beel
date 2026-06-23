@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     ENVIRONMENT: str = "development"  # development | staging | production
     DEMO_MODE: bool = False  # true = sin servicios externos, datos mock (default para deploys sin config)
+    DEMO_SEED_KEY: Optional[str] = None  # llave para sembrar/borrar datos demo vía endpoint admin
     BACKEND_URL: str = ""
     FRONTEND_URL: str = ""
 
