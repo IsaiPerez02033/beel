@@ -9,7 +9,7 @@ import { useApi } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
 import BecomeHostModal from "@/components/BecomeHostModal";
 import Price from "@/components/Price";
-import { cn } from "@/lib/utils";
+import { cn, formatRating } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -505,7 +505,7 @@ function PropertiesTab({ properties }: { properties: Property[] }) {
                 <div className="flex items-center gap-2">
                   {p.avg_rating ? (
                     <span className="text-caption text-[var(--text-secondary)]">
-                      ★ {p.avg_rating.toFixed(1)} ({p.total_reviews})
+                      ★ {formatRating(p.avg_rating)} ({p.total_reviews})
                     </span>
                   ) : null}
                   <Link

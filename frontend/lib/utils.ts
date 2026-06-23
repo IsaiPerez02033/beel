@@ -17,9 +17,11 @@ export function formatPrice(amount: number, currency = "MXN"): string {
 }
 
 /** Formatea rating con una decimal */
-export function formatRating(rating?: number | null): string {
-  if (rating == null || isNaN(rating)) return "Nuevo";
-  return rating.toFixed(1);
+export function formatRating(rating?: number | string | null): string {
+  if (rating == null) return "Nuevo";
+  const n = typeof rating === "number" ? rating : Number(rating);
+  if (isNaN(n)) return "Nuevo";
+  return n.toFixed(1);
 }
 
 /** Pluraliza huéspedes */
