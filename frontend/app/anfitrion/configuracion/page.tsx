@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
@@ -39,14 +39,23 @@ export default function ConfiguracionAnfitrionPage() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const router = useRouter();
   const { get, patch } = useApi();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sección inicial desde ?seccion=seguridad (al venir del gate de anfitrión)
-  const initialSection =
-    typeof window !== "undefined"
-      ? (new URLSearchParams(window.location.search).get("seccion") as Section) || "perfil"
-      : "perfil";
+  // Sección inicial desde ?seccion=seguridad (al venir del gate o del menú)
+  const validSections: Section[] = ["perfil", "notificaciones", "seguridad", "pagos"];
+  const paramSection = searchParams.get("seccion") as Section | null;
+  const initialSection: Section =
+    paramSection && validSections.includes(paramSection) ? paramSection : "perfil";
   const [section, setSection] = useState<Section>(initialSection);
+
+  // Sincroniza la sección cuando cambia el query param (?seccion=...) sin remontar.
+  useEffect(() => {
+    if (paramSection && validSections.includes(paramSection)) {
+      setSection(paramSection);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramSection]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
