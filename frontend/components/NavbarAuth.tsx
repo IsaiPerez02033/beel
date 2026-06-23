@@ -98,7 +98,7 @@ export default function NavbarAuth() {
 
       {fullName && (
         <span className="hidden md:block text-body-sm text-[var(--text-secondary)] ml-1">
-          Hola, <span className="font-medium text-[var(--text-primary)]">{shortName(fullName)}</span>
+          ¡Hola, <span className="font-medium text-[var(--text-primary)]">{shortName(fullName)}</span>!
         </span>
       )}
       <div className="relative">
