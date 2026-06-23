@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { Property } from "@/types";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
 import { Suspense } from "react";
@@ -100,17 +101,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Footer mínimo ─────────────────────────────────────────────────── */}
-      <footer className="border-t border-[var(--border-subtle)] py-6 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-caption text-[var(--text-tertiary)]">
-          <span>© {new Date().getFullYear()} Beel — Mérida, Yucatán</span>
-          <div className="flex items-center gap-4">
-            <a href="/privacidad" className="hover:text-[var(--text-secondary)]">Privacidad</a>
-            <a href="/terminos" className="hover:text-[var(--text-secondary)]">Términos</a>
-            <a href="/ayuda" className="hover:text-[var(--text-secondary)]">Ayuda</a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
