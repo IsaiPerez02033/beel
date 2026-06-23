@@ -32,9 +32,9 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Beel",
     links: [
-      { label: "Cómo funciona", href: "#" },
-      { label: "Sobre Beel", href: "#" },
-      { label: "Contacto", href: "#" },
+      { label: "Cómo funciona", href: "/como-funciona" },
+      { label: "Sobre Beel", href: "/sobre" },
+      { label: "Contacto", href: "/contacto" },
       { label: "Sin comisión", href: "/ser-anfitrion" },
     ],
   },
