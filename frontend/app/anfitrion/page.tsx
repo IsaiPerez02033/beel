@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
 import BecomeHostModal from "@/components/BecomeHostModal";
-import { formatPrice } from "@/lib/utils";
+import Price from "@/components/Price";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -221,7 +221,7 @@ export default function AnfitrionPage() {
             <StatCard
               icon={<DollarSign size={18} className="text-[var(--color-primary)]" />}
               label="Ingresos este mes"
-              value={formatPrice(stats.earnings_this_month)}
+              value={<Price amount={stats.earnings_this_month} />}
             />
             <StatCard
               icon={<Star size={18} className="text-[var(--color-accent)]" />}
@@ -297,7 +297,7 @@ function StatCard({
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string | number;
+  value: React.ReactNode;
   highlight?: boolean;
 }) {
   return (
@@ -427,7 +427,7 @@ function ReservationRow({
           </div>
 
           <p className="text-body-sm font-semibold text-[var(--text-primary)] mt-1">
-            {formatPrice(r.total_amount)}
+            {<Price amount={r.total_amount} />}
           </p>
         </div>
       </div>
@@ -500,7 +500,7 @@ function PropertiesTab({ properties }: { properties: Property[] }) {
               </p>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-body-sm font-semibold text-[var(--text-primary)]">
-                  {formatPrice(p.price_per_night)}/noche
+                  {<Price amount={p.price_per_night} />}/noche
                 </span>
                 <div className="flex items-center gap-2">
                   {p.avg_rating ? (

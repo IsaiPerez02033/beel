@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/useSafeAuth";
 import { differenceInCalendarDays, parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Star, Info } from "lucide-react";
-import { formatPrice, formatRating, pluralNights } from "@/lib/utils";
+import { formatRating, pluralNights } from "@/lib/utils";
+import Price from "@/components/Price";
 import type { Property } from "@/types";
 
 interface BookingWidgetProps {
@@ -75,7 +76,7 @@ export default function BookingWidget({
       <div className="flex items-baseline justify-between mb-4">
         <div>
           <span className="text-h1 font-semibold text-[var(--text-primary)]">
-            {formatPrice(property.price_per_night)}
+            {<Price amount={property.price_per_night} />}
           </span>
           <span className="text-body-sm text-[var(--text-secondary)]"> / noche</span>
         </div>
@@ -182,19 +183,19 @@ export default function BookingWidget({
         <div className="mt-4 space-y-0">
           <div className="price-row">
             <span>
-              {formatPrice(property.price_per_night)} × {pluralNights(nights)}
+              {<Price amount={property.price_per_night} />} × {pluralNights(nights)}
             </span>
-            <span>{formatPrice(subtotal)}</span>
+            <span>{<Price amount={subtotal} />}</span>
           </div>
           {cleaningFee > 0 && (
             <div className="price-row">
               <span>Limpieza</span>
-              <span>{formatPrice(cleaningFee)}</span>
+              <span>{<Price amount={cleaningFee} />}</span>
             </div>
           )}
           <div className="price-row total">
             <span>Total</span>
-            <span>{formatPrice(total)}</span>
+            <span>{<Price amount={total} />}</span>
           </div>
         </div>
       )}

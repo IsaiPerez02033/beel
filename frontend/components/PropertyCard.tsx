@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatPrice, formatRating } from "@/lib/utils";
+import { formatRating } from "@/lib/utils";
+import Price from "@/components/Price";
 import type { Property } from "@/types";
 
 interface PropertyCardProps {
@@ -172,7 +173,7 @@ export default function PropertyCard({
         {/* Precio */}
         <div className="flex items-baseline gap-1 mt-0.5">
           <span className="text-body font-semibold text-[var(--text-primary)]">
-            {formatPrice(property.price_per_night)}
+            {<Price amount={property.price_per_night} />}
           </span>
           <span className="text-caption text-[var(--text-secondary)]">noche</span>
         </div>

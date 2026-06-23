@@ -6,7 +6,8 @@ import BookingWidget from "@/components/BookingWidget";
 import AmenityList from "@/components/AmenityList";
 import PropertyReviews from "@/components/PropertyReviews";
 import { Star, Shield, Zap, PawPrint, ChevronLeft } from "lucide-react";
-import { formatPrice, formatRating } from "@/lib/utils";
+import { formatRating } from "@/lib/utils";
+import Price from "@/components/Price";
 import type { Property } from "@/types";
 import Link from "next/link";
 
@@ -289,7 +290,7 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
           <div className="flex items-center justify-between max-w-md mx-auto">
             <div>
               <span className="text-h2 font-semibold text-[var(--text-primary)]">
-                {formatPrice(property.price_per_night)}
+                {<Price amount={property.price_per_night} />}
               </span>
               <span className="text-caption text-[var(--text-secondary)]"> / noche</span>
             </div>

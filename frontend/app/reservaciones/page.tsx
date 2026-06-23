@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useSafeAuth";
 import Navbar from "@/components/Navbar";
 import { useApi } from "@/hooks/useApi";
-import { formatPrice } from "@/lib/utils";
+import Price from "@/components/Price";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { Calendar, MapPin, ChevronRight, Clock } from "lucide-react";
@@ -178,7 +178,7 @@ function ReservationCard({ reservation: r }: { reservation: Reservation }) {
 
         <div className="flex items-center justify-between mt-2">
           <span className="text-body-sm font-semibold text-[var(--text-primary)]">
-            {formatPrice(r.total_price)}
+            {<Price amount={r.total_price} />}
           </span>
           <ChevronRight size={16} className="text-[var(--text-tertiary)]" />
         </div>

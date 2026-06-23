@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CurrencySwitcher from "@/components/CurrencySwitcher";
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -84,7 +85,7 @@ export default function Footer() {
             <span className="text-[var(--border-strong)]">·</span>
             <span>🇲🇽 Español (MX)</span>
             <span className="text-[var(--border-strong)]">·</span>
-            <span>$ MXN</span>
+            <CurrencySwitcher />
           </div>
         </div>
       </div>

@@ -8,7 +8,6 @@ import { useApi } from "@/hooks/useApi";
 import Navbar from "@/components/Navbar";
 import PhotoUploader from "@/components/PhotoUploader";
 import { cn } from "@/lib/utils";
-import { formatPrice } from "@/lib/utils";
 import {
   ChevronLeft, Save, Loader2, Check, Eye, EyeOff,
   AlertCircle, Plus, Minus,
