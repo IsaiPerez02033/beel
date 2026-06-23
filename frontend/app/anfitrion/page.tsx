@@ -157,7 +157,7 @@ export default function AnfitrionPage() {
               Para acceder al panel de anfitrión necesitas verificar tu teléfono
               y tu identidad. Es rápido y solo se hace una vez.
             </p>
-            <button onClick={() => setShowHostModal(true)} className="btn btn-primary w-full">
+            <button onClick={() => setShowHostModal(true)} className="btn btn-primary w-full justify-center">
               Verificar mi cuenta
             </button>
             <Link href="/" className="block text-body-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mt-4">
