@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 async function getFeaturedProperties(): Promise<Property[]> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/properties?status=active&per_page=8`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/properties/search?status=active&per_page=8`,
       { next: { revalidate: 120 } }
     );
     if (!res.ok) return [];
