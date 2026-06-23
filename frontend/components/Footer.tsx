@@ -5,10 +5,10 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Asistencia",
     links: [
-      { label: "Centro de ayuda", href: "#" },
-      { label: "Opciones de cancelación", href: "#" },
-      { label: "Confianza y seguridad", href: "#" },
-      { label: "Reportar un problema", href: "#" },
+      { label: "Centro de ayuda", href: "/ayuda" },
+      { label: "Opciones de cancelación", href: "/cancelacion" },
+      { label: "Confianza y seguridad", href: "/confianza" },
+      { label: "Reportar un problema", href: "/reportar" },
     ],
   },
   {
