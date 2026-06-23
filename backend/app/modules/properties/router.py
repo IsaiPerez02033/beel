@@ -116,14 +116,12 @@ async def create_property(
     user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    # Verificación obligatoria de teléfono e identidad
+    # Verificación obligatoria de teléfono e identidad. En Beel, estar
+    # verificado ES el requisito para ser anfitrión, así que promovemos el
+    # rol automáticamente si aún es "guest".
     require_verified(user)
     if not user.is_host:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Debes ser anfitrión para publicar una propiedad. "
-                   "Ve a /users/me/become-host primero.",
-        )
+        user = await user_service.become_host(db, user)
     return await service.create_property(db, user, data)
 
 

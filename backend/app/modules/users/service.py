@@ -87,6 +87,15 @@ async def become_host(db: AsyncSession, user: User) -> User:
     return user
 
 
+async def maybe_promote_to_host(db: AsyncSession, user: User) -> User:
+    """Promueve a 'host' si el usuario ya completó ambas verificaciones.
+    En Beel, estar verificado (teléfono + identidad) ES el requisito para
+    ser anfitrión, así que el rol se eleva automáticamente."""
+    if user.role == "guest" and user.is_phone_verified and user.is_identity_verified:
+        await become_host(db, user)
+    return user
+
+
 async def soft_delete_user(db: AsyncSession, user: User) -> None:
     """Soft-delete: marca deleted_at pero preserva los datos."""
     user.deleted_at = datetime.now(timezone.utc)
