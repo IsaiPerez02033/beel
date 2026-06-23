@@ -39,6 +39,9 @@ type Step = "review" | "payment" | "confirmed";
 
 const POLICY_DESC: Record<string, string> = {
   flexible: "Cancelación gratuita hasta 24 h antes del check-in.",
+  moderate: "Cancelación gratuita hasta 5 días antes del check-in.",
+  strict: "Sin reembolso una vez confirmada la reserva.",
+  // compatibilidad con valores antiguos en español
   moderada: "Cancelación gratuita hasta 5 días antes del check-in.",
   estricta: "Sin reembolso una vez confirmada la reserva.",
 };
