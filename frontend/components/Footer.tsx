@@ -78,9 +78,9 @@ export default function Footer() {
             </span>
           </div>
           <div className="flex items-center gap-4 text-caption text-[var(--text-secondary)]">
-            <Link href="#" className="hover:text-[var(--text-primary)] transition-colors">Privacidad</Link>
+            <Link href="/privacidad" className="hover:text-[var(--text-primary)] transition-colors">Privacidad</Link>
             <span className="text-[var(--border-strong)]">·</span>
-            <Link href="#" className="hover:text-[var(--text-primary)] transition-colors">Términos</Link>
+            <Link href="/terminos" className="hover:text-[var(--text-primary)] transition-colors">Términos</Link>
             <span className="text-[var(--border-strong)]">·</span>
             <span>🇲🇽 Español (MX)</span>
             <span className="text-[var(--border-strong)]">·</span>
