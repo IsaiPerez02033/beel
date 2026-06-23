@@ -6,11 +6,11 @@ import { Search, CalendarCheck, Shield, KeyRound, Home, DollarSign, Star, CheckC
 
 export const metadata: Metadata = {
   title: "Cómo funciona",
-  description: "Cómo funciona Beel: reserva hospedaje en Yucatán o publica tu propiedad. Pagos protegidos y sin comisión para anfitriones.",
+  description: "Cómo funciona Beel: reserva hospedaje en México o publica tu propiedad. Pagos protegidos y sin comisión para anfitriones.",
 };
 
 const HUESPED = [
-  { icon: Search, titulo: "Busca y explora", desc: "Encuentra hospedajes en Mérida y la Península de Yucatán filtrando por fechas, huéspedes y tipo de propiedad." },
+  { icon: Search, titulo: "Busca y explora", desc: "Encuentra hospedajes en todo México filtrando por fechas, huéspedes y tipo de propiedad." },
   { icon: CalendarCheck, titulo: "Reserva tus fechas", desc: "Elige tus fechas y envía tu solicitud. Si la propiedad tiene reserva inmediata, queda confirmada al instante." },
   { icon: Shield, titulo: "Paga de forma segura", desc: "Tu pago queda protegido por Beel y solo se libera al anfitrión cuando tu estancia se completa sin problemas." },
   { icon: KeyRound, titulo: "Disfruta tu estancia", desc: "Recibe los detalles de tu hospedaje y coordina tu llegada con el anfitrión. Al terminar, deja tu reseña." },
@@ -35,7 +35,7 @@ export default function ComoFuncionaPage() {
             Cómo funciona Beel
           </h1>
           <p className="text-body-lg text-[var(--text-secondary)]">
-            Conectamos a viajeros con anfitriones locales en Yucatán. Pagos
+            Conectamos a viajeros con anfitriones locales en todo México. Pagos
             protegidos, anfitriones verificados y sin comisión para quien hospeda.
           </p>
         </div>

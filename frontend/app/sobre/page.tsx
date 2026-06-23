@@ -6,11 +6,11 @@ import { MapPin, Heart, Shield, DollarSign } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Sobre Beel",
-  description: "Beel es la plataforma de hospedaje hecha en Yucatán: para anfitriones locales, sin comisión y con pagos protegidos.",
+  description: "Beel es la plataforma de hospedaje hecha en México: para anfitriones locales, sin comisión y con pagos protegidos.",
 };
 
 const VALORES = [
-  { icon: MapPin, titulo: "Local de verdad", desc: "Nacimos en Mérida. Entendemos el mercado, los precios en pesos y las necesidades de quienes hospedan en la región." },
+  { icon: MapPin, titulo: "Local de verdad", desc: "Nacimos en México. Entendemos el mercado, los precios en pesos y las necesidades de quienes hospedan en el país." },
   { icon: DollarSign, titulo: "Sin comisión", desc: "Creemos que los anfitriones deben quedarse con lo que ganan. Por eso no cobramos comisión durante los primeros años." },
   { icon: Shield, titulo: "Confianza primero", desc: "Verificación de identidad obligatoria para anfitriones y pagos protegidos en cada reserva. La seguridad no es opcional." },
   { icon: Heart, titulo: "Soporte cercano", desc: "Un equipo local que responde, no un call center internacional. Estamos para ayudar a anfitriones y huéspedes por igual." },
@@ -25,12 +25,12 @@ export default function SobrePage() {
       <section className="bg-[var(--color-arena)] pt-16 pb-16 px-4 text-center">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-display font-display font-medium text-[var(--text-primary)] mb-4">
-            Hospedaje hecho en Yucatán
+            Hospedaje hecho en México
           </h1>
           <p className="text-body-lg text-[var(--text-secondary)]">
-            Beel es una plataforma de hospedaje pensada para la Península de
-            Yucatán: para anfitriones locales y para viajeros que buscan un lugar
-            auténtico donde quedarse.
+            Beel es una plataforma de hospedaje pensada para México: para
+            anfitriones locales y para viajeros que buscan un lugar auténtico
+            donde quedarse.
           </p>
         </div>
       </section>
@@ -45,7 +45,7 @@ export default function SobrePage() {
             Las grandes plataformas de hospedaje cobran comisiones altas y tratan
             a México como un mercado más. Beel nace para hacer lo contrario:
             poner primero a los anfitriones locales, con reglas justas y
-            herramientas hechas para la región.
+            herramientas hechas para el país.
           </p>
           <p>
             Queremos que publicar un espacio sea fácil, que cobrar sea transparente
@@ -54,9 +54,9 @@ export default function SobrePage() {
             ganancias.
           </p>
           <p>
-            Empezamos en Mérida y la Península de Yucatán, con la meta de crecer
-            cuidando lo que nos hace distintos: cercanía, confianza y un trato
-            justo para quien hospeda.
+            Empezamos en México, con la meta de crecer a nivel mundial cuidando
+            lo que nos hace distintos: cercanía, confianza y un trato justo para
+            quien hospeda.
           </p>
         </div>
       </section>
