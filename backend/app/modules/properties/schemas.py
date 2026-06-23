@@ -187,7 +187,7 @@ class PropertyCreateIn(BaseModel):
 
     cancellation_policy: str = Field(
         default="flexible",
-        pattern="^(flexible|moderada|estricta)$",
+        pattern="^(flexible|moderate|strict)$",
     )
     check_in_time: Optional[time] = None
     check_out_time: Optional[time] = None
@@ -208,7 +208,7 @@ class PropertyUpdateIn(BaseModel):
     min_stay_nights: Optional[int] = Field(None, ge=1)
     max_stay_nights: Optional[int] = Field(None, ge=1)
     cancellation_policy: Optional[str] = Field(
-        None, pattern="^(flexible|moderada|estricta)$"
+        None, pattern="^(flexible|moderate|strict)$"
     )
     check_in_time: Optional[time] = None
     check_out_time: Optional[time] = None

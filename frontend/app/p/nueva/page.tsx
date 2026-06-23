@@ -17,7 +17,7 @@ import type { Amenity } from "@/types";
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 type PropertyType = "casa" | "departamento" | "cabaña" | "villa" | "habitacion" | "hostal" | "otro";
-type CancellationPolicy = "flexible" | "moderada" | "estricta";
+type CancellationPolicy = "flexible" | "moderate" | "strict";
 
 interface FormData {
   // Paso 1 — Básicos
@@ -614,9 +614,9 @@ function Step4({ form, set, amenities }: StepProps & { amenities: Amenity[] }) {
   }, {});
 
   const POLICY_OPTIONS: { value: CancellationPolicy; label: string; desc: string }[] = [
-    { value: "flexible",  label: "Flexible",  desc: "Reembolso completo hasta 24h antes del check-in" },
-    { value: "moderada",  label: "Moderada",  desc: "Reembolso completo hasta 5 días antes del check-in" },
-    { value: "estricta",  label: "Estricta",  desc: "Reembolso del 50% hasta 1 semana antes del check-in" },
+    { value: "flexible", label: "Flexible", desc: "Reembolso completo hasta 24h antes del check-in" },
+    { value: "moderate", label: "Moderada", desc: "Reembolso completo hasta 5 días antes del check-in" },
+    { value: "strict",   label: "Estricta", desc: "Reembolso del 50% hasta 1 semana antes del check-in" },
   ];
 
   const RULES = [

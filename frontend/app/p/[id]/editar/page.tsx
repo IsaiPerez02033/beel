@@ -22,7 +22,7 @@ interface EditForm {
   security_deposit: string;
   min_stay_nights: number;
   max_stay_nights: string;
-  cancellation_policy: "flexible" | "moderada" | "estricta";
+  cancellation_policy: "flexible" | "moderate" | "strict";
   check_in_time: string;
   check_out_time: string;
   instant_booking: boolean;
@@ -33,9 +33,9 @@ interface EditForm {
 }
 
 const POLICY_OPTIONS = [
-  { value: "flexible",  label: "Flexible",  desc: "Reembolso completo hasta 24 h antes del check-in" },
-  { value: "moderada",  label: "Moderada",  desc: "Reembolso completo hasta 5 días antes del check-in" },
-  { value: "estricta",  label: "Estricta",  desc: "Reembolso del 50% hasta 1 semana antes" },
+  { value: "flexible", label: "Flexible", desc: "Reembolso completo hasta 24 h antes del check-in" },
+  { value: "moderate", label: "Moderada", desc: "Reembolso completo hasta 5 días antes del check-in" },
+  { value: "strict",   label: "Estricta", desc: "Reembolso del 50% hasta 1 semana antes" },
 ];
 
 const TOGGLES = [

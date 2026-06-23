@@ -53,6 +53,9 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
 
   const POLICY_LABELS: Record<string, string> = {
     flexible: "Flexible",
+    moderate: "Moderada",
+    strict: "Estricta",
+    // compatibilidad con valores antiguos en español
     moderada: "Moderada",
     estricta: "Estricta",
   };
