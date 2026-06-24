@@ -67,14 +67,9 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           </Link>
         </div>
 
-        {/* Barra de búsqueda — centrada */}
+        {/* Barra de búsqueda — centrada (oculta en el área de anfitrión) */}
         <div className="hidden md:flex items-center justify-center gap-1 flex-shrink-0">
-          {isHostArea ? (
-            <>
-              <NavLink href="/anfitrion">Panel</NavLink>
-              <NavLink href="/anfitrion/configuracion">Configuración</NavLink>
-            </>
-          ) : (
+          {!isHostArea && (
             <Link
               href="/buscar"
               className={cn(
