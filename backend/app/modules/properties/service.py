@@ -276,15 +276,14 @@ async def update_property(
     return property_
 
 
-async def delete_property(
-    db: AsyncSession, property_: Property, host: User
-) -> None:
-    """Soft-delete de la propiedad."""
-    from datetime import datetime, timezone
+async def delete_property(db: AsyncSession, property_: Property) -> None:
+    """Soft-delete de la propiedad. Decrementa el contador del DUEÑO real
+    (no del actor) para que un admin pueda borrar sin afectar su propio conteo."""
     property_.deleted_at = datetime.now(timezone.utc)
     property_.status = "deleted"
-    host.total_listings = max(0, host.total_listings - 1)
-    await db.flush()
+    if property_.host:
+        property_.host.total_listings = max(0, property_.host.total_listings - 1)
+    await db.commit()
     await invalidate(property_key(str(property_.id)))
 
 

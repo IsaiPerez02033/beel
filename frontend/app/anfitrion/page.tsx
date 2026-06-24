@@ -14,7 +14,7 @@ import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Home, Calendar, DollarSign, Star, Plus, ChevronRight,
-  Clock, CheckCircle, XCircle, AlertCircle, Settings,
+  Clock, CheckCircle, XCircle, AlertCircle, Settings, Trash2,
 } from "lucide-react";
 import type { Property } from "@/types";
 
@@ -55,7 +55,7 @@ type Tab = "reservaciones" | "propiedades";
 export default function AnfitrionPage() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
-  const { get, post } = useApi();
+  const { get, post, del } = useApi();
 
   const [tab, setTab] = useState<Tab>("reservaciones");
   const [reservations, setReservations] = useState<HostReservation[]>([]);
@@ -138,6 +138,11 @@ export default function AnfitrionPage() {
     } finally {
       setActionLoading(null);
     }
+  }
+
+  async function handleDeleteProperty(id: string) {
+    await del(`/properties/${id}`);
+    setProperties((prev) => prev.filter((p) => p.id !== id));
   }
 
   const pendingRes = reservations.filter((r) => r.status === "pending");
@@ -290,7 +295,7 @@ export default function AnfitrionPage() {
             onAction={handleReservationAction}
           />
         ) : (
-          <PropertiesTab properties={properties} />
+          <PropertiesTab properties={properties} onDelete={handleDeleteProperty} />
         )}
       </main>
     </div>
@@ -459,7 +464,23 @@ function ReservationRow({
   );
 }
 
-function PropertiesTab({ properties }: { properties: Property[] }) {
+function PropertiesTab({ properties, onDelete }: { properties: Property[]; onDelete: (id: string) => Promise<void> }) {
+  const [confirmDel, setConfirmDel] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function doDelete() {
+    if (!confirmDel) return;
+    setDeleting(true);
+    try {
+      await onDelete(confirmDel.id);
+      setConfirmDel(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (properties.length === 0) {
     return (
       <div className="empty-state py-16">
@@ -484,6 +505,24 @@ function PropertiesTab({ properties }: { properties: Property[] }) {
   };
 
   return (
+    <>
+    {confirmDel && (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => !deleting && setConfirmDel(null)}>
+        <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">¿Eliminar propiedad?</h3>
+          <p className="text-body-sm text-[var(--text-secondary)] mb-1 truncate">{confirmDel.title}</p>
+          <p className="text-body-sm text-[var(--text-secondary)] mb-5">
+            Esta acción la quitará de tu panel y de las búsquedas. No se puede deshacer.
+          </p>
+          <div className="flex gap-3 justify-end">
+            <button onClick={() => setConfirmDel(null)} disabled={deleting} className="btn btn-outline">Cancelar</button>
+            <button onClick={doDelete} disabled={deleting} className="btn bg-red-600 text-white hover:bg-red-700">
+              {deleting ? "Eliminando…" : "Eliminar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="space-y-3">
       {properties.map((p) => {
         const photo = p.photos?.find((ph) => ph.is_primary) ?? p.photos?.[0];
@@ -539,6 +578,13 @@ function PropertiesTab({ properties }: { properties: Property[] }) {
                   >
                     Editar
                   </Link>
+                  <button
+                    onClick={() => setConfirmDel({ id: p.id, title: p.title })}
+                    className="btn btn-ghost text-caption px-2 py-1 text-red-600 hover:bg-red-50"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={15} />
+                  </button>
                   <Link
                     href={p.status === "active" ? `/p/${p.id}` : `/p/${p.id}/editar`}
                     className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -552,5 +598,6 @@ function PropertiesTab({ properties }: { properties: Property[] }) {
         );
       })}
     </div>
+    </>
   );
 }
