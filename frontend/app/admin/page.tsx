@@ -71,7 +71,13 @@ export default function AdminPage() {
       router.push("/iniciar-sesion?redirect_url=/admin");
       return;
     }
-    fetchPayments();
+    // Gate de admin: verifica el rol antes de cargar datos sensibles
+    get<{ role: string }>("/users/me")
+      .then((u) => {
+        if (u.role !== "admin") { router.replace("/"); return; }
+        fetchPayments();
+      })
+      .catch(() => router.replace("/"));
   }, [isSignedIn, isLoaded]);
 
   async function fetchPayments() {

@@ -30,6 +30,7 @@ export default function AdminPropiedadesPage() {
   const [tab, setTab] = useState<Tab>("pending_review");
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // null = verificando
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [rejectModal, setRejectModal] = useState<{ id: string; title: string } | null>(null);
@@ -49,11 +50,18 @@ export default function AdminPropiedadesPage() {
     }
   }, [get, tab]);
 
+  // Gate de admin: verifica el rol antes de mostrar nada
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.push("/iniciar-sesion?redirect_url=/admin/propiedades"); return; }
-    fetchProps();
-  }, [isSignedIn, isLoaded, fetchProps, router]);
+    get<{ role: string }>("/users/me")
+      .then((u) => {
+        if (u.role !== "admin") { router.replace("/"); return; }
+        setIsAdmin(true);
+        fetchProps();
+      })
+      .catch(() => router.replace("/"));
+  }, [isSignedIn, isLoaded, get, fetchProps, router]);
 
   async function approve(id: string) {
     setActionLoading(id);
@@ -81,6 +89,18 @@ export default function AdminPropiedadesPage() {
     } finally {
       setActionLoading(null);
     }
+  }
+
+  // Mientras se verifica el rol (o si no es admin, antes de redirigir), no mostrar el panel
+  if (isAdmin !== true) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)]">
+        <Navbar />
+        <div className="flex justify-center py-32">
+          <Loader2 className="animate-spin text-[var(--text-tertiary)]" />
+        </div>
+      </div>
+    );
   }
 
   return (
