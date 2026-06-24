@@ -166,14 +166,20 @@ export default function AdminPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={fetchPayments}
-            className="btn btn-outline flex items-center gap-2"
-            disabled={loading}
-          >
-            <RefreshCw size={16} className={cn(loading && "animate-spin")} />
-            Actualizar
-          </button>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/propiedades" className="btn btn-primary flex items-center gap-2">
+              <ShieldCheck size={16} />
+              Moderar propiedades
+            </Link>
+            <button
+              onClick={fetchPayments}
+              className="btn btn-outline flex items-center gap-2"
+              disabled={loading}
+            >
+              <RefreshCw size={16} className={cn(loading && "animate-spin")} />
+              Actualizar
+            </button>
+          </div>
         </div>
 
         {/* Stats rápidos */}
