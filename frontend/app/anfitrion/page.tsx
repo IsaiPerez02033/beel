@@ -498,6 +498,26 @@ function PropertiesTab({ properties }: { properties: Property[] }) {
               <p className="text-body-sm text-[var(--text-secondary)] mt-0.5">
                 {p.city} · {p.bedrooms} {p.bedrooms === 1 ? "habitación" : "habitaciones"} · hasta {p.max_guests} huéspedes
               </p>
+
+              {p.status === "pending_review" && (
+                <div className="mt-2 flex items-start gap-2 rounded-lg bg-[var(--color-accent-light,#fef3c7)] px-3 py-2">
+                  <Clock size={14} className="text-[var(--color-accent,#d97706)] mt-0.5 flex-shrink-0" />
+                  <p className="text-caption text-[var(--text-secondary)]">
+                    <span className="font-medium text-[var(--text-primary)]">En revisión.</span>{" "}
+                    El equipo de Beel está verificando tu propiedad. Se publicará en cuanto se apruebe (normalmente en menos de 24 h).
+                  </p>
+                </div>
+              )}
+              {p.status === "suspended" && (
+                <div className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2">
+                  <XCircle size={14} className="text-red-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-caption text-[var(--text-secondary)]">
+                    <span className="font-medium text-red-700">No aprobada.</span>{" "}
+                    Esta propiedad no cumplió la revisión. Edítala y contáctanos para que la volvamos a revisar.
+                  </p>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mt-2">
                 <span className="text-body-sm font-semibold text-[var(--text-primary)]">
                   {<Price amount={p.price_per_night} />}/noche
