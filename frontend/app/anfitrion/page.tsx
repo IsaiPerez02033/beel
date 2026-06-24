@@ -87,30 +87,35 @@ export default function AnfitrionPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      const [resData, propData] = await Promise.all([
+      // Independientes: si una falla, la otra igual carga.
+      const [resSettled, propSettled] = await Promise.allSettled([
         get<{ reservations: HostReservation[] }>("/reservations/host-requests"),
         get<{ properties: Property[] }>("/properties/host/my-listings"),
       ]);
-      setReservations(resData.reservations);
-      setProperties(propData.properties);
+      const reservas = resSettled.status === "fulfilled" ? resSettled.value.reservations : [];
+      const props = propSettled.status === "fulfilled" ? propSettled.value.properties : [];
+      if (resSettled.status === "rejected") console.error("reservas:", resSettled.reason);
+      if (propSettled.status === "rejected") console.error("propiedades:", propSettled.reason);
+      setReservations(reservas);
+      setProperties(props);
 
       // Calcular stats localmente
       const now = new Date();
       const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-      const confirmedThisMonth = resData.reservations.filter(
+      const confirmedThisMonth = reservas.filter(
         (r) => r.status === "confirmed" && r.check_in.startsWith(thisMonth)
       );
-      const activeProps = propData.properties.filter((p) => p.status === "active");
-      const ratings = propData.properties.filter((p) => p.avg_rating).map((p) => Number(p.avg_rating));
+      const activeProps = props.filter((p) => p.status === "active");
+      const ratings = props.filter((p) => p.avg_rating).map((p) => Number(p.avg_rating));
 
       setStats({
-        total_listings: propData.properties.length,
+        total_listings: props.length,
         active_listings: activeProps.length,
-        pending_reservations: resData.reservations.filter((r) => r.status === "pending").length,
+        pending_reservations: reservas.filter((r) => r.status === "pending").length,
         confirmed_this_month: confirmedThisMonth.length,
         earnings_this_month: confirmedThisMonth.reduce((s, r) => s + r.total_amount, 0),
         avg_rating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
-        total_reviews: propData.properties.reduce((s, p) => s + p.total_reviews, 0),
+        total_reviews: props.reduce((s, p) => s + p.total_reviews, 0),
       });
     } catch (e) {
       console.error(e);

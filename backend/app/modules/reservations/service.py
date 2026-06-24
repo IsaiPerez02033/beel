@@ -158,7 +158,9 @@ def _calculate_price(
 
 def _reservation_query():
     return select(Reservation).options(
-        selectinload(Reservation.reservation_property),
+        # Cargar también las fotos del snapshot: PropertySnapshotOut las
+        # serializa y un lazy-load fuera del greenlet rompería (MissingGreenlet).
+        selectinload(Reservation.reservation_property).selectinload(Property.photos),
         selectinload(Reservation.guest),
         selectinload(Reservation.host),
     )
