@@ -44,7 +44,10 @@ export function useApi() {
         const err = await res.json().catch(() => ({ detail: "Error desconocido" }));
         throw new Error(err.detail ?? `HTTP ${res.status}`);
       }
-      return res.json() as Promise<T>;
+      // 204 No Content o cuerpo vacío (ej. DELETE): no intentar parsear JSON.
+      if (res.status === 204) return undefined as T;
+      const text = await res.text();
+      return (text ? JSON.parse(text) : undefined) as T;
     },
     [getToken]
   );
