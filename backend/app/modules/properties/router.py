@@ -258,7 +258,7 @@ async def delete_property(
     if property_.host_id != user.id and not user.is_admin:
         raise HTTPException(status_code=403, detail="No tienes permiso")
 
-    await service.delete_property(db, property_, user)
+    await service.delete_property(db, property_)
 
 
 # ── Propiedades del anfitrión autenticado ─────────────────────────────────────

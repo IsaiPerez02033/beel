@@ -10,7 +10,7 @@ import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
   ShieldCheck, RefreshCw, Check, X, MapPin, Users, BedDouble,
-  Loader2, ChevronLeft, BadgeCheck, Clock,
+  Loader2, ChevronLeft, BadgeCheck, Clock, Trash2,
 } from "lucide-react";
 import type { Property } from "@/types";
 
@@ -25,7 +25,7 @@ const TABS: { key: Tab; label: string }[] = [
 export default function AdminPropiedadesPage() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
-  const { get, post } = useApi();
+  const { get, post, del } = useApi();
 
   const [tab, setTab] = useState<Tab>("pending_review");
   const [properties, setProperties] = useState<Property[]>([]);
@@ -35,6 +35,7 @@ export default function AdminPropiedadesPage() {
   const [error, setError] = useState("");
   const [rejectModal, setRejectModal] = useState<{ id: string; title: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [deleteModal, setDeleteModal] = useState<{ id: string; title: string } | null>(null);
 
   const fetchProps = useCallback(async () => {
     setLoading(true);
@@ -86,6 +87,21 @@ export default function AdminPropiedadesPage() {
       setRejectReason("");
     } catch (e: any) {
       setError(e?.message ?? "No se pudo rechazar");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function doDelete() {
+    if (!deleteModal) return;
+    const id = deleteModal.id;
+    setActionLoading(id);
+    try {
+      await del(`/properties/${id}`);
+      setProperties((prev) => prev.filter((p) => p.id !== id));
+      setDeleteModal(null);
+    } catch (e: any) {
+      setError(e?.message ?? "No se pudo eliminar");
     } finally {
       setActionLoading(null);
     }
@@ -169,6 +185,7 @@ export default function AdminPropiedadesPage() {
                 loading={actionLoading === p.id}
                 onApprove={() => approve(p.id)}
                 onReject={() => setRejectModal({ id: p.id, title: p.title })}
+                onDelete={() => setDeleteModal({ id: p.id, title: p.title })}
               />
             ))}
           </div>
@@ -197,15 +214,35 @@ export default function AdminPropiedadesPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de eliminación (acción de admin) */}
+      {deleteModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setDeleteModal(null)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">Eliminar propiedad</h3>
+            <p className="text-body-sm text-[var(--text-secondary)] mb-2 truncate">{deleteModal.title}</p>
+            <p className="text-body-sm text-[var(--text-secondary)] mb-5">
+              La propiedad se eliminará de la plataforma (soft-delete). Úsalo solo en casos
+              de problemas con el anfitrión o contenido indebido. No se puede deshacer desde aquí.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setDeleteModal(null)} className="btn btn-outline">Cancelar</button>
+              <button onClick={doDelete} disabled={actionLoading === deleteModal.id} className="btn bg-red-600 text-white hover:bg-red-700">
+                {actionLoading === deleteModal.id ? "Eliminando…" : "Eliminar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function PropertyReviewCard({
-  property: p, tab, loading, onApprove, onReject,
+  property: p, tab, loading, onApprove, onReject, onDelete,
 }: {
   property: Property; tab: Tab; loading: boolean;
-  onApprove: () => void; onReject: () => void;
+  onApprove: () => void; onReject: () => void; onDelete: () => void;
 }) {
   const photo = p.photos?.find((x) => x.is_primary) ?? p.photos?.[0];
   return (
@@ -256,6 +293,14 @@ function PropertyReviewCard({
             </button>
           )}
           <Link href={`/p/${p.id}`} className="text-body-sm text-[var(--color-primary)] hover:underline whitespace-nowrap">Ver ↗</Link>
+          <button
+            onClick={onDelete}
+            disabled={loading}
+            className="btn btn-ghost text-caption px-2 py-2 text-red-600 hover:bg-red-50"
+            title="Eliminar propiedad"
+          >
+            <Trash2 size={15} />
+          </button>
         </div>
       </div>
     </div>
