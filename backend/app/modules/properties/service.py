@@ -247,7 +247,9 @@ async def create_property(
     await db.flush()
 
     logger.info("Propiedad creada: %s por host %s", property_.id, host.id)
-    return property_
+    # Re-consultar con relaciones (host/photos/amenities) cargadas para que la
+    # serialización del response_model no dispare un lazy-load fuera del greenlet.
+    return await get_property(db, property_.id)
 
 
 async def update_property(
