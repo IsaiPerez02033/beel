@@ -283,7 +283,8 @@ export default function EditarPropiedadPage() {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-body-sm text-[var(--text-tertiary)]">$</span>
                   <input
                     type="number"
-                    className="input w-full pl-7"
+                    className="input w-full"
+                    style={{ paddingLeft: "1.75rem" }}
                     min={0}
                     value={form.price_per_night}
                     onChange={(e) => setField("price_per_night", e.target.value)}
@@ -297,7 +298,8 @@ export default function EditarPropiedadPage() {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-body-sm text-[var(--text-tertiary)]">$</span>
                   <input
                     type="number"
-                    className="input w-full pl-7"
+                    className="input w-full"
+                    style={{ paddingLeft: "1.75rem" }}
                     min={0}
                     value={form.cleaning_fee}
                     onChange={(e) => setField("cleaning_fee", e.target.value)}
@@ -310,7 +312,8 @@ export default function EditarPropiedadPage() {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-body-sm text-[var(--text-tertiary)]">$</span>
                   <input
                     type="number"
-                    className="input w-full pl-7"
+                    className="input w-full"
+                    style={{ paddingLeft: "1.75rem" }}
                     min={0}
                     value={form.security_deposit}
                     onChange={(e) => setField("security_deposit", e.target.value)}

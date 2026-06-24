@@ -540,7 +540,8 @@ function Step3({ form, set }: StepProps) {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-body-sm text-[var(--text-tertiary)]">$</span>
             <input
               type="number"
-              className="input w-full pl-7"
+              className="input w-full"
+              style={{ paddingLeft: "1.75rem" }}
               placeholder="0"
               min={0}
               value={form.price_per_night}
@@ -558,7 +559,8 @@ function Step3({ form, set }: StepProps) {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-body-sm text-[var(--text-tertiary)]">$</span>
             <input
               type="number"
-              className="input w-full pl-7"
+              className="input w-full"
+              style={{ paddingLeft: "1.75rem" }}
               placeholder="0"
               min={0}
               value={form.cleaning_fee}
@@ -576,7 +578,8 @@ function Step3({ form, set }: StepProps) {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-body-sm text-[var(--text-tertiary)]">$</span>
             <input
               type="number"
-              className="input w-full pl-7"
+              className="input w-full"
+              style={{ paddingLeft: "1.75rem" }}
               placeholder="0"
               min={0}
               value={form.security_deposit}
