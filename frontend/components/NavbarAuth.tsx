@@ -73,21 +73,11 @@ export default function NavbarAuth() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      {isAdmin && (
-        <Link
-          href="/admin"
-          className="hidden sm:flex items-center gap-1 btn btn-ghost text-xs px-3 py-2 text-[var(--color-primary)]"
-        >
-          <ShieldCheck size={14} />
-          Admin
-        </Link>
-      )}
-
-      {/* Toggle de modo anfitrión / huésped */}
+    <div className="flex items-center gap-1.5">
+      {/* Toggle de modo anfitrión / huésped (el Admin vive en el menú del avatar) */}
       <button
         onClick={toggleMode}
-        className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2 font-medium"
+        className="hidden sm:flex items-center gap-1.5 btn btn-ghost text-xs px-3 py-2 font-medium whitespace-nowrap"
       >
         {isHostArea ? (
           <><Home size={14} /> Usar como huésped</>
@@ -97,7 +87,7 @@ export default function NavbarAuth() {
       </button>
 
       {fullName && (
-        <span className="hidden md:block text-body-sm text-[var(--text-secondary)] ml-1">
+        <span className="hidden lg:block text-body-sm text-[var(--text-secondary)] ml-1 mr-0.5 whitespace-nowrap">
           ¡Hola, <span className="font-medium text-[var(--text-primary)]">{shortName(fullName)}</span>!
         </span>
       )}
