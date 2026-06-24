@@ -224,7 +224,8 @@ a {
   text-decoration: none;
   transition: color var(--transition-normal);
 }
-a:hover { color: var(--color-primary-dark); }
+/* Los .btn manejan su propio color; no aplicar el hover de enlace de texto. */
+a:hover:not(.btn) { color: var(--color-primary-dark); }
 
 img, video {
   max-width: 100%;
@@ -312,6 +313,7 @@ input, textarea, select {
 .btn-primary:hover {
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
+  color: #fff;
 }
 
 .btn-accent {
@@ -322,6 +324,7 @@ input, textarea, select {
 .btn-accent:hover {
   background: #E08A0A;
   border-color: #E08A0A;
+  color: var(--color-tierra);
 }
 
 .btn-outline {
