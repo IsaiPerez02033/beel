@@ -4,7 +4,7 @@ import math
 import uuid
 import logging
 import random
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
@@ -294,3 +294,38 @@ async def list_amenities(db: AsyncSession) -> list[Amenity]:
         select(Amenity).order_by(Amenity.sort_order, Amenity.name_es)
     )
     return list(result.scalars().all())
+
+
+# ── Moderación (admin) ──────────────────────────────────────────────────────────
+
+async def list_for_review(
+    db: AsyncSession, status_filter: str = "pending_review", limit: int = 100
+) -> list[Property]:
+    """Lista propiedades por estado, para la cola de moderación del admin."""
+    result = await db.execute(
+        _base_query()
+        .where(Property.status == status_filter)
+        .order_by(Property.created_at.desc())
+        .limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+async def set_moderation_status(
+    db: AsyncSession,
+    property_: Property,
+    new_status: str,
+    admin_id: uuid.UUID,
+    reason: Optional[str] = None,
+) -> Property:
+    """Aprueba (active) o rechaza (suspended) una propiedad."""
+    property_.status = new_status
+    if new_status == "active":
+        property_.approved_by = admin_id
+        property_.approved_at = datetime.now(timezone.utc)
+        property_.suspension_reason = None
+    elif reason is not None:
+        property_.suspension_reason = reason
+    await db.commit()
+    await invalidate(property_key(str(property_.id)))
+    return property_

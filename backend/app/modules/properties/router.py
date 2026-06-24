@@ -5,7 +5,7 @@ import logging
 from decimal import Decimal
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser, OptionalUser
@@ -58,6 +58,57 @@ async def admin_delete_demo(
     from app.modules.properties.demo_seed import delete_demo_data
     _check_seed_key(key)
     return await delete_demo_data(db, purge_host=purge_host)
+
+
+# ── Admin: moderación de propiedades ────────────────────────────────────────────
+
+async def _require_admin(
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Dependency que exige rol admin de Beel."""
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user or user.role != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores de Beel")
+    return user
+
+
+@router.get("/admin/pending", response_model=list[PropertyOut])
+async def admin_list_pending(
+    status_filter: str = Query("pending_review", pattern="^(pending_review|active|suspended|inactive)$"),
+    admin_user=Depends(_require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Lista propiedades en revisión (o por estado) para moderación."""
+    return await service.list_for_review(db, status_filter=status_filter)
+
+
+@router.post("/{property_id}/approve", response_model=PropertyOut)
+async def admin_approve_property(
+    property_id: uuid.UUID,
+    admin_user=Depends(_require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Aprueba una propiedad: pasa a 'active' y queda pública."""
+    property_ = await service.get_property(db, property_id)
+    if not property_:
+        raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+    return await service.set_moderation_status(db, property_, "active", admin_user.id)
+
+
+@router.post("/{property_id}/reject", response_model=PropertyOut)
+async def admin_reject_property(
+    property_id: uuid.UUID,
+    payload: dict = Body(default={}),
+    admin_user=Depends(_require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Rechaza una propiedad: pasa a 'suspended' con motivo opcional."""
+    property_ = await service.get_property(db, property_id)
+    if not property_:
+        raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+    reason = (payload or {}).get("reason") or "Rechazada por el equipo de Beel"
+    return await service.set_moderation_status(db, property_, "suspended", admin_user.id, reason=reason)
 
 
 # ── Búsqueda y listado ────────────────────────────────────────────────────────
