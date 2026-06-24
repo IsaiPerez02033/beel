@@ -540,7 +540,7 @@ function PropertiesTab({ properties }: { properties: Property[] }) {
                     Editar
                   </Link>
                   <Link
-                    href={`/p/${p.id}`}
+                    href={p.status === "active" ? `/p/${p.id}` : `/p/${p.id}/editar`}
                     className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                   >
                     <ChevronRight size={16} />

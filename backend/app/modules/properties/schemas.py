@@ -127,6 +127,7 @@ class PropertyCardOut(BaseModel):
     """Schema reducido para grids y tarjetas — omite datos pesados."""
     id: uuid.UUID
     title: str
+    status: str
     property_type: str
     neighborhood: Optional[str]
     city: str
