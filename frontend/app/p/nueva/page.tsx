@@ -610,8 +610,40 @@ function Step3({ form, set }: StepProps) {
 
 // ── Step 4: Políticas y amenidades ────────────────────────────────────────────
 
+// Emoji por slug de amenidad (consistente para todas). Fallback por categoría.
+const AMENITY_EMOJI: Record<string, string> = {
+  wifi: "📶", aire_acondicionado: "❄️", calefaccion: "🔥", estacionamiento: "🚗",
+  televisor: "📺", tv: "📺", lavadora: "🧺", secadora: "🌀",
+  cocina: "🍳", cocina_equipada: "🍳", microondas: "🍲", cafetera: "☕",
+  refrigerador: "🧊", utensilios: "🍴",
+  piscina: "🏊", alberca: "🏊", terraza: "🌿", jardin: "🌳", asador: "🍖", hamaca: "🌴",
+  mascotas_ok: "🐾",
+  toallas: "🧖", secador_pelo: "💨", articulos_bano: "🧴",
+  ropa_cama: "🛏️", closet: "🗄️", cuna: "🍼",
+  caja_seguridad: "🔒", extinguidor: "🧯", detector_humo: "🚨", botiquin: "🩹",
+  netflix: "🎬", mesa_trabajo: "💻",
+  acceso_silla_ruedas: "♿", sin_escaleras: "🚶",
+  desayuno: "🥐", servicio_limpieza: "🧹", recepcion_24h: "🛎️",
+};
+const CATEGORY_EMOJI: Record<string, string> = {
+  basicos: "✨", cocina: "🍳", exteriores: "🌿", exterior: "🌿", reglas: "📋",
+  bano: "🚿", dormitorio: "🛏️", seguridad: "🛡️", entretenimiento: "🎬",
+  accesibilidad: "♿", servicios: "🛎️",
+};
+function amenityEmoji(a: Amenity): string {
+  return AMENITY_EMOJI[a.slug] ?? CATEGORY_EMOJI[a.category] ?? "•";
+}
+
 function Step4({ form, set, amenities }: StepProps & { amenities: Amenity[] }) {
-  const grouped = amenities.reduce<Record<string, Amenity[]>>((acc, a) => {
+  // Dedup por nombre (la BD tiene duplicados: Alberca, Cocina equipada, TV…)
+  const seenNames = new Set<string>();
+  const uniqueAmenities = amenities.filter((a) => {
+    const key = a.name_es.trim().toLowerCase();
+    if (seenNames.has(key)) return false;
+    seenNames.add(key);
+    return true;
+  });
+  const grouped = uniqueAmenities.reduce<Record<string, Amenity[]>>((acc, a) => {
     (acc[a.category] = acc[a.category] ?? []).push(a);
     return acc;
   }, {});
@@ -746,7 +778,7 @@ function Step4({ form, set, amenities }: StepProps & { amenities: Amenity[] }) {
                             : "border-[var(--border-subtle)] hover:border-[var(--border-default)] text-[var(--text-secondary)]"
                         )}
                       >
-                        {a.icon && <span className="text-base flex-shrink-0">{a.icon}</span>}
+                        <span className="text-base flex-shrink-0 w-5 text-center">{amenityEmoji(a)}</span>
                         <span className="text-caption font-medium truncate">{a.name_es}</span>
                         {selected && <Check size={12} className="ml-auto flex-shrink-0" />}
                       </button>
