@@ -321,6 +321,7 @@ async def set_moderation_status(
     reason: Optional[str] = None,
 ) -> Property:
     """Aprueba (active) o rechaza (suspended) una propiedad."""
+    prop_id = property_.id
     property_.status = new_status
     if new_status == "active":
         property_.approved_by = admin_id
@@ -329,5 +330,7 @@ async def set_moderation_status(
     elif reason is not None:
         property_.suspension_reason = reason
     await db.commit()
-    await invalidate(property_key(str(property_.id)))
-    return property_
+    await invalidate(property_key(str(prop_id)))
+    # Re-consultar con relaciones cargadas: el commit expira el objeto y la
+    # serialización del response_model dispararía un lazy-load fuera del greenlet.
+    return await get_property(db, prop_id)
