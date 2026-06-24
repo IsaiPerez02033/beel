@@ -172,9 +172,13 @@ async def list_amenities(db: AsyncSession = Depends(get_db)):
 @router.get("/{property_id}", response_model=PropertyOut)
 async def get_property(
     property_id: uuid.UUID,
+    current_user: OptionalUser = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """Retorna el detalle completo de una propiedad."""
+    """Retorna el detalle completo de una propiedad.
+
+    Las activas son públicas. Las no activas (en revisión, suspendidas) solo
+    las puede ver su dueño o un admin (para editarlas/revisarlas)."""
     from app.core.config import settings as s
     if s.DEMO_MODE or not s.has_database:
         demo = next((p for p in _demo_list if p["id"] == str(property_id)), None)
@@ -183,8 +187,13 @@ async def get_property(
         return demo
 
     property_ = await service.get_property(db, property_id)
-    if not property_ or property_.status not in ("active", "pending_review"):
+    if not property_:
         raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+    if property_.status != "active":
+        # Solo el dueño o un admin pueden ver una propiedad no activa
+        viewer = await user_service.get_user_by_id(db, current_user.id) if current_user else None
+        if not viewer or (property_.host_id != viewer.id and not viewer.is_admin):
+            raise HTTPException(status_code=404, detail="Propiedad no encontrada")
     return property_
 
 
