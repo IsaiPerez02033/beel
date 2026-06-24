@@ -101,7 +101,13 @@ export default function AdminPropiedadesPage() {
       setProperties((prev) => prev.filter((p) => p.id !== id));
       setDeleteModal(null);
     } catch (e: any) {
-      setError(e?.message ?? "No se pudo eliminar");
+      // 404 = ya no existe; la quitamos igual.
+      if (String(e?.message ?? "").toLowerCase().includes("encontrada")) {
+        setProperties((prev) => prev.filter((p) => p.id !== id));
+        setDeleteModal(null);
+      } else {
+        setError(e?.message ?? "No se pudo eliminar");
+      }
     } finally {
       setActionLoading(null);
     }

@@ -141,7 +141,12 @@ export default function AnfitrionPage() {
   }
 
   async function handleDeleteProperty(id: string) {
-    await del(`/properties/${id}`);
+    try {
+      await del(`/properties/${id}`);
+    } catch (e) {
+      // 404 = la propiedad ya no existe; la quitamos igual.
+      if (!String(e).toLowerCase().includes("encontrada")) throw e;
+    }
     setProperties((prev) => prev.filter((p) => p.id !== id));
   }
 
