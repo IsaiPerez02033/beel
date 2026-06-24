@@ -88,8 +88,8 @@ export default function AnfitrionPage() {
     setLoading(true);
     try {
       const [resData, propData] = await Promise.all([
-        get<{ reservations: HostReservation[] }>("/reservations/host"),
-        get<{ properties: Property[] }>("/properties/my-listings"),
+        get<{ reservations: HostReservation[] }>("/reservations/host-requests"),
+        get<{ properties: Property[] }>("/properties/host/my-listings"),
       ]);
       setReservations(resData.reservations);
       setProperties(propData.properties);
@@ -101,7 +101,7 @@ export default function AnfitrionPage() {
         (r) => r.status === "confirmed" && r.check_in.startsWith(thisMonth)
       );
       const activeProps = propData.properties.filter((p) => p.status === "active");
-      const ratings = propData.properties.filter((p) => p.avg_rating).map((p) => p.avg_rating!);
+      const ratings = propData.properties.filter((p) => p.avg_rating).map((p) => Number(p.avg_rating));
 
       setStats({
         total_listings: propData.properties.length,
@@ -122,7 +122,7 @@ export default function AnfitrionPage() {
   async function handleReservationAction(id: string, action: "confirm" | "reject") {
     setActionLoading(id);
     try {
-      await post(`/reservations/${id}/${action === "confirm" ? "confirm" : "reject"}`, {});
+      await post(`/reservations/${id}/respond`, { action });
       setReservations((prev) =>
         prev.map((r) =>
           r.id === id ? { ...r, status: action === "confirm" ? "confirmed" : "rejected" } : r
