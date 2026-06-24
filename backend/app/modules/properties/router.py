@@ -206,7 +206,14 @@ async def create_property(
     require_verified(user)
     if not user.is_host:
         user = await user_service.become_host(db, user)
-    return await service.create_property(db, user, data)
+    try:
+        return await service.create_property(db, user, data)
+    except HTTPException:
+        raise
+    except Exception as e:  # debug temporal: superficie del error real
+        import traceback
+        logger.error("create_property falló: %s", traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
 
 
 @router.patch("/{property_id}", response_model=PropertyOut)

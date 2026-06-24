@@ -105,8 +105,8 @@ export default function NuevaPropiedadPage() {
     get<{ is_phone_verified: boolean; is_identity_verified: boolean }>("/users/me")
       .then((u) => setVerified(!!u.is_phone_verified && !!u.is_identity_verified))
       .catch(() => setVerified(false));
-    get<{ amenities: Amenity[] }>("/properties/amenities")
-      .then((d) => setAmenities(d.amenities ?? []))
+    get<Amenity[] | { amenities: Amenity[] }>("/properties/amenities")
+      .then((d) => setAmenities(Array.isArray(d) ? d : (d.amenities ?? [])))
       .catch(() => {});
   }, [isSignedIn, isLoaded]);
 
