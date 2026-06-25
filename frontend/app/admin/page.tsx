@@ -218,7 +218,8 @@ export default function AdminPage() {
         <div className="relative mb-4">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
           <input
-            className="input w-full pl-9"
+            className="input w-full"
+            style={{ paddingLeft: "2.25rem" }}
             placeholder="Buscar por propiedad, huésped o anfitrión…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
