@@ -186,16 +186,22 @@ async def mp_webhook(
     body = await request.body()
     x_signature = request.headers.get("x-signature", "")
     x_request_id = request.headers.get("x-request-id", "")
+    # MP manda el id del recurso en el query string como ?data.id=...&type=...
+    data_id = request.query_params.get("data.id") or request.query_params.get("id", "")
 
     try:
         import json
-        payload = json.loads(body)
+        payload = json.loads(body) if body else {}
     except Exception:
         raise HTTPException(status_code=400, detail="JSON inválido")
+    # Algunos avisos de MP vienen vacíos/por query: completar desde el query string.
+    if not payload:
+        payload = {"type": request.query_params.get("type", "payment"),
+                   "data": {"id": data_id}}
 
     try:
         result = await payment_service.handle_mp_webhook(
-            db, payload, x_signature, x_request_id
+            db, payload, x_signature, x_request_id, data_id
         )
     except ValueError:
         raise HTTPException(status_code=401, detail="Firma de webhook inválida")
