@@ -151,22 +151,31 @@ async def _is_duplicate_webhook(x_request_id: str) -> bool:
         return False
 
 
-def _verify_mp_signature(request_body: bytes, x_signature: str, x_request_id: str) -> bool:
+def _verify_mp_signature(x_signature: str, x_request_id: str, data_id: str) -> bool:
     """
-    Verifica la firma HMAC-SHA256 del webhook de MP.
+    Verifica la firma HMAC-SHA256 del webhook de MP según el spec oficial.
+    El header x-signature viene como "ts=<unix>,v1=<hex>" y se firma el
+    manifest: id:<data.id>;request-id:<x-request-id>;ts:<ts>;
     Docs: https://www.mercadopago.com.mx/developers/es/docs/your-integrations/notifications/webhooks
     """
     if not settings.MERCADOPAGO_WEBHOOK_SECRET:
         logger.critical("MERCADOPAGO_WEBHOOK_SECRET no configurado — webhooks sin firma")
         return False
 
-    manifest = f"id:{x_request_id};request-id:{x_request_id};"
+    parts = dict(p.split("=", 1) for p in x_signature.split(",") if "=" in p)
+    ts, v1 = parts.get("ts", ""), parts.get("v1", "")
+    if not ts or not v1:
+        return False
+
+    # MP: si el id es alfanumérico va en minúsculas (los de pago son numéricos).
+    did = (data_id or "").lower()
+    manifest = f"id:{did};request-id:{x_request_id};ts:{ts};"
     expected = hmac.new(
         settings.MERCADOPAGO_WEBHOOK_SECRET.encode(),
         manifest.encode(),
         hashlib.sha256,
     ).hexdigest()
-    return hmac.compare_digest(expected, x_signature.split("=")[-1])
+    return hmac.compare_digest(expected, v1)
 
 
 async def handle_mp_webhook(
@@ -174,15 +183,14 @@ async def handle_mp_webhook(
     payload: dict,
     x_signature: str = "",
     x_request_id: str = "",
+    data_id: str = "",
 ) -> str:
     """
     Procesa los eventos de webhook de MercadoPago.
     Retorna el estado resultante del pago.
     """
-    # 1. Verificar firma HMAC
-    if not _verify_mp_signature(
-        json.dumps(payload).encode(), x_signature, x_request_id
-    ):
+    # 1. Verificar firma HMAC (sobre el manifest id;request-id;ts)
+    if not _verify_mp_signature(x_signature, x_request_id, data_id or str(payload.get("data", {}).get("id", ""))):
         logger.warning("Firma HMAC inválida en webhook MP: %s", x_request_id)
         raise ValueError("Invalid webhook signature")
 
