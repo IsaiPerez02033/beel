@@ -1,0 +1,28 @@
+name: Keep backend awake
+
+# Render (free tier) duerme el servicio tras ~15 min de inactividad, causando
+# cold starts (502/503) en el primer request. Este workflow pinguea el health
+# check cada 10 min para mantenerlo despierto. GitHub Actions es gratis e
+# ilimitado en repos públicos.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # cada 10 minutos
+  workflow_dispatch:           # permite dispararlo manualmente
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health check
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 \
+              https://beel-hrkx.onrender.com/api/v1/health || echo "000")
+            echo "Intento $i → HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          echo "El backend no respondió 200 tras 3 intentos (puede estar despertando)."
+          # No fallamos el job: el objetivo es despertarlo, no alertar.
+          exit 0
