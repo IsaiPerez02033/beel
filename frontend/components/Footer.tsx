@@ -21,15 +21,6 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
   {
-    title: "Explorar",
-    links: [
-      { label: "Buscar hospedajes", href: "/buscar" },
-      { label: "Destinos en México", href: "/buscar" },
-      { label: "Casas", href: "/buscar?tipo=casa" },
-      { label: "Villas con alberca", href: "/buscar?tipo=villa" },
-    ],
-  },
-  {
     title: "Beel",
     links: [
       { label: "Cómo funciona", href: "/como-funciona" },
@@ -46,7 +37,7 @@ export default function Footer() {
     <footer className="bg-[var(--bg-subtle)] border-t border-[var(--border-subtle)] mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Columnas */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
           {COLUMNS.map((col) => (
             <div key={col.title}>
               <h3 className="text-body-sm font-semibold text-[var(--text-primary)] mb-4">
