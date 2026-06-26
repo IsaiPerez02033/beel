@@ -204,15 +204,12 @@ async def create_property(
     db: AsyncSession = Depends(get_db),
 ):
     """Crea una nueva propiedad. El usuario debe ser anfitrión y estar verificado."""
-    from app.core.auth import require_verified
+    from app.core.auth import require_full_verified
 
     user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    # Verificación obligatoria de teléfono e identidad. En Beel, estar
-    # verificado ES el requisito para ser anfitrión, así que promovemos el
-    # rol automáticamente si aún es "guest".
-    require_verified(user)
+    require_full_verified(user)
     if not user.is_host:
         user = await user_service.become_host(db, user)
     return await service.create_property(db, user, data)

@@ -266,6 +266,7 @@ async def update_property(
         "min_stay_nights", "max_stay_nights", "cancellation_policy",
         "check_in_time", "check_out_time", "instant_booking",
         "allows_pets", "allows_smoking", "allows_events",
+        "require_guest_identity",
     }
     prop_id = property_.id
     for field, value in update_data.items():

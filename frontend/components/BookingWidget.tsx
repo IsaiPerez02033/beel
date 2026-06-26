@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useSafeAuth";
-import { differenceInCalendarDays, parseISO } from "date-fns";
+import { differenceInCalendarDays, parseISO, format } from "date-fns";
+import { useApi } from "@/hooks/useApi";
 import { Star, Info } from "lucide-react";
 import { formatRating, pluralNights } from "@/lib/utils";
 import Price from "@/components/Price";
@@ -25,6 +26,7 @@ export default function BookingWidget({
 }: BookingWidgetProps) {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
+  const { get } = useApi();
 
   const [checkIn, setCheckIn] = useState(initialCheckIn ?? "");
   const [checkOut, setCheckOut] = useState(initialCheckOut ?? "");
@@ -32,6 +34,42 @@ export default function BookingWidget({
     Math.min(initialGuests, property.max_guests)
   );
   const [loading, setLoading] = useState(false);
+  const [disabledDates, setDisabledDates] = useState<Date[]>([]);
+
+  // Obtener disponibilidad para los próximos 12 meses
+  useEffect(() => {
+    let active = true;
+    async function fetchAvailability() {
+      try {
+        const today = new Date();
+        const startStr = format(today, "yyyy-MM-dd");
+        const oneYearLater = new Date(today);
+        oneYearLater.setFullYear(today.getFullYear() + 1);
+        const endStr = format(oneYearLater, "yyyy-MM-dd");
+
+        const res = await get<{ days: { date: string; is_available: boolean }[] }>(
+          `/reservations/availability/${property.id}?start=${startStr}&end=${endStr}`
+        );
+
+        if (!active) return;
+
+        const blocked = res.days
+          .filter((d) => !d.is_available)
+          .map((d) => parseISO(d.date));
+
+        setDisabledDates(blocked);
+      } catch (err) {
+        console.error("Error al obtener disponibilidad:", err);
+      }
+    }
+
+    if (property.id) {
+      fetchAvailability();
+    }
+    return () => {
+      active = false;
+    };
+  }, [property.id, get]);
 
   // Cálculo de noches y precios
   const nights = useMemo(() => {
@@ -102,6 +140,7 @@ export default function BookingWidget({
           checkOut={checkOut}
           onCheckIn={setCheckIn}
           onCheckOut={setCheckOut}
+          disabledDates={disabledDates}
         />
       </div>
 

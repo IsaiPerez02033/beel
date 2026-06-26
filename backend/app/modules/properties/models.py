@@ -90,6 +90,7 @@ class Property(Base, TimestampMixin):
     allows_pets: Mapped[bool] = mapped_column(Boolean, default=False)
     allows_smoking: Mapped[bool] = mapped_column(Boolean, default=False)
     allows_events: Mapped[bool] = mapped_column(Boolean, default=False)
+    require_guest_identity: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Métricas cacheadas
     total_reviews: Mapped[int] = mapped_column(default=0)

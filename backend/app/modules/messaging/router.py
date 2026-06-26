@@ -223,32 +223,50 @@ async def websocket_messages(
         # Notificar conexión
         await ws.send_json({"type": "connected", "conversation_id": str(conversation_id)})
 
-        while True:
-            # Escuchar mensajes entrantes del cliente
+        async def read_from_client():
             try:
-                data = await asyncio.wait_for(ws.receive_json(), timeout=30.0)
-                if data.get("type") == "message" and data.get("body"):
-                    async with AsyncSessionLocal() as db:
-                        conv = await service.get_conversation(db, conversation_id)
-                        if conv:
-                            await service.send_message(
-                                db,
-                                conversation=conv,
-                                sender=user,
-                                data=MessageCreateIn(body=data["body"][:4000]),
-                            )
-                            await db.commit()
-            except asyncio.TimeoutError:
-                # Ping para mantener conexión viva
-                await ws.send_json({"type": "ping"})
+                while True:
+                    data = await ws.receive_json()
+                    if data.get("type") == "message" and data.get("body"):
+                        async with AsyncSessionLocal() as db:
+                            conv = await service.get_conversation(db, conversation_id)
+                            if conv:
+                                await service.send_message(
+                                    db,
+                                    conversation=conv,
+                                    sender=user,
+                                    data=MessageCreateIn(body=data["body"][:4000]),
+                                )
+                                await db.commit()
+            except WebSocketDisconnect:
+                pass
+            except Exception as e:
+                logger.error("Error reading from client websocket: %s", e)
 
-            # Enviar eventos de broadcast al cliente
-            while not q.empty():
-                try:
-                    event = q.get_nowait()
-                    await ws.send_json(event)
-                except asyncio.QueueEmpty:
-                    break
+        async def write_to_client():
+            try:
+                while True:
+                    try:
+                        # Esperar evento de la cola con un timeout para pings periódicos
+                        event = await asyncio.wait_for(q.get(), timeout=25.0)
+                        await ws.send_json(event)
+                        q.task_done()
+                    except asyncio.TimeoutError:
+                        await ws.send_json({"type": "ping"})
+            except WebSocketDisconnect:
+                pass
+            except Exception as e:
+                logger.error("Error writing to client websocket: %s", e)
+
+        read_task = asyncio.create_task(read_from_client())
+        write_task = asyncio.create_task(write_to_client())
+
+        await asyncio.wait(
+            [read_task, write_task],
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        read_task.cancel()
+        write_task.cancel()
 
     except WebSocketDisconnect:
         pass

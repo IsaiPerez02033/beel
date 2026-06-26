@@ -14,6 +14,7 @@ interface DateRangePickerProps {
   onCheckIn: (val: string) => void;
   onCheckOut: (val: string) => void;
   compact?: boolean;
+  disabledDates?: Date[];
 }
 
 function toDate(s: string): Date | undefined {
@@ -40,7 +41,7 @@ function computePos(r: DOMRect): { top: number; left: number } {
 }
 
 export default function DateRangePicker({
-  checkIn, checkOut, onCheckIn, onCheckOut, compact = false,
+  checkIn, checkOut, onCheckIn, onCheckOut, compact = false, disabledDates = [],
 }: DateRangePickerProps) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -95,6 +96,38 @@ export default function DateRangePicker({
 
   function handleSelect(r?: DateRange) {
     if (!r) return;
+
+    if (disabledDates && disabledDates.length > 0 && r.from && r.to) {
+      const current = new Date(r.from);
+      current.setHours(0, 0, 0, 0);
+      const end = new Date(r.to);
+      end.setHours(0, 0, 0, 0);
+      let hasBlockedDate = false;
+
+      const disabledTimeStamps = new Set(
+        disabledDates.map((d) => {
+          const copy = new Date(d);
+          copy.setHours(0, 0, 0, 0);
+          return copy.getTime();
+        })
+      );
+
+      while (current <= end) {
+        if (disabledTimeStamps.has(current.getTime())) {
+          hasBlockedDate = true;
+          break;
+        }
+        current.setDate(current.getDate() + 1);
+      }
+
+      if (hasBlockedDate) {
+        onCheckIn(toStr(r.from));
+        onCheckOut("");
+        setSelecting("to");
+        return;
+      }
+    }
+
     if (selecting === "from") {
       onCheckIn(toStr(r.from));
       onCheckOut("");
@@ -193,6 +226,7 @@ export default function DateRangePicker({
             selected={range}
             onSelect={handleSelect}
             fromDate={today}
+            disabled={disabledDates}
             numberOfMonths={1}
             showOutsideDays={false}
             classNames={{

@@ -176,14 +176,13 @@ async def become_host(
     db: AsyncSession = Depends(get_db),
 ):
     """Convierte al usuario en anfitrión. Requiere teléfono e identidad verificados."""
-    from app.core.auth import require_verified
+    from app.core.auth import require_full_verified
 
     user_id = current_user.id
     user = await service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    # Verificación obligatoria de teléfono e identidad para ser anfitrión
-    require_verified(user)
+    require_full_verified(user)
     updated = await service.become_host(db, user)
     return updated
 
