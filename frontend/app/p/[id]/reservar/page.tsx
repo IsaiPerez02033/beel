@@ -97,7 +97,8 @@ export default function ReservarPage() {
       .finally(() => setLoading(false));
   }, [id, checkIn, checkOut, isSignedIn, isLoaded]);
 
-  async function handleConfirm() {
+  async function handleConfirm(e?: React.MouseEvent) {
+    e?.preventDefault();
     if (!property) return;
     setSubmitting(true);
     setError(null);
@@ -230,6 +231,7 @@ export default function ReservarPage() {
                 )}
 
                 <button
+                  type="button"
                   onClick={handleConfirm}
                   disabled={submitting}
                   className="btn btn-primary w-full justify-center py-3.5 text-body"
