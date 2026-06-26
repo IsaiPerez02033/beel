@@ -46,8 +46,10 @@ export default function BookingWidget({
     }
   }, [checkIn, checkOut]);
 
-  const subtotal = nights * property.price_per_night;
-  const cleaningFee = property.cleaning_fee ?? 0;
+  // La API serializa los Decimal como strings; coaccionar a número o
+  // el "+" concatena (ej. 2 + "0.00" = "20.00").
+  const subtotal = nights * Number(property.price_per_night);
+  const cleaningFee = Number(property.cleaning_fee ?? 0);
   const total = subtotal + cleaningFee;
 
   async function handleReserve() {
