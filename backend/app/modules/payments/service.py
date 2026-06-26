@@ -89,7 +89,7 @@ async def create_checkout(
         },
         "back_urls": back_urls,
         "auto_return": "approved",
-        "notification_url": f"{settings.BACKEND_URL}/api/v1/payments/webhook/mercadopago",
+        "notification_url": f"{settings.BACKEND_URL or settings.ALLOWED_ORIGINS[-1]}/api/v1/payments/webhook/mercadopago",
         "external_reference": str(reservation.id),
         "expires": False,
         "metadata": {
