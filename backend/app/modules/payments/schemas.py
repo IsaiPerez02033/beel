@@ -1,7 +1,7 @@
 """Pydantic schemas para pagos."""
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
@@ -43,8 +43,8 @@ class AdminPaymentPropertyOut(BaseModel):
 
 
 class AdminPaymentReservationOut(BaseModel):
-    check_in: str
-    check_out: str
+    check_in: date
+    check_out: date
     nights: int
     guest: AdminPaymentUserOut
     host: AdminPaymentUserOut
