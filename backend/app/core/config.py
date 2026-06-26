@@ -100,7 +100,7 @@ class Settings(BaseSettings):
     SENTRY_DSN: Optional[str] = None
 
     # ── Seguridad ─────────────────────────────────────────────────────────────
-    MAX_REQUEST_BODY_SIZE: int = 1 * 1024 * 1024
+    MAX_REQUEST_BODY_SIZE: int = 15 * 1024 * 1024
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:3000",
         "https://beel.mx",
