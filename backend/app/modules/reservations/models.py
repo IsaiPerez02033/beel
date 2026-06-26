@@ -16,7 +16,7 @@ from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean, CheckConstraint, Date, DateTime, ForeignKey,
-    Integer, Numeric, SmallInteger, String, Text, func,
+    Integer, Numeric, SmallInteger, String, Text, Computed, func,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -101,7 +101,11 @@ class Reservation(Base, TimestampMixin):
     # Fechas
     check_in: Mapped[date] = mapped_column(Date, nullable=False)
     check_out: Mapped[date] = mapped_column(Date, nullable=False)
-    nights: Mapped[int] = mapped_column(SmallInteger, nullable=False)  # GENERATED ALWAYS — no escribir
+    nights: Mapped[int] = mapped_column(
+        SmallInteger,
+        Computed("(check_out - check_in)", persisted=True),
+        nullable=False,
+    )  # GENERATED ALWAYS — no escribir
     guests_count: Mapped[int] = mapped_column("guests_count", SmallInteger, nullable=False)
 
     # Snapshot de precios al momento de la reserva
