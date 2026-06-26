@@ -29,6 +29,16 @@ function fmtDisplay(s: string): string | null {
   try { return format(parseISO(s), "d MMM", { locale: es }); } catch { return null; }
 }
 
+// Posiciona el popover: abajo del trigger, o arriba si no cabe; clamp horizontal.
+function computePos(r: DOMRect): { top: number; left: number } {
+  const W = 340, H = 430, M = 8;
+  const spaceBelow = window.innerHeight - r.bottom;
+  const top = spaceBelow < H + M ? Math.max(M, r.top - H - M) : r.bottom + M;
+  let left = r.left;
+  if (left + W > window.innerWidth - M) left = Math.max(M, window.innerWidth - W - M);
+  return { top, left };
+}
+
 export default function DateRangePicker({
   checkIn, checkOut, onCheckIn, onCheckOut, compact = false,
 }: DateRangePickerProps) {
@@ -48,8 +58,7 @@ export default function DateRangePicker({
   const openWithPos = useCallback((which: "from" | "to") => {
     setSelecting(which);
     if (triggerRef.current) {
-      const r = triggerRef.current.getBoundingClientRect();
-      setPopoverPos({ top: r.bottom + 8, left: r.left });
+      setPopoverPos(computePos(triggerRef.current.getBoundingClientRect()));
     }
     setOpen(true);
   }, []);
@@ -73,8 +82,7 @@ export default function DateRangePicker({
     if (!open) return;
     function reposition() {
       if (triggerRef.current) {
-        const r = triggerRef.current.getBoundingClientRect();
-        setPopoverPos({ top: r.bottom + 8, left: r.left });
+        setPopoverPos(computePos(triggerRef.current.getBoundingClientRect()));
       }
     }
     window.addEventListener("scroll", reposition, true);

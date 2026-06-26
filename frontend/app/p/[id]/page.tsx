@@ -267,11 +267,11 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
                 )}
               </div>
             </div>
-          </div>
 
             {/* Reseñas */}
             <div className="divider" />
             <PropertyReviews propertyId={property.id} />
+          </div>
 
           {/* ── Widget de reserva (sticky) ─────────────────────────────── */}
           <div className="hidden lg:block">
