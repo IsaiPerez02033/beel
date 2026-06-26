@@ -44,6 +44,7 @@ async def _dates_are_available(
     """
     Verifica que todas las fechas en [check_in, check_out) estén disponibles.
     Usa SELECT FOR UPDATE para bloquear las filas y evitar race conditions.
+    Fechas sin registro en availability se consideran disponibles (default).
     """
     needed_dates = _date_range(check_in, check_out)
     if not needed_dates:
@@ -60,12 +61,8 @@ async def _dates_are_available(
         .with_for_update()
     )
     rows = result.scalars().all()
-    found_dates = {r.date for r in rows}
 
-    # Verificar que todas las fechas existen y están disponibles
-    for d in needed_dates:
-        if d not in found_dates:
-            return False
+    # Solo rechazar si hay una fila explícitamente bloqueada
     for r in rows:
         if not r.is_available:
             return False
