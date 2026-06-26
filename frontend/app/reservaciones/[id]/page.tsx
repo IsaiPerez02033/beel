@@ -205,7 +205,7 @@ export default function ReservationDetailPage() {
             {reservation.status === "confirmed" && (
               <Link
                 href={`/mensajes?conv=${reservation.id}`}
-                className="btn btn-outline w-full text-center"
+                className="btn btn-outline w-full justify-center"
               >
                 Contactar al{" "}
                 {reservation.host?.full_name ?? "anfitrión"}
@@ -215,7 +215,7 @@ export default function ReservationDetailPage() {
             <button
               onClick={handleCancel}
               disabled={cancelling}
-              className="btn border border-red-500 text-red-500 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed w-full text-center transition-all duration-200"
+              className="btn !border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error-light)] w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {cancelling ? "Cancelando..." : "Cancelar reservación"}
             </button>
