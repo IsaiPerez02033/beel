@@ -21,7 +21,8 @@ interface PhotoUploaderProps {
   maxPhotos?: number;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Proxy de Vercel (mismo origen, sin CORS). El proxy agrega el prefijo /api/v1.
+const API = "/api/backend";
 
 export default function PhotoUploader({
   propertyId,
@@ -71,7 +72,7 @@ export default function PhotoUploader({
         formData.append("file", file);
 
         const res = await fetch(
-          `${API}/api/v1/properties/${propertyId}/photos`,
+          `${API}/properties/${propertyId}/photos`,
           {
             method: "POST",
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -98,7 +99,7 @@ export default function PhotoUploader({
 
   async function deletePhoto(photoId: string) {
     const token = await getToken();
-    await fetch(`${API}/api/v1/properties/${propertyId}/photos/${photoId}`, {
+    await fetch(`${API}/properties/${propertyId}/photos/${photoId}`, {
       method: "DELETE",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
@@ -107,7 +108,7 @@ export default function PhotoUploader({
 
   async function setPrimary(photoId: string) {
     const token = await getToken();
-    await fetch(`${API}/api/v1/properties/${propertyId}/photos/${photoId}`, {
+    await fetch(`${API}/properties/${propertyId}/photos/${photoId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
