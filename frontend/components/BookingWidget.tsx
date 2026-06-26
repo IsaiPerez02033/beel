@@ -147,6 +147,10 @@ export default function BookingWidget({
       >
         {loading
           ? "Procesando..."
+          : !checkIn || !checkOut
+          ? "Selecciona tus fechas"
+          : nights < property.min_stay_nights
+          ? `Mínimo ${pluralNights(property.min_stay_nights)}`
           : property.instant_booking
           ? "Reservar ahora"
           : "Solicitar reserva"}
