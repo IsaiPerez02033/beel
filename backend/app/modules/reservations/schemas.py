@@ -92,7 +92,7 @@ class ReservationCreateIn(BaseModel):
     property_id: uuid.UUID
     check_in: date
     check_out: date
-    guests: int = Field(..., ge=1, le=30)
+    guests_count: int = Field(..., ge=1, le=30)
     guest_message: Optional[str] = Field(None, max_length=1000)
 
     @model_validator(mode="after")

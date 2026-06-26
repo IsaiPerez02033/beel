@@ -238,7 +238,7 @@ async def create_reservation(
         )
 
     # Validar capacidad
-    if data.guests > property_.max_guests:
+    if data.guests_count > property_.max_guests:
         from fastapi import HTTPException
         raise HTTPException(
             status_code=400,
@@ -273,7 +273,7 @@ async def create_reservation(
         host_id=property_.host_id,
         check_in=data.check_in,
         check_out=data.check_out,
-        guests_count=data.guests,
+        guests_count=data.guests_count,
         price_per_night_snapshot=breakdown.price_per_night,
         cleaning_fee_snapshot=breakdown.cleaning_fee,
         security_deposit_snapshot=breakdown.security_deposit,
