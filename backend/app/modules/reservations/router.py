@@ -158,7 +158,8 @@ async def respond_to_reservation(
     if not reservation:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
 
-    return await service.respond_to_reservation(db, reservation, user, data)
+    await service.respond_to_reservation(db, reservation, user, data)
+    return await service.get_reservation(db, reservation_id)
 
 
 @router.post("/{reservation_id}/cancel", response_model=ReservationOut)
@@ -177,7 +178,8 @@ async def cancel_reservation(
     if not reservation:
         raise HTTPException(status_code=404, detail="Reserva no encontrada")
 
-    return await service.cancel_reservation(db, reservation, user, data)
+    await service.cancel_reservation(db, reservation, user, data)
+    return await service.get_reservation(db, reservation_id)
 
 
 # ── Gestión de disponibilidad por el host ─────────────────────────────────────
