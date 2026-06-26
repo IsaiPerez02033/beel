@@ -318,7 +318,9 @@ async def create_reservation(
     else:
         asyncio.ensure_future(email_service.send_new_request_host(reservation))
 
-    return reservation
+    # Re-consultar con relaciones (incluye reservation_property.photos) para
+    # que la serialización de ReservationOut no dispare lazy-load (MissingGreenlet).
+    return await get_reservation(db, reservation.id)
 
 
 async def respond_to_reservation(
