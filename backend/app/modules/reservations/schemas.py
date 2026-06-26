@@ -97,9 +97,12 @@ class ReservationCreateIn(BaseModel):
 
     @model_validator(mode="after")
     def validate_dates(self) -> "ReservationCreateIn":
-        from datetime import date as date_type
-        today = date_type.today()
-        if self.check_in < today:
+        from datetime import date as date_type, timedelta
+        # El servidor corre en UTC y puede ir 1 día adelantado respecto al
+        # huésped (ej. noche en México = madrugada del día siguiente en UTC).
+        # Damos 1 día de tolerancia para no rechazar reservas de "hoy".
+        earliest = date_type.today() - timedelta(days=1)
+        if self.check_in < earliest:
             raise ValueError("La fecha de llegada no puede ser en el pasado")
         if self.check_out <= self.check_in:
             raise ValueError("La fecha de salida debe ser posterior a la de llegada")

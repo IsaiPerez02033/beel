@@ -50,7 +50,19 @@ export function useApi() {
       if (!res) throw new Error("Sin respuesta del servidor");
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: "Error desconocido" }));
-        throw new Error(err.detail ?? `HTTP ${res.status}`);
+        let msg = err.detail;
+        // FastAPI 422: detail es un array de errores de validación.
+        if (Array.isArray(msg)) {
+          msg = msg
+            .map((d: { loc?: unknown[]; msg?: string }) => {
+              const field = Array.isArray(d.loc) ? d.loc[d.loc.length - 1] : "";
+              return `${field ? field + ": " : ""}${d.msg ?? ""}`;
+            })
+            .join(" · ");
+        } else if (msg && typeof msg === "object") {
+          msg = JSON.stringify(msg);
+        }
+        throw new Error(msg || `HTTP ${res.status}`);
       }
       // 204 No Content o cuerpo vacío (ej. DELETE): no intentar parsear JSON.
       if (res.status === 204) return undefined as T;
