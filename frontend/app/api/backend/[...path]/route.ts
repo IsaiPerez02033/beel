@@ -25,11 +25,13 @@ async function proxy(req: NextRequest, params: { path: string[] }): Promise<Next
 
   let body: BodyInit | null = null;
   const method = req.method;
-  if (!["GET", "HEAD"].includes(method)) {
+  
+  // Solo leer el cuerpo si el método permite/espera un body (POST, PUT, PATCH)
+  if (["POST", "PUT", "PATCH"].includes(method)) {
     try {
       body = await req.blob();
     } catch {
-      // Ignorar si no hay cuerpo (ej. DELETE o peticiones vacías)
+      // Ignorar si no hay cuerpo o falla la lectura
     }
   }
 
@@ -39,8 +41,25 @@ async function proxy(req: NextRequest, params: { path: string[] }): Promise<Next
     headers.delete("transfer-encoding");
   }
 
+  // Eliminar cabeceras hop-by-hop y host para evitar conflictos de socket/proxy
+  const hopByHopHeaders = [
+    "connection",
+    "keep-alive",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade"
+  ];
+  hopByHopHeaders.forEach(h => headers.delete(h));
+
   try {
-    const fetchInit: RequestInit = { method, headers };
+    const fetchInit: RequestInit = { 
+      method, 
+      headers,
+      cache: "no-store"
+    };
     if (body) {
       fetchInit.body = body;
     }
