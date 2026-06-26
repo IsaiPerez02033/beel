@@ -26,7 +26,11 @@ async function proxy(req: NextRequest, params: { path: string[] }): Promise<Next
   let body: BodyInit | null = null;
   const method = req.method;
   if (!["GET", "HEAD"].includes(method)) {
-    body = await req.blob();
+    try {
+      body = await req.blob();
+    } catch {
+      // Ignorar si no hay cuerpo (ej. DELETE o peticiones vacías)
+    }
   }
 
   try {
