@@ -243,7 +243,8 @@ async def create_property(
             db.add(pa)
 
     # Actualizar contador del host
-    host.total_listings += 1
+    current_listings = host.total_listings or 0
+    host.total_listings = current_listings + 1
     await db.flush()
 
     logger.info("Propiedad creada: %s por host %s", property_.id, host.id)
@@ -283,7 +284,8 @@ async def delete_property(db: AsyncSession, property_: Property) -> None:
     property_.deleted_at = datetime.now(timezone.utc)
     property_.status = "deleted"
     if property_.host:
-        property_.host.total_listings = max(0, property_.host.total_listings - 1)
+        current_listings = property_.host.total_listings or 0
+        property_.host.total_listings = max(0, current_listings - 1)
     await db.commit()
     await invalidate(property_key(str(property_.id)))
 
