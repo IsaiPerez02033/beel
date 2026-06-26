@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import BookingWidget from "@/components/BookingWidget";
 import AmenityList from "@/components/AmenityList";
 import PropertyReviews from "@/components/PropertyReviews";
+import PropertyGallery from "@/components/PropertyGallery";
 import { Star, Shield, Zap, PawPrint, ChevronLeft } from "lucide-react";
 import { formatRating } from "@/lib/utils";
 import Price from "@/components/Price";
@@ -47,9 +48,7 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
   const property = await getProperty(params.id);
   if (!property) notFound();
 
-  const photos = property.photos.slice(0, 5);
-  const mainPhoto = photos[0];
-  const gridPhotos = photos.slice(1, 5);
+  // Las fotos y la galería se gestionan en el componente cliente PropertyGallery
 
   const POLICY_LABELS: Record<string, string> = {
     flexible: "Flexible",
@@ -109,46 +108,8 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
           </span>
         </div>
 
-        {/* Galería */}
-        <div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-[400px] mb-8">
-          {/* Foto principal */}
-          <div className="col-span-2 row-span-2 relative bg-[var(--color-primary-light)]">
-            {mainPhoto?.url && (
-              <Image
-                src={mainPhoto.url}
-                alt={property.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            )}
-          </div>
-
-          {/* Fotos secundarias */}
-          {gridPhotos.map((photo, i) => (
-            <div
-              key={photo.id}
-              className="relative bg-[var(--color-primary-light)] col-span-1 row-span-1"
-            >
-              {photo.url && (
-                <Image
-                  src={photo.url}
-                  alt={`${property.title} — foto ${i + 2}`}
-                  fill
-                  className="object-cover"
-                />
-              )}
-            </div>
-          ))}
-
-          {/* Rellenos si hay menos de 4 fotos secundarias */}
-          {Array.from({ length: Math.max(0, 4 - gridPhotos.length) }).map((_, i) => (
-            <div
-              key={`placeholder-${i}`}
-              className="bg-[var(--color-primary-light)] col-span-1 row-span-1"
-            />
-          ))}
-        </div>
+        {/* Galería Interactiva */}
+        <PropertyGallery photos={property.photos} title={property.title} />
 
         {/* Layout principal: info izq + widget der */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">
