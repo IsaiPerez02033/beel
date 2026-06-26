@@ -14,7 +14,12 @@ const HAS_GOOGLE = !!process.env.AUTH_GOOGLE_ID || !!process.env.NEXT_PUBLIC_GOO
 export default function RegistroPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect_url") ?? "/";
+  const rawRedirectUrl = searchParams.get("redirect_url") ?? "/";
+  // Sanitizar redirección: si va a configuración, panel de anfitrión o admin, mandar a inicio (/)
+  const redirectUrl =
+    rawRedirectUrl.startsWith("/anfitrion") || rawRedirectUrl.startsWith("/admin")
+      ? "/"
+      : rawRedirectUrl;
   // Si viene redirigido desde login porque la cuenta no existe
   const motivo = searchParams.get("motivo");
   const emailParam = searchParams.get("email") ?? "";
