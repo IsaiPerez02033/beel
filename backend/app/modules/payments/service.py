@@ -110,6 +110,8 @@ async def create_checkout(
 
     payment = Payment(
         reservation_id=reservation.id,
+        payment_provider="mercadopago",
+        payment_type="full",
         mp_preference_id=pref.get("id"),
         amount=reservation.total_amount,
         currency=reservation.currency,
