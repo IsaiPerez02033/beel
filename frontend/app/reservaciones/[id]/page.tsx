@@ -10,7 +10,7 @@ import { useApi } from "@/hooks/useApi";
 import Price from "@/components/Price";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar, MapPin, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, ArrowLeft, AlertTriangle } from "lucide-react";
 
 interface ReservationDetail {
   id: string;
@@ -59,9 +59,13 @@ export default function ReservationDetailPage() {
   const [reservation, setReservation] = useState<ReservationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const handleCancel = async () => {
-    if (!confirm("¿Estás seguro de que deseas cancelar esta reservación?")) return;
+  const handleCancel = () => {
+    setShowConfirmModal(true);
+  };
+
+  const confirmCancel = async () => {
     setCancelling(true);
     try {
       await post(`/reservations/${id}/cancel`, { reason: "Cancelado por el huésped" });
@@ -72,6 +76,7 @@ export default function ReservationDetailPage() {
       alert(err.message || "Error al cancelar la reservación");
     } finally {
       setCancelling(false);
+      setShowConfirmModal(false);
     }
   };
 
@@ -204,6 +209,47 @@ export default function ReservationDetailPage() {
           </div>
         )}
       </div>
+
+      {showConfirmModal && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in" 
+          onClick={() => setShowConfirmModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-[var(--color-error-light)] flex items-center justify-center mb-4">
+                <AlertTriangle size={24} className="text-[var(--color-error)]" />
+              </div>
+              <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-2 font-display">
+                ¿Cancelar reservación?
+              </h3>
+              <p className="text-body-sm text-[var(--text-secondary)] mb-6">
+                ¿Estás seguro de que deseas cancelar esta reservación? Esta acción no se puede deshacer.
+              </p>
+            </div>
+            
+            <div className="flex gap-3 justify-center w-full">
+              <button 
+                onClick={() => setShowConfirmModal(false)} 
+                disabled={cancelling}
+                className="btn btn-ghost flex-1 justify-center"
+              >
+                No, mantener
+              </button>
+              <button 
+                onClick={confirmCancel} 
+                disabled={cancelling} 
+                className="btn bg-[var(--color-error)] text-white hover:bg-red-600 border-none flex-1 justify-center disabled:opacity-50"
+              >
+                {cancelling ? "Cancelando..." : "Sí, cancelar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
