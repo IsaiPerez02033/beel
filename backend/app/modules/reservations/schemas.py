@@ -5,7 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 
 # ── Subschemas ────────────────────────────────────────────────────────────────
@@ -15,9 +15,26 @@ class PropertySnapshotOut(BaseModel):
     title: str
     city: str
     neighborhood: Optional[str]
-    photos: list[dict]  # [{url, is_primary}]
+    photos: list[dict] = []  # [{url, is_primary}]
 
     model_config = {"from_attributes": True}
+
+    @field_validator("photos", mode="before")
+    @classmethod
+    def _photos_to_dicts(cls, v):
+        """Convierte objetos PropertyPhoto ORM a dicts (el campo es list[dict])."""
+        if not v:
+            return []
+        out = []
+        for p in v:
+            if isinstance(p, dict):
+                out.append(p)
+            else:
+                out.append({
+                    "url": getattr(p, "url", ""),
+                    "is_primary": bool(getattr(p, "is_primary", False)),
+                })
+        return out
 
 
 class UserSnapshotOut(BaseModel):
@@ -64,6 +81,20 @@ class ReservationOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("guest", "host", mode="before")
+    @classmethod
+    def _user_to_dict(cls, v):
+        """Convierte el objeto User ORM a dict (el campo es dict). Sin esto,
+        Pydantic intenta validar un User contra `dict` → ResponseValidationError."""
+        if v is None or isinstance(v, dict):
+            return v
+        return {
+            "id": str(getattr(v, "id", "")),
+            "full_name": getattr(v, "full_name", ""),
+            "avatar_url": getattr(v, "avatar_url", None),
+            "is_identity_verified": bool(getattr(v, "is_identity_verified", False)),
+        }
 
 
 class ReservationListOut(BaseModel):
