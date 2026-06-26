@@ -38,6 +38,10 @@ class Payment(Base, TimestampMixin):
         index=True,
     )
 
+    # Proveedor y Tipo de pago (esquema DB)
+    payment_provider: Mapped[str] = mapped_column(String(20), nullable=False, default="mercadopago")
+    payment_type: Mapped[str] = mapped_column(String(20), nullable=False, default="full")
+
     # MercadoPago IDs
     mp_preference_id: Mapped[Optional[str]] = mapped_column(String(255), index=True)
     mp_payment_id: Mapped[Optional[str]] = mapped_column(String(255), unique=True)
