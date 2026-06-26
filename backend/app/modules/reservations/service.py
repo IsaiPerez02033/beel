@@ -206,7 +206,7 @@ async def create_reservation(
     result = await db.execute(
         select(Property)
         .where(Property.id == data.property_id, Property.status == "active")
-        .with_for_update(skip_locked=True)
+        .with_for_update()
     )
     property_ = result.scalar_one_or_none()
     if not property_:
@@ -301,9 +301,6 @@ async def create_reservation(
         guest.total_trips += 1
 
     await db.flush()
-
-    # Refrescar para cargar computed columns + relaciones tras flush
-    await db.refresh(reservation, ["nights", "updated_at", "reservation_property", "guest", "host"])
 
     logger.info(
         "Reserva %s creada (%s) | propiedad=%s guest=%s",
@@ -494,16 +491,21 @@ async def host_block_dates(
     reason: str,
 ) -> int:
     """El host bloquea fechas manualmente."""
+    if not dates:
+        return 0
+
+    result = await db.execute(
+        select(Availability).where(
+            Availability.property_id == property_id,
+            Availability.date.in_(dates),
+        )
+    )
+    existing_map = {avail.date: avail for avail in result.scalars().all()}
+
     count = 0
     for d in dates:
-        result = await db.execute(
-            select(Availability).where(
-                Availability.property_id == property_id,
-                Availability.date == d,
-            )
-        )
-        avail = result.scalar_one_or_none()
-        if avail:
+        if d in existing_map:
+            avail = existing_map[d]
             if avail.is_available:
                 avail.is_available = False
                 avail.blocked_reason = reason
@@ -526,20 +528,23 @@ async def host_unblock_dates(
     dates: list[date],
 ) -> int:
     """El host desbloquea fechas (solo las que él bloqueó, no reservas)."""
-    count = 0
-    for d in dates:
-        result = await db.execute(
-            select(Availability).where(
-                Availability.property_id == property_id,
-                Availability.date == d,
-                Availability.blocked_reason.in_(["host_block", "maintenance"]),
-            )
+    if not dates:
+        return 0
+
+    result = await db.execute(
+        select(Availability).where(
+            Availability.property_id == property_id,
+            Availability.date.in_(dates),
+            Availability.blocked_reason.in_(["host_block", "maintenance"]),
         )
-        avail = result.scalar_one_or_none()
-        if avail:
-            avail.is_available = True
-            avail.blocked_reason = None
-            count += 1
+    )
+    existing = result.scalars().all()
+
+    count = 0
+    for avail in existing:
+        avail.is_available = True
+        avail.blocked_reason = None
+        count += 1
     await db.flush()
     return count
 
@@ -558,17 +563,20 @@ async def generate_availability_horizon(
 
     today = date.today()
     end = today + timedelta(days=horizon_days)
-    count = 0
 
+    result = await db.execute(
+        select(Availability.date).where(
+            Availability.property_id == property_id,
+            Availability.date >= today,
+            Availability.date < end,
+        )
+    )
+    existing_dates = set(result.scalars().all())
+
+    count = 0
     current = today
     while current < end:
-        result = await db.execute(
-            select(Availability).where(
-                Availability.property_id == property_id,
-                Availability.date == current,
-            )
-        )
-        if not result.scalar_one_or_none():
+        if current not in existing_dates:
             db.add(Availability(property_id=property_id, date=current, is_available=True))
             count += 1
         current += timedelta(days=1)

@@ -39,6 +39,7 @@ export interface Property {
   allows_pets: boolean;
   allows_smoking: boolean;
   allows_events: boolean;
+  require_guest_identity: boolean;
 
   // Métricas
   total_reviews: number;

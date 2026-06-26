@@ -71,14 +71,31 @@ async def create_reservation(
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
-    """Crea una reserva. Requiere teléfono e identidad verificados."""
-    from app.core.auth import require_verified
+    """Crea una reserva. Huésped: teléfono obligatorio. Identidad solo si el anfitrión lo exige."""
+    from app.core.auth import require_phone_verified, require_full_verified
 
-    user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
+    user = await user_service.get_user_by_id(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    require_verified(user)
+
+    # Teléfono siempre obligatorio para huésped
+    require_phone_verified(user)
+
+    # Identidad solo si el anfitrión lo exige en esta propiedad
+    prop = await _get_property_or_404(db, data.property_id)
+    if prop.require_guest_identity:
+        require_full_verified(user)
+
     return await service.create_reservation(db, user, data)
+
+
+async def _get_property_or_404(db, property_id):
+    """Helper: obtiene propiedad o lanza 404."""
+    from app.modules.properties import service as prop_service
+    prop = await prop_service.get_property(db, property_id)
+    if not prop:
+        raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+    return prop
 
 
 @router.get("/my-trips", response_model=ReservationListOut)

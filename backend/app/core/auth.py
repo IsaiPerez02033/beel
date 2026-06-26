@@ -131,11 +131,10 @@ async def get_optional_user(
     return await get_current_user(credentials)
 
 
-def require_verified(user) -> None:
+def require_phone_verified(user) -> None:
     """
-    Levanta 403 si el usuario no tiene teléfono e identidad verificados.
-    Usar en acciones de confianza (reservar, publicar propiedad).
-    `user` es el modelo User de la BD.
+    Huéspedes: solo teléfono obligatorio. Rápido, barato.
+    Levanta 403 si el usuario no tiene teléfono verificado.
     """
     if not getattr(user, "is_phone_verified", False):
         raise HTTPException(
@@ -143,6 +142,14 @@ def require_verified(user) -> None:
             detail="Debes verificar tu número de teléfono antes de continuar. "
                    "Ve a Configuración → Seguridad.",
         )
+
+
+def require_full_verified(user) -> None:
+    """
+    Anfitriones: teléfono + identidad obligatorios.
+    Levanta 403 si falta cualquiera de los dos.
+    """
+    require_phone_verified(user)
     if not getattr(user, "is_identity_verified", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
