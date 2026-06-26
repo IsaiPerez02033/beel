@@ -33,8 +33,19 @@ async function proxy(req: NextRequest, params: { path: string[] }): Promise<Next
     }
   }
 
+  if (!body) {
+    headers.delete("content-length");
+    headers.delete("content-type");
+    headers.delete("transfer-encoding");
+  }
+
   try {
-    const res = await fetch(url, { method, headers, body });
+    const fetchInit: RequestInit = { method, headers };
+    if (body) {
+      fetchInit.body = body;
+    }
+
+    const res = await fetch(url, fetchInit);
 
     // Bufferear la respuesta completa. fetch() ya descomprimió el body,
     // pero los headers content-encoding/content-length corresponden al
@@ -54,6 +65,7 @@ async function proxy(req: NextRequest, params: { path: string[] }): Promise<Next
       headers: resHeaders,
     });
   } catch (e) {
+    console.error("[Proxy Error]", e);
     return NextResponse.json(
       { detail: "El servidor no está disponible. Intenta de nuevo en unos segundos." },
       { status: 503 }
