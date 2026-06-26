@@ -3,11 +3,11 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useSafeAuth";
-import { differenceInCalendarDays, parseISO, format } from "date-fns";
-import { es } from "date-fns/locale";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 import { Star, Info } from "lucide-react";
 import { formatRating, pluralNights } from "@/lib/utils";
 import Price from "@/components/Price";
+import DateRangePicker from "@/components/DateRangePicker";
 import type { Property } from "@/types";
 
 interface BookingWidgetProps {
@@ -91,41 +91,19 @@ export default function BookingWidget({
         )}
       </div>
 
-      {/* Fecha y huéspedes */}
-      <div className="border border-[var(--border-default)] rounded-xl overflow-hidden mb-3">
-        {/* Fechas */}
-        <div className="grid grid-cols-2">
-          <div className="p-3 border-r border-[var(--border-default)]">
-            <label className="block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-primary)] mb-1">
-              Llegada
-            </label>
-            <input
-              type="date"
-              value={checkIn}
-              min={format(new Date(), "yyyy-MM-dd")}
-              onChange={(e) => {
-                setCheckIn(e.target.value);
-                if (checkOut && e.target.value >= checkOut) setCheckOut("");
-              }}
-              className="w-full text-body-sm text-[var(--text-primary)] bg-transparent outline-none"
-            />
-          </div>
-          <div className="p-3">
-            <label className="block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-primary)] mb-1">
-              Salida
-            </label>
-            <input
-              type="date"
-              value={checkOut}
-              min={checkIn || format(new Date(), "yyyy-MM-dd")}
-              onChange={(e) => setCheckOut(e.target.value)}
-              className="w-full text-body-sm text-[var(--text-primary)] bg-transparent outline-none"
-            />
-          </div>
-        </div>
+      {/* Fechas — calendario estilo Airbnb */}
+      <div className="border border-[var(--border-default)] rounded-xl mb-3 flex">
+        <DateRangePicker
+          checkIn={checkIn}
+          checkOut={checkOut}
+          onCheckIn={setCheckIn}
+          onCheckOut={setCheckOut}
+        />
+      </div>
 
-        {/* Huéspedes */}
-        <div className="p-3 border-t border-[var(--border-default)] flex items-center justify-between">
+      {/* Huéspedes */}
+      <div className="border border-[var(--border-default)] rounded-xl mb-3">
+        <div className="p-3 flex items-center justify-between">
           <div>
             <label className="block text-[9px] font-semibold uppercase tracking-wider text-[var(--text-primary)] mb-0.5">
               Huéspedes
