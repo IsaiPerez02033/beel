@@ -301,6 +301,10 @@ async def create_reservation(
         guest.total_trips += 1
 
     await db.flush()
+
+    # Refrescar para cargar computed columns + relaciones tras flush
+    await db.refresh(reservation, ["nights", "updated_at", "reservation_property", "guest", "host"])
+
     logger.info(
         "Reserva %s creada (%s) | propiedad=%s guest=%s",
         reservation.id, initial_status, property_.id, guest.id,
