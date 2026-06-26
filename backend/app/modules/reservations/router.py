@@ -72,11 +72,7 @@ async def create_reservation(
     db: AsyncSession = Depends(get_db),
 ):
     """Crea una reserva. Requiere teléfono e identidad verificados."""
-    from app.core.config import settings as s
     from app.core.auth import require_verified
-
-    if s.DEMO_MODE or not s.has_database:
-        return _demo_reservation(data)
 
     user = await user_service.get_user_by_id(db, uuid.UUID(current_user.sub))
     if not user:
@@ -226,29 +222,3 @@ async def unblock_dates(
 
     count = await service.host_unblock_dates(db, property_id, data.dates)
     return {"unblocked": count}
-
-
-def _demo_reservation(data):
-    """Mock de reserva en modo demo (sin BD)."""
-    import uuid
-    from datetime import date as dt
-    nights = (data.check_out - data.check_in).days or 2
-    price = 1800
-    return {
-        "id": str(uuid.uuid4()),
-        "property_id": str(data.property_id),
-        "guest_id": str(uuid.uuid4()),
-        "host_id": str(uuid.uuid4()),
-        "check_in": data.check_in.isoformat(),
-        "check_out": data.check_out.isoformat(),
-        "guests_count": data.guests_count,
-        "nights": nights,
-        "price_per_night_snapshot": str(price),
-        "cleaning_fee_snapshot": "300",
-        "security_deposit_snapshot": "0",
-        "platform_fee_snapshot": "0",
-        "total_amount": str(price * nights + 300),
-        "currency": "MXN",
-        "cancellation_policy_snapshot": "flexible",
-        "status": "confirmed",
-    }
