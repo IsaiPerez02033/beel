@@ -157,12 +157,14 @@ export default function BookingWidget({
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setGuests(Math.max(1, guests - 1))}
               className="w-7 h-7 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm hover:border-[var(--border-strong)] transition-colors"
             >
               −
             </button>
             <button
+              type="button"
               onClick={() => setGuests(Math.min(property.max_guests, guests + 1))}
               className="w-7 h-7 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm hover:border-[var(--border-strong)] transition-colors"
             >
@@ -182,6 +184,7 @@ export default function BookingWidget({
 
       {/* Botón reservar */}
       <button
+        type="button"
         onClick={handleReserve}
         disabled={!canReserve || loading}
         className="btn btn-primary w-full justify-center py-3 text-body disabled:opacity-50 disabled:cursor-not-allowed"
