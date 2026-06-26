@@ -10,7 +10,7 @@ import { useApi } from "@/hooks/useApi";
 import Price from "@/components/Price";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar, MapPin, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Calendar, MapPin, ArrowLeft, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 
 interface ReservationDetail {
   id: string;
@@ -60,6 +60,11 @@ export default function ReservationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [modalNotification, setModalNotification] = useState<{
+    type: "success" | "error";
+    title: string;
+    message: string;
+  } | null>(null);
 
   const handleCancel = () => {
     setShowConfirmModal(true);
@@ -69,11 +74,19 @@ export default function ReservationDetailPage() {
     setCancelling(true);
     try {
       await post(`/reservations/${id}/cancel`, { reason: "Cancelado por el huésped" });
-      alert("Reservación cancelada exitosamente");
       const updated = await get<ReservationDetail>(`/reservations/${id}`);
       setReservation(updated);
+      setModalNotification({
+        type: "success",
+        title: "Cancelación exitosa",
+        message: "Tu reservación ha sido cancelada exitosamente."
+      });
     } catch (err: any) {
-      alert(err.message || "Error al cancelar la reservación");
+      setModalNotification({
+        type: "error",
+        title: "Error al cancelar",
+        message: err.message || "Ocurrió un error al intentar cancelar la reservación."
+      });
     } finally {
       setCancelling(false);
       setShowConfirmModal(false);
@@ -245,6 +258,51 @@ export default function ReservationDetailPage() {
                 className="btn bg-[var(--color-error)] text-white hover:bg-red-600 border-none flex-1 justify-center disabled:opacity-50"
               >
                 {cancelling ? "Cancelando..." : "Sí, cancelar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalNotification && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in" 
+          onClick={() => setModalNotification(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
+                modalNotification.type === "success" 
+                  ? "bg-[var(--color-success-light)]" 
+                  : "bg-[var(--color-error-light)]"
+              }`}>
+                {modalNotification.type === "success" ? (
+                  <CheckCircle2 size={24} className="text-[var(--color-success)]" />
+                ) : (
+                  <XCircle size={24} className="text-[var(--color-error)]" />
+                )}
+              </div>
+              <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-2 font-display">
+                {modalNotification.title}
+              </h3>
+              <p className="text-body-sm text-[var(--text-secondary)] mb-6">
+                {modalNotification.message}
+              </p>
+            </div>
+            
+            <div className="flex justify-center w-full">
+              <button 
+                onClick={() => setModalNotification(null)} 
+                className={`btn w-full justify-center ${
+                  modalNotification.type === "success"
+                    ? "btn-primary"
+                    : "bg-[var(--color-error)] text-white hover:bg-red-600 border-none"
+                }`}
+              >
+                Aceptar
               </button>
             </div>
           </div>
