@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { signInWithGoogle } from "@/app/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 
-const HAS_GOOGLE = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const HAS_GOOGLE = !!process.env.AUTH_GOOGLE_ID || !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 // Proxy interno para evitar CORS
 const API = typeof window !== "undefined" ? "/api/backend" : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000") + "/api/v1";
 

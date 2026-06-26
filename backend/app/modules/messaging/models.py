@@ -69,6 +69,7 @@ class Conversation(Base):
     unread_count_host: Mapped[int] = mapped_column("unread_count_host", default=0)
 
     is_pre_booking: Mapped[bool] = mapped_column("is_pre_booking", Boolean, default=True)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
     last_message_sender_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),

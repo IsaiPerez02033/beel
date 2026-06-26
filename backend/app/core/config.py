@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # ── Autenticación (NextAuth) ────────────────────────────────────────────────
     NEXTAUTH_SECRET: str = ""  # Secreto compartido con el frontend (HS256 para JWT)
 
+    # ── Clerk (legacy webhook) ──────────────────────────────────────────────────
+    CLERK_WEBHOOK_SECRET: Optional[str] = None  # Solo necesario si se usa Clerk webhook
+
     # ── Almacenamiento de fotos (Supabase Storage) ────────────────────────────
     SUPABASE_URL: Optional[str] = None          # https://xxxxx.supabase.co
     SUPABASE_SERVICE_KEY: Optional[str] = None  # service_role key (NO el anon)
