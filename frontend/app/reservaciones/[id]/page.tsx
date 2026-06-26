@@ -55,9 +55,25 @@ export default function ReservationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
-  const { get } = useApi();
+  const { get, post } = useApi();
   const [reservation, setReservation] = useState<ReservationDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!confirm("¿Estás seguro de que deseas cancelar esta reservación?")) return;
+    setCancelling(true);
+    try {
+      await post(`/reservations/${id}/cancel`, { reason: "Cancelado por el huésped" });
+      alert("Reservación cancelada exitosamente");
+      const updated = await get<ReservationDetail>(`/reservations/${id}`);
+      setReservation(updated);
+    } catch (err: any) {
+      alert(err.message || "Error al cancelar la reservación");
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -166,15 +182,25 @@ export default function ReservationDetailPage() {
           </div>
         </div>
 
-        {reservation.status === "confirmed" && (
-          <div className="mt-4">
-            <Link
-              href={`/mensajes?conv=${reservation.id}`}
-              className="btn btn-outline w-full text-center"
+        {(reservation.status === "pending" || reservation.status === "confirmed") && (
+          <div className="mt-4 space-y-2">
+            {reservation.status === "confirmed" && (
+              <Link
+                href={`/mensajes?conv=${reservation.id}`}
+                className="btn btn-outline w-full text-center"
+              >
+                Contactar al{" "}
+                {reservation.host?.full_name ?? "anfitrión"}
+              </Link>
+            )}
+            
+            <button
+              onClick={handleCancel}
+              disabled={cancelling}
+              className="btn border border-red-500 text-red-500 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed w-full text-center transition-all duration-200"
             >
-              Contactar al{" "}
-              {reservation.host?.full_name ?? "anfitrión"}
-            </Link>
+              {cancelling ? "Cancelando..." : "Cancelar reservación"}
+            </button>
           </div>
         )}
       </div>
