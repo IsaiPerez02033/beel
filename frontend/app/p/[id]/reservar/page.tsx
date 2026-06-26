@@ -50,7 +50,7 @@ export default function ReservarPage() {
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const { get, post } = useApi();
 
   const checkIn = searchParams.get("check_in") ?? "";
@@ -71,8 +71,12 @@ export default function ReservarPage() {
     : 0;
 
   useEffect(() => {
+    // Esperar a que la sesión cargue: en móvil isSignedIn arranca false
+    // mientras NextAuth resuelve → sin esto redirige a login en bucle.
+    if (!isLoaded) return;
     if (!isSignedIn) {
-      router.push(`/iniciar-sesion?redirect_url=/p/${id}/reservar?${searchParams}`);
+      const dest = `/p/${id}/reservar?${searchParams.toString()}`;
+      router.push(`/iniciar-sesion?redirect_url=${encodeURIComponent(dest)}`);
       return;
     }
     if (!checkIn || !checkOut || nights <= 0) {
@@ -91,7 +95,7 @@ export default function ReservarPage() {
       })
       .catch(() => router.push(`/p/${id}`))
       .finally(() => setLoading(false));
-  }, [id, checkIn, checkOut, isSignedIn]);
+  }, [id, checkIn, checkOut, isSignedIn, isLoaded]);
 
   async function handleConfirm() {
     if (!property) return;

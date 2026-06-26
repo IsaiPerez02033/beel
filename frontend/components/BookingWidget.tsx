@@ -24,7 +24,7 @@ export default function BookingWidget({
   initialGuests = 1,
 }: BookingWidgetProps) {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
 
   const [checkIn, setCheckIn] = useState(initialCheckIn ?? "");
   const [checkOut, setCheckOut] = useState(initialCheckOut ?? "");
@@ -51,12 +51,6 @@ export default function BookingWidget({
   const total = subtotal + cleaningFee;
 
   async function handleReserve() {
-    if (!isSignedIn) {
-      router.push(
-        `/iniciar-sesion?redirect_url=/p/${property.id}/reservar`
-      );
-      return;
-    }
     if (!checkIn || !checkOut || nights < property.min_stay_nights) return;
 
     const params = new URLSearchParams({
@@ -64,7 +58,15 @@ export default function BookingWidget({
       check_out: checkOut,
       huespedes: String(guests),
     });
-    router.push(`/p/${property.id}/reservar?${params}`);
+    const dest = `/p/${property.id}/reservar?${params}`;
+
+    // Solo redirigir a login si YA cargó la sesión y no hay usuario
+    // (en móvil isSignedIn arranca false mientras carga → evita el bucle).
+    if (isLoaded && !isSignedIn) {
+      router.push(`/iniciar-sesion?redirect_url=${encodeURIComponent(dest)}`);
+      return;
+    }
+    router.push(dest);
   }
 
   const canReserve =
