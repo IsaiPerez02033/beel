@@ -266,14 +266,15 @@ async def update_property(
         "check_in_time", "check_out_time", "instant_booking",
         "allows_pets", "allows_smoking", "allows_events",
     }
+    prop_id = property_.id
     for field, value in update_data.items():
         if field in allowed:
             setattr(property_, field, value)
-    await db.flush()
-
-    # Invalidar cache
-    await invalidate(property_key(str(property_.id)))
-    return property_
+    await db.commit()
+    await invalidate(property_key(str(prop_id)))
+    # Re-consultar con relaciones cargadas: el commit expira el objeto y la
+    # serialización del response_model dispararía un lazy-load fuera del greenlet.
+    return await get_property(db, prop_id)
 
 
 async def delete_property(db: AsyncSession, property_: Property) -> None:
