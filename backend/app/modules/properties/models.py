@@ -117,7 +117,7 @@ class Property(Base, TimestampMixin):
     )
     photos: Mapped[list["PropertyPhoto"]] = relationship(
         "PropertyPhoto",
-        back_populates="property",
+        back_populates="listing",
         order_by="PropertyPhoto.display_order",
         lazy="selectin",
     )
@@ -175,11 +175,12 @@ class PropertyPhoto(Base):
     display_order: Mapped[int] = mapped_column(SmallInteger, default=0)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
     caption: Mapped[Optional[str]] = mapped_column(String(255))
+    s3_key: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
-    property: Mapped["Property"] = relationship("Property", back_populates="photos")
+    listing: Mapped["Property"] = relationship("Property", back_populates="photos")
 
 
 class Amenity(Base):

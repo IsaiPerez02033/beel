@@ -18,8 +18,8 @@ interface Reservation {
   check_in: string;
   check_out: string;
   nights: number;
-  guests: number;
-  total_price: number;
+  guests_count: number;
+  total_amount: number;
   currency: string;
   status: string;
   reservation_property: {
@@ -62,8 +62,6 @@ export default function ReservacionesPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [isSignedIn, get]);
-
-  const today = new Date().toISOString().split("T")[0];
 
   const filtered = reservations.filter((r) => {
     if (tab === "upcoming") return ["pending", "confirmed"].includes(r.status);
@@ -178,7 +176,7 @@ function ReservationCard({ reservation: r }: { reservation: Reservation }) {
 
         <div className="flex items-center justify-between mt-2">
           <span className="text-body-sm font-semibold text-[var(--text-primary)]">
-            {<Price amount={r.total_price} />}
+            {<Price amount={r.total_amount} />}
           </span>
           <ChevronRight size={16} className="text-[var(--text-tertiary)]" />
         </div>

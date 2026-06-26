@@ -106,7 +106,7 @@ export default function ReservarPage() {
         property_id: id,
         check_in: checkIn,
         check_out: checkOut,
-        guests,
+        guests_count: guests,
       });
       setReservationId(reservation.id);
 

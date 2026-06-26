@@ -17,8 +17,8 @@ interface ReservationDetail {
   check_in: string;
   check_out: string;
   nights: number;
-  guests: number;
-  total_price: number;
+  guests_count: number;
+  total_amount: number;
   currency: string;
   status: string;
   guest_message?: string;
@@ -151,7 +151,7 @@ export default function ReservationDetailPage() {
               </div>
               <div>
                 <p className="text-caption text-[var(--text-tertiary)]">Huéspedes</p>
-                <p className="text-body text-[var(--text-primary)]">{reservation.guests}</p>
+                <p className="text-body text-[var(--text-primary)]">{reservation.guests_count}</p>
               </div>
             </div>
 
@@ -160,7 +160,7 @@ export default function ReservationDetailPage() {
             <div className="flex items-center justify-between">
               <p className="text-body text-[var(--text-secondary)]">Total pagado</p>
               <p className="text-heading font-semibold text-[var(--text-primary)]">
-                {<Price amount={reservation.total_price} />}
+                {<Price amount={reservation.total_amount} />}
               </p>
             </div>
           </div>

@@ -276,7 +276,7 @@ export default function ConfiguracionAnfitrionPage() {
                       className="input w-full opacity-60 cursor-not-allowed"
                       value={profile?.email ?? ""}
                       disabled
-                      title="El correo se gestiona desde tu cuenta de Clerk"
+                      title="El correo se gestiona desde tu cuenta de autenticación"
                     />
                     <p className="text-caption text-[var(--text-tertiary)] mt-1">
                       El correo se gestiona desde tu cuenta de autenticación

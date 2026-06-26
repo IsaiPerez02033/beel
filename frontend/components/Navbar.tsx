@@ -130,17 +130,6 @@ export default function Navbar({ transparent = false }: NavbarProps) {
   );
 }
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="px-4 py-2 rounded-full text-body text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors font-medium"
-    >
-      {children}
-    </Link>
-  );
-}
-
 function MobileLink({
   href,
   onClick,

@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
 import SearchFilters from "@/components/SearchFilters";
-import type { Property, SearchParams, SearchResult } from "@/types";
+import type { Property, SearchParams } from "@/types";
 
 export const metadata: Metadata = {
   title: "Explorar hospedajes",

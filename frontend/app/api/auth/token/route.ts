@@ -20,9 +20,11 @@ export async function GET() {
     return NextResponse.json({ token: null });
   }
 
-  const secret = new TextEncoder().encode(
-    process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? ""
-  );
+  const secretKey = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET ?? "";
+  if (!secretKey) {
+    return NextResponse.json({ token: null, error: "NEXTAUTH_SECRET not configured" }, { status: 500 });
+  }
+  const secret = new TextEncoder().encode(secretKey);
 
   const token = await new SignJWT({
     // sub: UUID de Beel si existe, si no el Google sub, si no el email como último recurso
