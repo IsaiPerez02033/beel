@@ -59,8 +59,11 @@ async def send_code(phone_e164: str, channel: Channel = "sms") -> None:
                 detail = "El número de teléfono no es válido."
             elif body.get("code") == 60410:
                 detail = "Este número está bloqueado temporalmente. Intenta más tarde."
+            else:
+                # DEBUG TEMPORAL: mostrar el código y mensaje real de Twilio.
+                detail = f"Twilio [{resp.status_code}] code={body.get('code')}: {body.get('message')}"
         except Exception:
-            pass
+            detail = f"Twilio [{resp.status_code}]: {resp.text[:200]}"
         raise ValueError(detail)
 
     logger.info("Código enviado a %s vía %s", phone_e164, channel)
