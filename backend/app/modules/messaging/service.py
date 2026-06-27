@@ -103,7 +103,44 @@ async def get_conversation(
     result = await db.execute(
         _conv_query().where(Conversation.reservation_id == conversation_id)
     )
-    return result.scalar_one_or_none()
+    conv = result.scalar_one_or_none()
+    if conv:
+        return conv
+
+    # 3. Autocreación para reservas existentes (legacy)
+    try:
+        from app.modules.reservations.models import Reservation
+        from app.modules.messaging.service import send_system_message
+        
+        res_stmt = select(Reservation).where(Reservation.id == conversation_id)
+        res_result = await db.execute(res_stmt)
+        reservation = res_result.scalar_one_or_none()
+        
+        if reservation:
+            conv = Conversation(
+                guest_id=reservation.guest_id,
+                host_id=reservation.host_id,
+                property_id=reservation.property_id,
+                reservation_id=reservation.id,
+            )
+            db.add(conv)
+            await db.flush()
+            
+            # Cargar relaciones
+            await db.refresh(conv, ["guest", "host"])
+            
+            msg_text = "Nueva solicitud de reserva creada."
+            if reservation.status == "confirmed":
+                msg_text = "Reserva confirmada."
+            await send_system_message(db, conv, msg_text)
+            await db.commit()
+            
+            logger.info("Conversación autocreada para reserva existente: %s", reservation.id)
+            return conv
+    except Exception as e:
+        logger.error("Error al autocrear conversación en get_conversation: %s", e)
+
+    return None
 
 
 async def list_conversations(
