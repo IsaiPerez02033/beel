@@ -246,7 +246,7 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             }}
             placeholder="Busca tu dirección exacta..."
             style={{ fontSize: "16px" }}
-            className="input w-full pl-10 pr-10"
+            className="input w-full pl-11 pr-10"
             autoComplete="new-password"
             spellCheck={false}
           />
