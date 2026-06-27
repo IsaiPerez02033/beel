@@ -623,6 +623,11 @@ input, textarea, select {
 .animate-spin     { animation: spin 1s linear infinite; }
 .animate-pulse-brand { animation: pulse-brand 2s ease-in-out infinite; }
 
+/* Safe area para iPhone con notch/Dynamic Island */
+.safe-area-bottom {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
 /* Indicador de conexión SSE */
 .sse-connected::before {
   content: "";
