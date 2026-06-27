@@ -229,6 +229,20 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
               </div>
             </div>
 
+            {/* Widget móvil inline */}
+            <div className="lg:hidden my-8" id="booking-widget-mobile">
+              <div className="divider" />
+              <h2 className="text-h2 text-[var(--text-primary)] mb-4">Selecciona tus fechas</h2>
+              <BookingWidget
+                property={property}
+                initialCheckIn={searchParams.check_in}
+                initialCheckOut={searchParams.check_out}
+                initialGuests={
+                  searchParams.huespedes ? Number(searchParams.huespedes) : 1
+                }
+              />
+            </div>
+
             {/* Reseñas */}
             <div className="divider" />
             <PropertyReviews propertyId={property.id} />
@@ -258,12 +272,21 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
               </span>
               <span className="text-caption text-[var(--text-secondary)]"> / noche</span>
             </div>
-            <a
-              href={`/p/${property.id}/reservar`}
-              className="btn btn-primary px-6"
-            >
-              Reservar
-            </a>
+            {searchParams.check_in && searchParams.check_out ? (
+              <a
+                href={`/p/${property.id}/reservar?check_in=${searchParams.check_in}&check_out=${searchParams.check_out}&huespedes=${searchParams.huespedes ?? 1}`}
+                className="btn btn-primary px-6"
+              >
+                Reservar
+              </a>
+            ) : (
+              <a
+                href="#booking-widget-mobile"
+                className="btn btn-primary px-6"
+              >
+                Elegir fechas
+              </a>
+            )}
           </div>
         </div>
       </main>
