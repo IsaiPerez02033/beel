@@ -114,15 +114,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
 
       {/* Menú móvil */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-3 space-y-2">
-          {isHostArea ? (
-            <>
-              <MobileLink href="/anfitrion" onClick={() => setMobileOpen(false)}>Panel</MobileLink>
-              <MobileLink href="/anfitrion/configuracion" onClick={() => setMobileOpen(false)}>Configuración</MobileLink>
-            </>
-          ) : (
-            <MobileLink href="/buscar" onClick={() => setMobileOpen(false)}>Explorar</MobileLink>
-          )}
+        <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-4">
           <NavbarAuthMobile onClose={() => setMobileOpen(false)} />
         </div>
       )}
