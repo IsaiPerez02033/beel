@@ -355,7 +355,7 @@ export default function MensajesPage() {
   };
 
   return (
-    <div className="h-dvh bg-white flex flex-col overflow-hidden">
+    <div className="h-dvh bg-white flex flex-col overflow-hidden" style={{ touchAction: "pan-y" }}>
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -455,7 +455,7 @@ export default function MensajesPage() {
           {activeConvId && activeConv ? (
             <>
               {/* Header del Chat */}
-              <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between bg-white z-10 flex-shrink-0">
+              <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-neutral-100 flex items-center justify-between bg-white z-10 flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
@@ -510,32 +510,37 @@ export default function MensajesPage() {
               </div>
 
               {/* Contenedor de Mensajes */}
-              <div className="flex-1 overflow-y-auto px-6 py-4 bg-white">
+              <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 bg-white">
                 {renderMessages()}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Barra de reply */}
               {replyingTo && (
-                <div className="px-5 pt-3 pb-0 flex-shrink-0 flex items-center gap-3 bg-white border-t border-neutral-100">
-                  <div className="flex-1 border-l-4 border-[var(--color-primary)] pl-3 py-1 bg-neutral-50 rounded-r-lg">
-                    <p className="text-[11px] font-semibold text-[var(--color-primary)]">
+                <div className="px-3 sm:px-5 pt-2 pb-0 flex-shrink-0 flex items-center gap-2 bg-white border-t border-neutral-100">
+                  <div className="flex-1 border-l-4 border-[var(--color-primary)] pl-3 py-1.5 bg-neutral-50 rounded-r-lg min-w-0">
+                    <p className="text-[11px] font-semibold text-[var(--color-primary)] truncate">
                       {replyingTo.sender_id === localUserId ? "Tú" : (replyingTo.sender?.full_name ?? "Usuario")}
                     </p>
                     <p className="text-xs text-neutral-500 truncate">{replyingTo.content ?? replyingTo.body}</p>
                   </div>
-                  <button onClick={() => setReplyingTo(null)} className="p-1 text-neutral-400 hover:text-neutral-700">
+                  <button onClick={() => setReplyingTo(null)} className="flex-shrink-0 p-2 text-neutral-400 hover:text-neutral-700 active:scale-95">
                     <X size={16} />
                   </button>
                 </div>
               )}
 
-              {/* Caja de Input (Estilo Airbnb) */}
-              <div className="p-5 border-t border-neutral-100 bg-white flex-shrink-0">
-                <div className="relative border border-neutral-300 focus-within:border-neutral-900 focus-within:ring-1 focus-within:ring-neutral-900 rounded-3xl p-3 pl-4 pr-14 transition-all bg-white max-w-3xl mx-auto flex items-center">
+              {/* Caja de Input */}
+              <div className="px-3 sm:px-5 py-3 border-t border-neutral-100 bg-white flex-shrink-0 safe-area-bottom">
+                <div className="relative border border-neutral-200 focus-within:border-neutral-900 focus-within:ring-1 focus-within:ring-neutral-900 rounded-2xl sm:rounded-3xl py-2.5 pl-4 pr-12 transition-all bg-white max-w-3xl mx-auto flex items-end gap-2 shadow-sm">
                   <textarea
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      // Auto-resize
+                      e.target.style.height = "auto";
+                      e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -544,18 +549,20 @@ export default function MensajesPage() {
                     }}
                     placeholder="Escribe un mensaje..."
                     rows={1}
-                    className="w-full resize-none outline-none border-none text-sm placeholder-neutral-400 bg-transparent text-neutral-800 pr-1 py-1 max-h-[120px] focus:ring-0"
+                    style={{ fontSize: "16px" }} // Evita zoom en iOS (mínimo 16px)
+                    className="w-full resize-none outline-none border-none placeholder-neutral-400 bg-transparent text-neutral-800 py-0.5 max-h-[120px] focus:ring-0 leading-relaxed"
                     disabled={sending}
                   />
                   <button
                     onClick={handleSend}
                     disabled={!input.trim() || sending}
-                    className="absolute right-3 bottom-3 w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:pointer-events-none shadow-sm"
+                    className="flex-shrink-0 w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:pointer-events-none shadow-sm mb-0.5"
                   >
-                    <Send size={13} className="rotate-0 text-white -mr-[1px] -mt-[1px]" strokeWidth={2.5} />
+                    <Send size={13} className="text-white -mr-[1px] -mt-[1px]" strokeWidth={2.5} />
                   </button>
                 </div>
-                <p className="text-[10px] text-neutral-400 text-center mt-2.5">
+                {/* Hint solo en desktop */}
+                <p className="hidden sm:block text-[10px] text-neutral-400 text-center mt-2">
                   Presiona Enter para enviar. Shift + Enter para salto de línea.
                 </p>
               </div>
