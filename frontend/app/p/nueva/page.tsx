@@ -13,6 +13,7 @@ import {
   Settings, Check, Loader2, Plus, Minus, Camera,
 } from "lucide-react";
 import type { Amenity } from "@/types";
+import LocationPicker from "@/components/LocationPicker";
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,8 @@ interface FormData {
   neighborhood: string;
   city: string;
   state: string;
+  lat: number | null;
+  lng: number | null;
   // Paso 3 — Capacidad y precio
   max_guests: number;
   bedrooms: number;
@@ -51,7 +54,7 @@ interface FormData {
 
 const INITIAL: FormData = {
   title: "", description: "", property_type: "casa",
-  address: "", neighborhood: "", city: "", state: "",
+  address: "", neighborhood: "", city: "", state: "", lat: null, lng: null,
   max_guests: 2, bedrooms: 1, beds: 1, bathrooms: 1,
   price_per_night: "", cleaning_fee: "", security_deposit: "",
   min_stay_nights: 1,
@@ -154,8 +157,8 @@ export default function NuevaPropiedadPage() {
         price_per_night: Number(form.price_per_night),
         cleaning_fee: Number(form.cleaning_fee || 0),
         security_deposit: Number(form.security_deposit || 0),
-        latitude: 20.9674,
-        longitude: -89.5926,
+        latitude: form.lat ?? 19.4326,
+        longitude: form.lng ?? -99.1332,
       };
       const property = await post<{ id: string }>("/properties", payload);
       setCreatedPropertyId(property.id);
@@ -427,60 +430,17 @@ function Step2({ form, set }: StepProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2">
-          <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">
-            Dirección <span className="text-red-500">*</span>
-          </label>
-          <input
-            className="input w-full"
-            placeholder="Calle, número, colonia"
-            value={form.address}
-            onChange={(e) => set("address", e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">
-            Colonia / Fraccionamiento
-          </label>
-          <input
-            className="input w-full"
-            placeholder="Ej: Centro Histórico"
-            value={form.neighborhood}
-            onChange={(e) => set("neighborhood", e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">
-            Ciudad <span className="text-red-500">*</span>
-          </label>
-          <input
-            className="input w-full"
-            placeholder="Ej: Guadalajara"
-            value={form.city}
-            onChange={(e) => set("city", e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">Estado</label>
-          <input
-            className="input w-full"
-            placeholder="Ej: Jalisco"
-            value={form.state}
-            onChange={(e) => set("state", e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="bg-[var(--bg-subtle)] rounded-xl p-4 flex items-start gap-3">
-        <MapPin size={16} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
-        <p className="text-body-sm text-[var(--text-secondary)]">
-          La ubicación exacta en mapa estará disponible próximamente. Por ahora usaremos las coordenadas del centro de la ciudad que ingreses.
-        </p>
-      </div>
+      <LocationPicker
+        initialAddress={form.address}
+        onSelect={(result) => {
+          set("address", result.address);
+          set("neighborhood", result.neighborhood);
+          set("city", result.city);
+          set("state", result.state);
+          set("lat", result.lat);
+          set("lng", result.lng);
+        }}
+      />
     </div>
   );
 }
