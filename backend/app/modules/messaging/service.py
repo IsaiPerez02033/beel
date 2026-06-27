@@ -74,6 +74,10 @@ async def get_or_create_conversation(
     )
     conv = result.scalar_one_or_none()
     if conv:
+        # Si la conversación existente no tenía reserva y ahora se pasa una, vincularla
+        if reservation_id and not conv.reservation_id:
+            conv.reservation_id = reservation_id
+            await db.flush()
         return conv, False
 
     conv = Conversation(
@@ -114,30 +118,47 @@ async def get_conversation(
         reservation = res_result.scalar_one_or_none()
         
         if reservation:
-            conv = Conversation(
-                guest_id=reservation.guest_id,
-                host_id=reservation.host_id,
-                property_id=reservation.property_id,
-                reservation_id=reservation.id,
+            # Buscar si ya existe una conversación sin reserva asociada para este guest-host-propiedad
+            existing_stmt = select(Conversation).where(
+                Conversation.guest_id == reservation.guest_id,
+                Conversation.host_id == reservation.host_id,
+                Conversation.property_id == reservation.property_id,
+                Conversation.reservation_id.is_(None)
             )
-            db.add(conv)
-            await db.flush()
-            
-            msg_text = "Nueva solicitud de reserva creada."
-            if reservation.status == "confirmed":
-                msg_text = "Reserva confirmada."
-            await send_system_message(db, conv, msg_text)
-            await db.commit()
+            existing_result = await db.execute(existing_stmt)
+            conv = existing_result.scalar_one_or_none()
+
+            if conv:
+                # Si existe, vincular la reservación
+                conv.reservation_id = reservation.id
+                await db.flush()
+                await db.commit()
+                logger.info("Conversación pre-existente vinculada a reserva legacy: %s (id: %s)", reservation.id, conv.id)
+            else:
+                # Si no, crear una nueva conversación
+                conv = Conversation(
+                    guest_id=reservation.guest_id,
+                    host_id=reservation.host_id,
+                    property_id=reservation.property_id,
+                    reservation_id=reservation.id,
+                )
+                db.add(conv)
+                await db.flush()
+                
+                msg_text = "Nueva solicitud de reserva creada."
+                if reservation.status == "confirmed":
+                    msg_text = "Reserva confirmada."
+                await send_system_message(db, conv, msg_text)
+                await db.commit()
+                logger.info("Conversación autocreada para reserva legacy: %s (id: %s)", reservation.id, conv.id)
             
             # Re-consultar usando _conv_query para pre-cargar relaciones y evitar Greenlet errors
             result = await db.execute(
                 _conv_query().where(Conversation.id == conv.id)
             )
-            fresh_conv = result.scalar_one_or_none()
-            logger.info("Conversación autocreada para reserva existente: %s (id: %s)", reservation.id, fresh_conv.id if fresh_conv else None)
-            return fresh_conv
+            return result.scalar_one_or_none()
     except Exception as e:
-        logger.exception("Error al autocrear conversación en get_conversation: %s", e)
+        logger.exception("Error al autocrear/vincular conversación en get_conversation: %s", e)
 
     return None
 

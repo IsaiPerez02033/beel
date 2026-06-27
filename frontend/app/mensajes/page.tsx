@@ -132,6 +132,12 @@ export default function MensajesPage() {
     (c) => c.id === activeConvId || c.reservation_id === activeConvId
   );
 
+  // Sincronizar el estado del chat activo con los parámetros de la URL
+  const convParam = searchParams.get("conv");
+  useEffect(() => {
+    setActiveConvId(convParam);
+  }, [convParam]);
+
   // Normalizar el ID activo al ID de la conversación si coincidió por ID de reserva
   useEffect(() => {
     if (activeConv && activeConv.id !== activeConvId) {
