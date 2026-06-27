@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
+const KEY = process.env.GOOGLE_MAPS_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
 
 export async function GET(req: NextRequest) {
   const placeId = req.nextUrl.searchParams.get("id") ?? "";
