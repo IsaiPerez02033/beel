@@ -176,15 +176,8 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     });
   }, []);
 
-  if (!apiKey) {
-    return (
-      <div>
-        <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Dirección <span className="text-red-500">*</span></label>
-        <input className="input w-full" placeholder="Calle, numero, colonia" style={{ fontSize: "16px" }}
-          onChange={(e) => onSelectRef.current({ address: e.target.value, neighborhood: "", city: "", state: "", lat: 19.4326, lng: -99.1332 })} />
-      </div>
-    );
-  }
+  // No bloquear aunque no haya apiKey — el proxy de /api/places/ no necesita
+  // exponer la key al cliente, funciona igual sin ella en el componente.
 
   return (
     <div className="space-y-4">
