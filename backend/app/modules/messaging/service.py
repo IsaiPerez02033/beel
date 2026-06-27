@@ -368,7 +368,7 @@ async def send_system_message(
         conversation_id=conversation.id,
         sender_id=conversation.host_id,  # sistema usa el ID del host como sender ficticio
         message_type="system",
-        body=body,
+        content=body,
         metadata_=metadata,
     )
     db.add(msg)
