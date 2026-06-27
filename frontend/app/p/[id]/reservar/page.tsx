@@ -49,7 +49,9 @@ const POLICY_DESC: Record<string, string> = {
   estricta: "Sin reembolso una vez confirmada la reserva.",
 };
 
-const IVA_RATE = 0.16;
+// IVA incluido: el precio del anfitrión ya lleva IVA. Extraemos la parte
+// que corresponde al impuesto (misma lógica que Airbnb México).
+const IVA_FACTOR = 16 / 116;
 
 export default function ReservarPage() {
   const { id } = useParams<{ id: string }>();
@@ -79,8 +81,10 @@ export default function ReservarPage() {
     ? differenceInCalendarDays(parseISO(checkOut), parseISO(checkIn))
     : 0;
 
-  const iva = breakdown ? breakdown.total * IVA_RATE : 0;
-  const totalWithIva = breakdown ? breakdown.total + iva : 0;
+  // IVA ya incluido en el precio — extraemos la parte del impuesto
+  const iva = breakdown ? breakdown.total * IVA_FACTOR : 0;
+  // El total que paga el huésped es el mismo (el IVA ya está dentro)
+  const totalWithIva = breakdown ? breakdown.total : 0;
 
   const fetchBreakdown = useCallback(async (ci: string, co: string) => {
     if (!ci || !co) return;
@@ -381,7 +385,7 @@ export default function ReservarPage() {
                   </div>
                 )}
                 <div className="flex justify-between text-[var(--text-secondary)]">
-                  <span>IVA (16%)</span>
+                  <span>Impuestos</span>
                   <span><Price amount={iva} /></span>
                 </div>
 
@@ -389,6 +393,7 @@ export default function ReservarPage() {
                   <span>Total MXN</span>
                   <span><Price amount={totalWithIva} /></span>
                 </div>
+                <p className="text-[11px] text-[var(--text-tertiary)] mt-1">IVA incluido en el precio</p>
               </div>
             </div>
           </div>
