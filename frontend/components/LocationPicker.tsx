@@ -26,7 +26,7 @@ declare global {
 
 let scriptLoaded = false;
 let scriptLoading = false;
-const callbacks: (() => void)[] = [];
+const callbacks: Array<() => void> = [];
 
 function loadGoogleMaps(apiKey: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -43,10 +43,7 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
     s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps&language=es&region=MX`;
     s.async = true;
     s.defer = true;
-    s.onerror = () => {
-      scriptLoading = false;
-      reject(new Error("No se pudo cargar Google Maps"));
-    };
+    s.onerror = () => { scriptLoading = false; reject(new Error("Error al cargar Google Maps")); };
     document.head.appendChild(s);
   });
 }
@@ -62,16 +59,31 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
-  const autocompleteRef = useRef<any>(null);
+  // Guardar onSelect en ref para que el useEffect no se reinicie cuando cambia
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
 
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [selected, setSelected] = useState<LocationResult | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  // Inicializar mapa en una posición dada
-  const initMap = useCallback((lat: number, lng: number) => {
+  // Cargar Google Maps una sola vez
+  useEffect(() => {
+    if (!apiKey) return;
+    loadGoogleMaps(apiKey)
+      .then(() => setReady(true))
+      .catch(() => setLoadError(true));
+  }, [apiKey]);
+
+  // Inicializar mapa
+  const initMap = useCallback((lat: number, lng: number, result: LocationResult) => {
     if (!mapRef.current || !window.google) return;
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setCenter({ lat, lng });
+      markerRef.current?.setPosition({ lat, lng });
+      return;
+    }
     const map = new window.google.maps.Map(mapRef.current, {
       center: { lat, lng },
       zoom: 16,
@@ -99,38 +111,28 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     });
     markerRef.current = marker;
 
-    // Al arrastrar el pin, actualizar coords
     marker.addListener("dragstart", () => setDragging(true));
     marker.addListener("dragend", () => {
       setDragging(false);
       const pos = marker.getPosition();
       if (!pos) return;
-      const newLat = pos.lat();
-      const newLng = pos.lng();
-      setSelected((prev) => prev ? { ...prev, lat: newLat, lng: newLng } : null);
-      onSelect({ ...(selected ?? { address: "", neighborhood: "", city: "", state: "" }), lat: newLat, lng: newLng });
+      const updated = { ...result, lat: pos.lat(), lng: pos.lng() };
+      setSelected(updated);
+      onSelectRef.current(updated);
     });
-  }, [onSelect, selected]);
+  }, []);
 
-  // Cargar Google Maps y configurar autocomplete
-  useEffect(() => {
-    if (!apiKey) return;
-    loadGoogleMaps(apiKey)
-      .then(() => setReady(true))
-      .catch(() => setLoadError(true));
-  }, [apiKey]);
-
+  // Configurar autocomplete — solo corre cuando ready cambia a true
   useEffect(() => {
     if (!ready || !inputRef.current) return;
 
     const ac = new window.google.maps.places.Autocomplete(inputRef.current, {
       componentRestrictions: { country: "mx" },
-      fields: ["address_components", "geometry", "formatted_address", "name"],
+      fields: ["address_components", "geometry", "formatted_address"],
       types: ["address"],
     });
-    autocompleteRef.current = ac;
 
-    ac.addListener("place_changed", () => {
+    const listener = ac.addListener("place_changed", () => {
       const place = ac.getPlace();
       if (!place.geometry?.location) return;
 
@@ -150,34 +152,35 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
 
       const result: LocationResult = { address, neighborhood: colonia, city, state, lat, lng };
       setSelected(result);
-      onSelect(result);
-
-      // Mostrar/actualizar mapa
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.setCenter({ lat, lng });
-        markerRef.current?.setPosition({ lat, lng });
-      } else {
-        initMap(lat, lng);
-      }
+      onSelectRef.current(result);
+      initMap(lat, lng, result);
     });
 
-    return () => window.google?.maps.event.clearInstanceListeners(ac);
-  }, [ready, initMap, onSelect]);
+    return () => {
+      window.google?.maps.event.removeListener(listener);
+    };
+  }, [ready, initMap]); // onSelect NO está aquí — evita reinicio en cada render
 
   if (!apiKey || loadError) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-4">
           {loadError
-            ? "No se pudo cargar el mapa. Verifica que la API key de Google Maps esté configurada correctamente en Vercel."
+            ? "No se pudo cargar Google Maps. Verifica la API key en Vercel."
             : "Falta configurar NEXT_PUBLIC_GOOGLE_MAPS_KEY"}
         </p>
-        {/* Fallback: campos manuales */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="sm:col-span-2">
-            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Dirección <span className="text-red-500">*</span></label>
-            <input className="input w-full" placeholder="Calle, número, colonia" style={{ fontSize: "16px" }} onChange={(e) => onSelect({ address: e.target.value, neighborhood: "", city: "", state: "", lat: 19.4326, lng: -99.1332 })} />
-          </div>
+        <div>
+          <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">
+            Dirección <span className="text-red-500">*</span>
+          </label>
+          <input
+            className="input w-full"
+            placeholder="Calle, numero, colonia"
+            style={{ fontSize: "16px" }}
+            onChange={(e) => onSelectRef.current({
+              address: e.target.value, neighborhood: "", city: "", state: "", lat: 19.4326, lng: -99.1332,
+            })}
+          />
         </div>
       </div>
     );
@@ -191,23 +194,25 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
           Dirección <span className="text-red-500">*</span>
         </label>
         <div className="relative">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
+            {ready ? <Search size={16} /> : <Loader2 size={16} className="animate-spin" />}
+          </span>
           <input
             ref={inputRef}
             type="text"
             defaultValue={initialAddress}
             placeholder={ready ? "Busca tu direccion exacta..." : "Cargando..."}
             style={{ fontSize: "16px" }}
-            className="input w-full"
-            disabled={!ready}
+            className="input w-full pl-10"
             autoComplete="off"
           />
         </div>
         <p className="text-[11px] text-[var(--text-tertiary)] mt-1.5">
-          Escribe la dirección y selecciona una opción de la lista
+          Escribe la direccion y selecciona una opcion de la lista
         </p>
       </div>
 
-      {/* Mapa — solo visible tras seleccionar */}
+      {/* Mapa */}
       {selected && (
         <div className="rounded-2xl overflow-hidden border border-neutral-200 shadow-sm">
           <div ref={mapRef} className="w-full h-56 sm:h-64 bg-neutral-100" />
@@ -220,22 +225,15 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
               <p className="text-[11px] text-[var(--text-secondary)]">
                 {selected.city}{selected.state ? `, ${selected.state}` : ""}
               </p>
-              {dragging && (
-                <p className="text-[11px] text-[var(--color-primary)] mt-0.5">
-                  Suelta el pin para ajustar la ubicación
-                </p>
-              )}
-              {!dragging && (
-                <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
-                  Puedes arrastrar el pin para ajustar la posición exacta
-                </p>
-              )}
+              <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
+                {dragging ? "Suelta el pin para ajustar" : "Arrastra el pin para ajustar la posicion exacta"}
+              </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Campos complementarios — se autollenan pero son editables */}
+      {/* Campos editables post-seleccion */}
       {selected && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
@@ -245,12 +243,8 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             <input
               className="input w-full"
               value={selected.neighborhood}
-              onChange={(e) => {
-                const updated = { ...selected, neighborhood: e.target.value };
-                setSelected(updated);
-                onSelect(updated);
-              }}
-              placeholder="Ej: Centro Histórico"
+              onChange={(e) => { const u = { ...selected, neighborhood: e.target.value }; setSelected(u); onSelectRef.current(u); }}
+              placeholder="Ej: Centro Historico"
               style={{ fontSize: "16px" }}
             />
           </div>
@@ -261,27 +255,17 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             <input
               className="input w-full"
               value={selected.city}
-              onChange={(e) => {
-                const updated = { ...selected, city: e.target.value };
-                setSelected(updated);
-                onSelect(updated);
-              }}
+              onChange={(e) => { const u = { ...selected, city: e.target.value }; setSelected(u); onSelectRef.current(u); }}
               placeholder="Ej: Guadalajara"
               style={{ fontSize: "16px" }}
             />
           </div>
           <div>
-            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">
-              Estado
-            </label>
+            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Estado</label>
             <input
               className="input w-full"
               value={selected.state}
-              onChange={(e) => {
-                const updated = { ...selected, state: e.target.value };
-                setSelected(updated);
-                onSelect(updated);
-              }}
+              onChange={(e) => { const u = { ...selected, state: e.target.value }; setSelected(u); onSelectRef.current(u); }}
               placeholder="Ej: Jalisco"
               style={{ fontSize: "16px" }}
             />
