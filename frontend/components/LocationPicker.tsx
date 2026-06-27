@@ -154,12 +154,15 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
   }
 
   const initMap = useCallback((lat: number, lng: number, result: LocationResult) => {
-    if (!mapRef.current || !window.google) return;
+    if (!window.google) return;
     if (mapInstanceRef.current) {
       mapInstanceRef.current.setCenter({ lat, lng });
       markerRef.current?.setPosition({ lat, lng });
       return;
     }
+    // Esperar a que el div sea visible en el DOM tras el re-render
+    setTimeout(() => {
+      if (!mapRef.current) return;
     const map = new window.google.maps.Map(mapRef.current, {
       center: { lat, lng }, zoom: 16, disableDefaultUI: true, zoomControl: true,
       styles: [
@@ -182,6 +185,10 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
       setSelected(updated);
       onSelectRef.current(updated);
     });
+    // Forzar resize para que Google Maps calcule dimensiones correctamente
+    window.google.maps.event.trigger(map, "resize");
+    map.setCenter({ lat, lng });
+    }, 100); // esperar 100ms a que el div sea visible tras setSelected
   }, []);
 
   // No bloquear aunque no haya apiKey — el proxy de /api/places/ no necesita
