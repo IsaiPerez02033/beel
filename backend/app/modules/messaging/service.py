@@ -233,10 +233,7 @@ async def get_messages(
     """
     query = (
         select(Message)
-        .options(
-            selectinload(Message.sender),
-            selectinload(Message.reply_to).selectinload(Message.sender),
-        )
+        .options(selectinload(Message.sender))
         .where(
             Message.conversation_id == conversation_id,
             Message.deleted_by_sender.is_(False),
@@ -244,7 +241,6 @@ async def get_messages(
     )
 
     if before_id:
-        # Obtener created_at del cursor
         cur_result = await db.execute(
             select(Message.created_at).where(Message.id == before_id)
         )
@@ -260,8 +256,25 @@ async def get_messages(
     if has_more:
         msgs = msgs[:limit]
 
-    # Retornar en orden cronológico (más antiguo primero)
     msgs.reverse()
+
+    # Resolver reply_to manualmente para evitar confusión del identity map de
+    # SQLAlchemy con relaciones auto-referenciales (Message → Message).
+    # selectinload en relaciones auto-referenciales puede asignar reply_to al
+    # objeto incorrecto cuando los mensajes referenciados ya están en el pool.
+    reply_ids = [m.reply_to_id for m in msgs if m.reply_to_id]
+    if reply_ids:
+        rr = await db.execute(
+            select(Message)
+            .options(selectinload(Message.sender))
+            .where(Message.id.in_(reply_ids))
+        )
+        reply_map: dict[uuid.UUID, Message] = {r.id: r for r in rr.scalars()}
+        for m in msgs:
+            if m.reply_to_id and m.reply_to_id in reply_map:
+                # Asignación directa en __dict__ para no disparar el lazy-loader
+                m.__dict__["reply_to"] = reply_map[m.reply_to_id]
+
     return msgs, has_more
 
 
@@ -335,14 +348,21 @@ async def send_message(
     # Re-consultar con la relación `sender` cargada para evitar MissingGreenlet
     # al serializar MessageOut (lazy-load fuera del greenlet → 500 → rollback).
     result = await db.execute(
-        select(Message)
-        .options(
-            selectinload(Message.sender),
-            selectinload(Message.reply_to).selectinload(Message.sender),
-        )
-        .where(Message.id == msg.id)
+        select(Message).options(selectinload(Message.sender)).where(Message.id == msg.id)
     )
-    return result.scalar_one()
+    saved = result.scalar_one()
+
+    # Resolver reply_to manualmente (mismo motivo que en get_messages)
+    if saved.reply_to_id:
+        rr = await db.execute(
+            select(Message).options(selectinload(Message.sender))
+            .where(Message.id == saved.reply_to_id)
+        )
+        parent = rr.scalar_one_or_none()
+        if parent:
+            saved.__dict__["reply_to"] = parent
+
+    return saved
 
 
 async def mark_read(
