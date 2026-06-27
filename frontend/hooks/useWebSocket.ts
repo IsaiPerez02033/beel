@@ -23,6 +23,10 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
   const activeRef = useRef(true);
   const optionsRef = useRef(options);
   optionsRef.current = options;
+  // getToken puede cambiar de identidad en cada render; lo guardamos en un ref
+  // para que `connect` NO se recree y evitar un bucle de reconexión constante.
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   const connect = useCallback(async () => {
     if (!conversationId || !activeRef.current) return;
@@ -32,7 +36,7 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
       wsRef.current = null;
     }
 
-    const token = await getToken();
+    const token = await getTokenRef.current();
     if (!token) return;
 
     const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/^http/, "ws");
@@ -67,7 +71,7 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
       retryRef.current++;
       setTimeout(connect, delay);
     };
-  }, [conversationId, getToken]);
+  }, [conversationId]);
 
   useEffect(() => {
     activeRef.current = true;
