@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 
-from app.modules.messaging.models import Conversation, Message
+from app.modules.messaging.models import Conversation, Message, MessageReaction
 from app.modules.messaging.schemas import ConversationStartIn, MessageCreateIn
 from app.modules.users.models import User
 from app.modules.properties.models import Property
@@ -417,6 +417,55 @@ async def send_system_message(
     await db.flush()
     await _broadcast(conversation.id, {"type": "system", "body": body})
     return msg
+
+
+# ── Reacciones ───────────────────────────────────────────────────────────────
+
+async def add_reaction(
+    db: AsyncSession, message_id: uuid.UUID, user_id: uuid.UUID, emoji: str
+) -> Message:
+    existing = await db.execute(
+        select(MessageReaction).where(
+            MessageReaction.message_id == message_id,
+            MessageReaction.user_id == user_id,
+            MessageReaction.emoji == emoji,
+        )
+    )
+    if not existing.scalar_one_or_none():
+        db.add(MessageReaction(message_id=message_id, user_id=user_id, emoji=emoji))
+        await db.flush()
+
+    result = await db.execute(
+        select(Message).options(
+            selectinload(Message.sender),
+            selectinload(Message.reactions),
+        ).where(Message.id == message_id)
+    )
+    return result.scalar_one()
+
+
+async def remove_reaction(
+    db: AsyncSession, message_id: uuid.UUID, user_id: uuid.UUID, emoji: str
+) -> Message:
+    result = await db.execute(
+        select(MessageReaction).where(
+            MessageReaction.message_id == message_id,
+            MessageReaction.user_id == user_id,
+            MessageReaction.emoji == emoji,
+        )
+    )
+    reaction = result.scalar_one_or_none()
+    if reaction:
+        await db.delete(reaction)
+        await db.flush()
+
+    result = await db.execute(
+        select(Message).options(
+            selectinload(Message.sender),
+            selectinload(Message.reactions),
+        ).where(Message.id == message_id)
+    )
+    return result.scalar_one()
 
 
 # ── SSE streams ───────────────────────────────────────────────────────────────

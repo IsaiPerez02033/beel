@@ -34,6 +34,13 @@ class ReplyPreviewOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ReactionOut(BaseModel):
+    """Reacción agrupada: emoji + lista de user_ids que la pusieron."""
+    emoji: str
+    count: int
+    user_ids: list[uuid.UUID]
+
+
 class MessageOut(BaseModel):
     id: uuid.UUID
     conversation_id: uuid.UUID
@@ -42,6 +49,7 @@ class MessageOut(BaseModel):
     reply_to: Optional[ReplyPreviewOut] = None
     message_type: str = "text"
     content: Optional[str] = None
+    reactions: list[ReactionOut] = []
     # OJO: la columna en BD se llama "metadata", pero ese nombre choca con el
     # atributo reservado SQLAlchemy `Base.metadata` (un objeto MetaData()).
     # En el modelo el JSONB real vive en `metadata_`, así que leemos de ahí
@@ -83,7 +91,6 @@ class MessageOut(BaseModel):
     @field_validator("reply_to", mode="before")
     @classmethod
     def _build_reply_preview(cls, v):
-        """Convierte el ORM Message a dict con sender_name para evitar lazy-load."""
         if v is None or isinstance(v, dict):
             return v
         sender = getattr(v, "sender", None)
@@ -93,6 +100,18 @@ class MessageOut(BaseModel):
             "content": v.content,
             "sender_name": getattr(sender, "full_name", None) if sender else None,
         }
+
+    @field_validator("reactions", mode="before")
+    @classmethod
+    def _group_reactions(cls, v):
+        """Agrupa lista de ORM MessageReaction en [{ emoji, count, user_ids }]."""
+        if not v or isinstance(v, list) and (not v or isinstance(v[0], dict)):
+            return v or []
+        from collections import defaultdict
+        groups: dict = defaultdict(list)
+        for r in v:
+            groups[r.emoji].append(r.user_id)
+        return [{"emoji": e, "count": len(uids), "user_ids": uids} for e, uids in groups.items()]
 
 
 class MessageListOut(BaseModel):
@@ -132,6 +151,10 @@ class MessageCreateIn(BaseModel):
     message_type: str = Field(default="text", pattern="^(text|system)$")
     metadata: Optional[dict] = None
     reply_to_id: Optional[uuid.UUID] = None
+
+
+class ReactionIn(BaseModel):
+    emoji: str = Field(..., min_length=1, max_length=10)
 
 
 class ConversationStartIn(BaseModel):
