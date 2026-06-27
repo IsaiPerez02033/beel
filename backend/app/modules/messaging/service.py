@@ -235,6 +235,21 @@ async def send_message(
 
     await db.flush()
 
+    # Registrar notificación de nuevo mensaje en la app
+    try:
+        from app.modules.notifications.service import create_notification
+        recipient_id = conversation.host_id if is_guest_sender else conversation.guest_id
+        await create_notification(
+            db,
+            user_id=recipient_id,
+            type="new_message",
+            title=f"Nuevo mensaje de {sender.full_name}",
+            body=preview,
+            data={"conversation_id": str(conversation.id)},
+        )
+    except Exception as e:
+        logger.error("Error al crear notificación de nuevo mensaje: %s", e)
+
     # Broadcast SSE
     await _broadcast(
         conversation.id,

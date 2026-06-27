@@ -320,6 +320,47 @@ async def create_reservation(
     except Exception as e:
         logger.error("Error al crear conversación para reserva: %s", e)
 
+    # Registrar notificaciones en la app
+    try:
+        from app.modules.notifications.service import create_notification
+        notif_data = {"reservation_id": str(reservation.id), "property_id": str(property_.id)}
+        if initial_status == "confirmed":
+            await create_notification(
+                db,
+                user_id=property_.host_id,
+                type="reservation_confirmed",
+                title="¡Reserva Confirmada!",
+                body=f"Felicidades, {guest.full_name} reservó {property_.title} ({data.check_in} a {data.check_out}).",
+                data=notif_data,
+            )
+            await create_notification(
+                db,
+                user_id=guest.id,
+                type="reservation_confirmed",
+                title="Tu reserva ha sido confirmada",
+                body=f"Tu reserva en {property_.title} para {data.check_in} a {data.check_out} está lista.",
+                data=notif_data,
+            )
+        else:
+            await create_notification(
+                db,
+                user_id=property_.host_id,
+                type="reservation_request",
+                title="Nueva Solicitud de Reserva",
+                body=f"{guest.full_name} desea reservar {property_.title} ({data.check_in} a {data.check_out}).",
+                data=notif_data,
+            )
+            await create_notification(
+                db,
+                user_id=guest.id,
+                type="reservation_request",
+                title="Solicitud de reserva enviada",
+                body=f"Hemos enviado tu solicitud al anfitrión para {property_.title}.",
+                data=notif_data,
+            )
+    except Exception as e:
+        logger.error("Error al crear notificaciones para reserva: %s", e)
+
     logger.info(
         "Reserva %s creada (%s) | propiedad=%s guest=%s",
         reservation.id, initial_status, property_.id, guest.id,
@@ -393,6 +434,32 @@ async def respond_to_reservation(
         reservation.host_message = data.message
 
     await db.flush()
+
+    # Registrar notificaciones en la app
+    try:
+        from app.modules.notifications.service import create_notification
+        notif_data = {"reservation_id": str(reservation.id), "property_id": str(reservation.property_id)}
+        if reservation.status == "confirmed":
+            await create_notification(
+                db,
+                user_id=reservation.guest_id,
+                type="reservation_accepted",
+                title="Solicitud Aceptada",
+                body=f"¡Buenas noticias! Tu solicitud para {reservation.reservation_property.title} fue aceptada.",
+                data=notif_data,
+            )
+        elif reservation.status == "rejected":
+            await create_notification(
+                db,
+                user_id=reservation.guest_id,
+                type="reservation_rejected",
+                title="Solicitud Rechazada",
+                body=f"Tu solicitud para {reservation.reservation_property.title} fue rechazada por el anfitrión.",
+                data=notif_data,
+            )
+    except Exception as e:
+        logger.error("Error al crear notificaciones en respond_to_reservation: %s", e)
+
     logger.info("Reserva %s → %s por host %s", reservation.id, reservation.status, host.id)
 
     # Notificaciones por email (fire-and-forget)
