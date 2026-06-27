@@ -6,6 +6,8 @@ import { MapPin, Loader2, Search, X } from "lucide-react";
 
 interface LocationResult {
   address: string;
+  street: string;
+  postal_code: string;
   neighborhood: string;
   city: string;
   state: string;
@@ -134,17 +136,17 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
         const c = comps.find((c) => types.some((t) => (c.types ?? []).includes(t)));
         return c?.longText ?? "";
       };
-      const street = get(["route"]);
+      const streetName = get(["route"]);
       const number = get(["street_number"]);
       const colonia = get(["sublocality", "sublocality_level_1", "neighborhood"]);
       const city = get(["locality"]) || get(["administrative_area_level_3"]) || get(["administrative_area_level_2"]);
       const state = get(["administrative_area_level_1"]);
-      // Si hay calle y número úsalos; si no, usar la dirección formateada completa de Google
-      const address = number ? `${street} ${number}` : street || place.formattedAddress?.split(",")[0] || s.mainText;
+      const postal_code = get(["postal_code"]);
+      const address = number ? `${streetName} ${number}` : streetName || place.formattedAddress?.split(",")[0] || s.mainText;
       const lat = place.location?.latitude ?? 19.4326;
       const lng = place.location?.longitude ?? -99.1332;
 
-      const result: LocationResult = { address, neighborhood: colonia, city, state, lat, lng };
+      const result: LocationResult = { address, street: streetName, postal_code, neighborhood: colonia, city, state, lat, lng };
       setSelected(result);
       onSelectRef.current(result);
       initMap(lat, lng, result);
@@ -182,9 +184,32 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
       setDragging(false);
       const pos = marker.getPosition();
       if (!pos) return;
-      const updated = { ...result, lat: pos.lat(), lng: pos.lng() };
-      setSelected(updated);
-      onSelectRef.current(updated);
+      const lat = pos.lat(), lng = pos.lng();
+      // Geocoding inverso para actualizar campos con la nueva posición
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ location: { lat, lng }, language: "es" }, (results: any[], status: string) => {
+        if (status === "OK" && results[0]) {
+          const comps = results[0].address_components ?? [];
+          const get = (types: string[]) => {
+            const c = comps.find((c: any) => types.some((t: string) => c.types.includes(t)));
+            return c?.long_name ?? "";
+          };
+          const streetName = get(["route"]);
+          const number = get(["street_number"]);
+          const colonia = get(["sublocality", "sublocality_level_1", "neighborhood"]);
+          const city = get(["locality"]) || get(["administrative_area_level_3"]) || get(["administrative_area_level_2"]);
+          const state = get(["administrative_area_level_1"]);
+          const postal_code = get(["postal_code"]);
+          const address = number ? `${streetName} ${number}` : streetName || results[0].formatted_address.split(",")[0];
+          const updated = { address, street: streetName, postal_code, neighborhood: colonia, city, state, lat, lng };
+          setSelected(updated);
+          onSelectRef.current(updated);
+        } else {
+          const updated = { ...result, lat, lng };
+          setSelected(updated);
+          onSelectRef.current(updated);
+        }
+      });
     });
     // Forzar resize para que Google Maps calcule dimensiones correctamente
     window.google.maps.event.trigger(map, "resize");
@@ -289,6 +314,12 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
       {selected && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
+            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Calle</label>
+            <input className="input w-full" value={selected.street} style={{ fontSize: "16px" }}
+              onChange={(e) => { const u = { ...selected, street: e.target.value }; setSelected(u); onSelectRef.current(u); }}
+              placeholder="Ej: Calle Rosales" />
+          </div>
+          <div className="sm:col-span-2">
             <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Colonia / Fraccionamiento</label>
             <input className="input w-full" value={selected.neighborhood} style={{ fontSize: "16px" }}
               onChange={(e) => { const u = { ...selected, neighborhood: e.target.value }; setSelected(u); onSelectRef.current(u); }}
@@ -305,6 +336,12 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             <input className="input w-full" value={selected.state} style={{ fontSize: "16px" }}
               onChange={(e) => { const u = { ...selected, state: e.target.value }; setSelected(u); onSelectRef.current(u); }}
               placeholder="Ej: Jalisco" />
+          </div>
+          <div>
+            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Código Postal</label>
+            <input className="input w-full" value={selected.postal_code} style={{ fontSize: "16px" }}
+              onChange={(e) => { const u = { ...selected, postal_code: e.target.value }; setSelected(u); onSelectRef.current(u); }}
+              placeholder="Ej: 54665" />
           </div>
         </div>
       )}
