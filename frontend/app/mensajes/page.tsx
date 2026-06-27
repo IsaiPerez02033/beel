@@ -346,7 +346,7 @@ export default function MensajesPage() {
   };
 
   return (
-    <div className="h-screen bg-white flex flex-col overflow-hidden">
+    <div className="h-dvh bg-white flex flex-col overflow-hidden">
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -354,7 +354,7 @@ export default function MensajesPage() {
         <aside
           className={cn(
             "w-full md:w-[350px] lg:w-[380px] border-r border-neutral-200 flex flex-col bg-white flex-shrink-0 z-30 transition-transform duration-300",
-            activeConvId && "hidden md:flex"
+            activeConvId ? "hidden md:flex" : "flex"
           )}
         >
           {/* Header lateral con buscador y filtros */}
@@ -442,14 +442,20 @@ export default function MensajesPage() {
         </aside>
 
         {/* ── COLUMNA 2: Chat Activo ── */}
-        <main className={cn("flex-1 flex flex-col bg-white overflow-hidden relative", !activeConvId && "hidden md:flex")}>
+        <main className={cn("flex-1 flex flex-col bg-white overflow-hidden relative", !activeConvId ? "hidden md:flex" : "flex")}>
           {activeConvId && activeConv ? (
             <>
               {/* Header del Chat */}
               <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between bg-white z-10 flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setActiveConvId(null)}
+                    onClick={() => {
+                      if (showInfoSidebar) {
+                        setShowInfoSidebar(false);
+                      } else {
+                        setActiveConvId(null);
+                      }
+                    }}
                     className="md:hidden p-1.5 rounded-full hover:bg-neutral-100 text-neutral-600 transition-colors"
                   >
                     <ArrowLeft size={18} />
@@ -543,12 +549,20 @@ export default function MensajesPage() {
           )}
         </main>
 
-        {/* ── COLUMNA 3: Detalles de Reserva (Airbnb-style) ── */}
+        {/* ── COLUMNA 3: Detalles de Reserva ── */}
+        {/* En móvil: drawer desde abajo. En desktop: columna lateral fija. */}
         {activeConvId && activeConv && showInfoSidebar && (
+          <>
+            {/* Overlay oscuro solo en móvil */}
+            <div
+              className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+              onClick={() => setShowInfoSidebar(false)}
+            />
           <aside
             className={cn(
-              "fixed inset-0 lg:static z-40 bg-white lg:bg-transparent w-full lg:w-[320px] xl:w-[360px] flex-shrink-0 border-l border-neutral-200 flex flex-col overflow-y-auto transition-transform duration-300",
-              showInfoSidebar ? "translate-x-0" : "translate-x-full"
+              "fixed bottom-0 left-0 right-0 z-40 bg-white rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto",
+              "lg:static lg:rounded-none lg:shadow-none lg:max-h-none lg:w-[320px] xl:w-[360px] lg:flex-shrink-0 lg:border-l lg:border-neutral-200 lg:flex lg:flex-col lg:overflow-y-auto",
+              "transition-transform duration-300"
             )}
           >
             {/* Header del sidebar */}
@@ -724,6 +738,7 @@ export default function MensajesPage() {
               </div>
             )}
           </aside>
+          </>
         )}
       </div>
     </div>
