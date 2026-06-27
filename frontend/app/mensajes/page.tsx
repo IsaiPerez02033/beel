@@ -94,9 +94,18 @@ export default function MensajesPage() {
   useEffect(() => {
     if (!activeConvId) return;
     get<{ messages: Message[] }>(`/messaging/${activeConvId}/messages`)
-      .then((d) => setMessages(d.messages))
+      .then((d) => {
+        setMessages(d.messages);
+        // Si no tenemos esta conversación en la lista lateral, recargar la lista
+        const exists = conversations.some(c => c.id === activeConvId || c.reservation_id === activeConvId);
+        if (!exists) {
+          get<{ conversations: Conversation[] }>("/messaging")
+            .then((res) => setConversations(res.conversations))
+            .catch(console.error);
+        }
+      })
       .catch(console.error);
-  }, [activeConvId, get]);
+  }, [activeConvId, get, conversations]);
 
   // WebSocket: recibir mensajes en tiempo real
   const { send: wsSend } = useWebSocket(activeConvId, {

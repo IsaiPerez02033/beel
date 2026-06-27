@@ -80,7 +80,7 @@ async def get_messages(
         raise HTTPException(status_code=404, detail="Conversación no encontrada")
     _assert_participant(conv, user.id)
 
-    msgs, has_more = await service.get_messages(db, conversation_id, before_id, limit)
+    msgs, has_more = await service.get_messages(db, conv.id, before_id, limit)
     # Marcar como leídos
     await service.mark_read(db, conv, user)
 
@@ -158,7 +158,7 @@ async def stream_messages(
     _assert_participant(conv, user.id)
 
     return StreamingResponse(
-        service.stream_conversation(conversation_id),
+        service.stream_conversation(conv.id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -217,11 +217,11 @@ async def websocket_messages(
     await ws.accept()
 
     # Registrar listener para broadcast
-    q: asyncio.Queue = service._register_listener(conversation_id)
+    q: asyncio.Queue = service._register_listener(conv.id)
 
     try:
         # Notificar conexión
-        await ws.send_json({"type": "connected", "conversation_id": str(conversation_id)})
+        await ws.send_json({"type": "connected", "conversation_id": str(conv.id)})
 
         async def read_from_client():
             try:
@@ -229,11 +229,11 @@ async def websocket_messages(
                     data = await ws.receive_json()
                     if data.get("type") == "message" and data.get("body"):
                         async with AsyncSessionLocal() as db:
-                            conv = await service.get_conversation(db, conversation_id)
-                            if conv:
+                            active_conv = await service.get_conversation(db, conv.id)
+                            if active_conv:
                                 await service.send_message(
                                     db,
-                                    conversation=conv,
+                                    conversation=active_conv,
                                     sender=user,
                                     data=MessageCreateIn(body=data["body"][:4000]),
                                 )
@@ -271,7 +271,7 @@ async def websocket_messages(
     except WebSocketDisconnect:
         pass
     finally:
-        service._unregister_listener(conversation_id, q)
+        service._unregister_listener(conv.id, q)
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
