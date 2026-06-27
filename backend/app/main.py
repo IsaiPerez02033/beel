@@ -168,42 +168,6 @@ async def health_check():
     }
 
 
-# ── Debug Database ────────────────────────────────────────────────────────────
-@app.get(f"{API_PREFIX}/db-debug", tags=["debug"])
-async def db_debug():
-    import traceback
-    from app.core.database import AsyncSessionLocal
-    from sqlalchemy import select
-    from app.modules.reservations.models import Reservation
-    from app.modules.notifications.models import Notification
-    
-    if not AsyncSessionLocal:
-        return {"status": "error", "message": "AsyncSessionLocal is None"}
-        
-    res_status = "unknown"
-    try:
-        async with AsyncSessionLocal() as db:
-            res_stmt = select(Reservation).limit(1)
-            await db.execute(res_stmt)
-            res_status = "ok"
-    except Exception as e:
-        res_status = f"error: {str(e)}\n{traceback.format_exc()}"
-        
-    notif_status = "unknown"
-    try:
-        async with AsyncSessionLocal() as db:
-            notif_stmt = select(Notification).limit(1)
-            await db.execute(notif_stmt)
-            notif_status = "ok"
-    except Exception as e:
-        notif_status = f"error: {str(e)}\n{traceback.format_exc()}"
-        
-    return {
-        "reservations_table": res_status,
-        "notifications_table": notif_status,
-    }
-
-
 # ── Global exception handler ──────────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
