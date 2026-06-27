@@ -11,10 +11,15 @@ from pydantic import BaseModel, Field, field_validator
 
 class ParticipantOut(BaseModel):
     id: uuid.UUID
-    full_name: str
-    avatar_url: Optional[str]
+    full_name: str = "Usuario"
+    avatar_url: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+    @field_validator("full_name", mode="before")
+    @classmethod
+    def _default_full_name(cls, v):
+        return v if v else "Usuario"
 
 
 # ── Mensaje ───────────────────────────────────────────────────────────────────
