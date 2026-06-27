@@ -204,7 +204,9 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             placeholder={ready ? "Busca tu direccion exacta..." : "Cargando..."}
             style={{ fontSize: "16px" }}
             className="input w-full pl-10"
-            autoComplete="off"
+            autoComplete="new-password"
+            spellCheck={false}
+            data-form-type="other"
           />
         </div>
         <p className="text-[11px] text-[var(--text-tertiary)] mt-1.5">
