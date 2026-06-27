@@ -869,6 +869,7 @@ function SwipeableMessage({
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      style={{ touchAction: swiping ? "none" : "pan-y" }}
     >
       {/* Icono de reply que aparece al swipear (izquierda del mensaje) */}
       {!isMine && (
@@ -892,11 +893,11 @@ function SwipeableMessage({
 
         {/* Burbuja */}
         <div className="relative">
-          {/* Botón de reply en hover (desktop) */}
+          {/* Botón reply — solo desktop (hover) */}
           <button
             onClick={onReply}
             className={cn(
-              "absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white border border-neutral-200 shadow-sm text-neutral-500 hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity z-10",
+              "hidden sm:flex absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white border border-neutral-200 shadow-sm text-neutral-500 hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity z-10",
               isMine ? "-left-9" : "-right-9"
             )}
             title="Responder"
@@ -923,32 +924,57 @@ function SwipeableMessage({
                     : "bg-neutral-200/60 border-neutral-400 text-neutral-600"
                 )}
               >
-                <p className="font-semibold truncate">
-                  {msg.reply_to.sender_name ?? "Usuario"}
-                </p>
+                <p className="font-semibold truncate">{msg.reply_to.sender_name ?? "Usuario"}</p>
                 <p className="truncate opacity-80">{msg.reply_to.content}</p>
               </button>
             )}
 
             <p className="whitespace-pre-wrap">{msg.content ?? msg.body}</p>
-            <div className="flex items-center justify-end gap-1 mt-1.5 opacity-60 text-[9px]">
-              <span>{format(msgDate, "HH:mm")}</span>
+
+            {/* Timestamp + botón de reacción en móvil (inline dentro de burbuja) */}
+            <div className={cn("flex items-center gap-2 mt-1.5", isMine ? "justify-end" : "justify-between")}>
+              {!isMine && (
+                <MessageReactions
+                  messageId={msg.id}
+                  conversationId={conversationId}
+                  reactions={msg.reactions ?? []}
+                  currentUserId={currentUserId}
+                  isMine={isMine}
+                  onReact={onReact}
+                  compact
+                />
+              )}
+              <span className="text-[9px] opacity-60 flex-shrink-0">{format(msgDate, "HH:mm")}</span>
+              {isMine && (
+                <MessageReactions
+                  messageId={msg.id}
+                  conversationId={conversationId}
+                  reactions={msg.reactions ?? []}
+                  currentUserId={currentUserId}
+                  isMine={isMine}
+                  onReact={onReact}
+                  compact
+                />
+              )}
             </div>
           </div>
+
+          {/* Reacciones existentes debajo de la burbuja */}
+          {(msg.reactions?.length ?? 0) > 0 && (
+            <div className={cn("mt-1", isMine ? "flex justify-end" : "flex justify-start")}>
+              <MessageReactions
+                messageId={msg.id}
+                conversationId={conversationId}
+                reactions={msg.reactions ?? []}
+                currentUserId={currentUserId}
+                isMine={isMine}
+                onReact={onReact}
+                showOnlyBadges
+              />
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Reacciones */}
-      {(msg.reactions && msg.reactions.length > 0 || true) && (
-        <MessageReactions
-          messageId={msg.id}
-          conversationId={conversationId}
-          reactions={msg.reactions ?? []}
-          currentUserId={currentUserId}
-          isMine={isMine}
-          onReact={onReact}
-        />
-      )}
 
       {/* Icono de reply al swipear (derecha, para mensajes propios) */}
       {isMine && (
