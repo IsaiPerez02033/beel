@@ -28,6 +28,7 @@ interface Conversation {
   unread_count_host: number;
   guest: Participant;
   host: Participant;
+  reservation_id?: string;
 }
 
 interface Message {
@@ -57,7 +58,16 @@ export default function MensajesPage() {
   const [localUserId, setLocalUserId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const activeConv = conversations.find((c) => c.id === activeConvId);
+  const activeConv = conversations.find(
+    (c) => c.id === activeConvId || c.reservation_id === activeConvId
+  );
+
+  // Normalizar el ID activo al ID de la conversación si coincidió por ID de reserva
+  useEffect(() => {
+    if (activeConv && activeConv.id !== activeConvId) {
+      setActiveConvId(activeConv.id);
+    }
+  }, [activeConv, activeConvId]);
 
   // Obtener ID local del usuario
   useEffect(() => {
