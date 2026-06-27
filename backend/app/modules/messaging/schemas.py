@@ -1,10 +1,10 @@
 """Pydantic schemas para mensajería."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ── Participante ──────────────────────────────────────────────────────────────
@@ -23,16 +23,34 @@ class MessageOut(BaseModel):
     id: uuid.UUID
     conversation_id: uuid.UUID
     sender_id: uuid.UUID
-    message_type: str
-    content: Optional[str]
+    message_type: str = "text"
+    content: Optional[str] = None
     metadata_: Optional[dict] = Field(None, alias="metadata")
-    is_read: bool
+    is_read: bool = False
     deleted_by_sender: bool = False
-    read_at: Optional[datetime]
+    read_at: Optional[datetime] = None
     created_at: datetime
     sender: Optional[ParticipantOut] = None
 
     model_config = {"from_attributes": True, "populate_by_name": True}
+
+    # Defensa: un registro recién insertado (flush sin commit) puede llegar con
+    # created_at=None, y campos no nulos pueden venir None por drift histórico.
+    # Rellenamos en lugar de tirar un 500 que rompería el envío/lectura.
+    @field_validator("created_at", mode="before")
+    @classmethod
+    def _default_created_at(cls, v):
+        return v if v is not None else datetime.now(timezone.utc)
+
+    @field_validator("message_type", mode="before")
+    @classmethod
+    def _default_message_type(cls, v):
+        return v if v else "text"
+
+    @field_validator("is_read", "deleted_by_sender", mode="before")
+    @classmethod
+    def _default_bool(cls, v):
+        return bool(v) if v is not None else False
 
 
 class MessageListOut(BaseModel):
