@@ -66,6 +66,11 @@ class User(Base, TimestampMixin):
     # Preferencias
     preferred_language: Mapped[str] = mapped_column(String(5), default="es")
 
+    # Datos bancarios para cobrar
+    bank_name: Mapped[Optional[str]] = mapped_column(String(100))
+    bank_clabe: Mapped[Optional[str]] = mapped_column(String(50))
+    bank_account_holder: Mapped[Optional[str]] = mapped_column(String(255))
+
     # Métricas de negocio
     host_since: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     total_listings: Mapped[int] = mapped_column(Integer, default=0)

@@ -34,6 +34,9 @@ class PaymentOut(BaseModel):
 class AdminPaymentUserOut(BaseModel):
     full_name: str
     email: str
+    bank_name: Optional[str] = None
+    bank_clabe: Optional[str] = None
+    bank_account_holder: Optional[str] = None
     model_config = {"from_attributes": True}
 
 

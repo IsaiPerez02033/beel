@@ -35,7 +35,13 @@ interface AdminPayment {
     check_out: string;
     nights: number;
     guest: { full_name: string; email: string };
-    host: { full_name: string; email: string };
+    host: {
+      full_name: string;
+      email: string;
+      bank_name?: string;
+      bank_clabe?: string;
+      bank_account_holder?: string;
+    };
     reservation_property: { title: string };
   };
 }
@@ -390,6 +396,14 @@ function PaymentRow({
             <div>
               <span className="text-[var(--text-tertiary)]">Anfitrión: </span>
               <span className="text-[var(--text-secondary)]">{res?.host?.full_name}</span>
+              {res?.host?.bank_clabe && (
+                <div className="mt-1 text-caption text-[var(--text-secondary)] bg-[var(--bg-subtle)] p-2 rounded-lg border border-[var(--border-subtle)]">
+                  <p className="font-semibold text-[var(--text-primary)]">Datos de Transferencia:</p>
+                  <p><span className="text-[var(--text-tertiary)]">Titular:</span> {res.host.bank_account_holder}</p>
+                  <p><span className="text-[var(--text-tertiary)]">Banco:</span> {res.host.bank_name}</p>
+                  <p className="font-mono bg-[var(--bg-base)] px-1 rounded text-[var(--text-primary)] select-all w-fit">CLABE: {res.host.bank_clabe}</p>
+                </div>
+              )}
             </div>
             {res?.check_in && (
               <div>

@@ -67,6 +67,11 @@ class UserMeOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    # Datos bancarios (cobros)
+    bank_name: Optional[str] = None
+    bank_clabe: Optional[str] = None
+    bank_account_holder: Optional[str] = None
+
     model_config = {"from_attributes": True}
 
 
@@ -79,6 +84,9 @@ class UserUpdateIn(BaseModel):
     phone_country_code: Optional[str] = Field(None, max_length=5)
     preferred_language: Optional[str] = Field(None, pattern="^(es|en|pt)$")
     avatar_url: Optional[str] = Field(None, max_length=1000)
+    bank_name: Optional[str] = Field(None, max_length=100)
+    bank_clabe: Optional[str] = Field(None, max_length=50)
+    bank_account_holder: Optional[str] = Field(None, max_length=255)
 
 
 class PhoneSendIn(BaseModel):
