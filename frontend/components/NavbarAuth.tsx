@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ShieldCheck, LogOut, Settings, User, Home, Briefcase, MessageSquare, Map, HelpCircle } from "lucide-react";
+import { ShieldCheck, LogOut, Settings, User, Home, Briefcase, MessageSquare, Map, HelpCircle, Bell, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
 import BecomeHostModal from "@/components/BecomeHostModal";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 
 // Extrae primer nombre + primer apellido de un nombre completo.
 // "Isai Aram Perez Flores" → "Isai Perez" | "Ana López" → "Ana López"
@@ -91,6 +93,10 @@ export default function NavbarAuth() {
           ¡Hola, <span className="font-medium text-[var(--text-primary)]">{shortName(fullName)}</span>!
         </span>
       )}
+
+      {/* Campana de Notificaciones */}
+      <NotificationsDropdown />
+
       <div className="relative">
         <button
           onClick={() => setShowMenu(!showMenu)}
@@ -270,5 +276,152 @@ function MobileLink({ href, onClick, children }: { href: string; onClick: () => 
     <Link href={href} onClick={onClick} className="block px-4 py-3 rounded-lg text-body font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors">
       {children}
     </Link>
+  );
+}
+
+interface NotificationItem {
+  id: string;
+  type: string;
+  title?: string;
+  body?: string;
+  is_read: boolean;
+  created_at: string;
+  data?: {
+    reservation_id?: string;
+    property_id?: string;
+    conversation_id?: string;
+  };
+}
+
+function NotificationsDropdown() {
+  const { get, post } = useApi();
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+
+    const fetchNotifs = () => {
+      get<{ notifications: NotificationItem[]; unread_count: number }>("/notifications?limit=8")
+        .then((res) => {
+          setNotifications(res.notifications ?? []);
+          setUnreadCount(res.unread_count ?? 0);
+        })
+        .catch(() => {});
+    };
+
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 45000);
+    return () => clearInterval(interval);
+  }, [isSignedIn, get]);
+
+  async function handleMarkAllRead() {
+    try {
+      await post("/notifications/read-all", {});
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleNotificationClick(notif: NotificationItem) {
+    setShowNotifications(false);
+    
+    if (!notif.is_read) {
+      post(`/notifications/${notif.id}/read`, {})
+        .then(() => {
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n))
+          );
+          setUnreadCount((c) => Math.max(0, c - 1));
+        })
+        .catch(() => {});
+    }
+
+    if (notif.data?.reservation_id) {
+      router.push(`/reservaciones/${notif.data.reservation_id}`);
+    } else if (notif.data?.conversation_id) {
+      router.push(`/mensajes?conv=${notif.data.conversation_id}`);
+    } else if (notif.data?.property_id) {
+      router.push(`/p/${notif.data.property_id}`);
+    } else {
+      router.push("/reservaciones");
+    }
+  }
+
+  if (!isSignedIn) return null;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowNotifications(!showNotifications)}
+        className="relative p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        title="Notificaciones"
+      >
+        <Bell size={20} />
+        {unreadCount > 0 && (
+          <span className="absolute top-1.5 right-1.5 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-[var(--color-primary)] text-white text-[9px] font-bold ring-2 ring-white">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {showNotifications && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
+          <div className="absolute right-0 top-11 z-20 bg-white rounded-2xl shadow-xl border border-[var(--border-subtle)] py-2 w-80 max-h-[420px] flex flex-col overflow-hidden animate-fade-in">
+            <div className="px-4 py-2 border-b border-[var(--border-subtle)] flex items-center justify-between">
+              <span className="text-body font-semibold text-[var(--text-primary)]">Notificaciones</span>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllRead}
+                  className="text-caption font-medium text-[var(--color-primary)] hover:underline"
+                >
+                  Marcar leídas
+                </button>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto min-h-[100px] max-h-[300px]">
+              {notifications.length === 0 ? (
+                <div className="py-8 text-center text-caption text-[var(--text-tertiary)]">
+                  No tienes notificaciones
+                </div>
+              ) : (
+                notifications.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => handleNotificationClick(n)}
+                    className={cn(
+                      "w-full text-left px-4 py-3 hover:bg-[var(--bg-subtle)] transition-colors border-b border-[var(--border-subtle)] flex items-start gap-3",
+                      !n.is_read && "bg-[var(--color-primary-light)]/20 font-medium"
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-body-sm font-semibold text-[var(--text-primary)] leading-snug">
+                        {n.title ?? "Notificación"}
+                      </p>
+                      <p className="text-caption text-[var(--text-secondary)] line-clamp-2 mt-0.5 leading-relaxed">
+                        {n.body}
+                      </p>
+                      <span className="text-[9px] text-[var(--text-tertiary)] mt-1 block">
+                        {format(parseISO(n.created_at), "d MMM, HH:mm", { locale: es })}
+                      </span>
+                    </div>
+                    {!n.is_read && (
+                      <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] flex-shrink-0 mt-1.5" />
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
