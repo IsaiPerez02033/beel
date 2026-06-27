@@ -49,34 +49,3 @@ async def mark_all_read(
     await db.commit()
     return {"marked_read": count}
 
-
-@router.post("/test-email")
-async def test_email(key: str = Query(...)):
-    """Endpoint temporal para probar el envío de emails. Requiere ?key=DEMO_SEED_KEY."""
-    from app.core.config import settings
-    from app.core.email import _send
-    if key != settings.DEMO_SEED_KEY:
-        raise HTTPException(status_code=403, detail="Clave inválida")
-    await _send(
-        to_email="aramperez57@gmail.com",
-        to_name="Isai Perez",
-        subject="✓ Prueba de email — Beel",
-        html="""
-        <div style="font-family:Arial,sans-serif;padding:32px;background:#F1EFE8;">
-          <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
-            <h1 style="color:#147A5C;font-size:24px;margin:0 0 16px;">
-              ¡Los emails de Beel funcionan! 🎉
-            </h1>
-            <p style="color:#5C5A57;font-size:15px;line-height:1.6;">
-              Este es un correo de prueba enviado desde <strong>beel</strong>.
-              Si lo recibes, el sistema de notificaciones por email está
-              correctamente configurado.
-            </p>
-            <p style="color:#9C9A96;font-size:13px;margin-top:24px;">
-              — Equipo Beel
-            </p>
-          </div>
-        </div>
-        """,
-    )
-    return {"ok": True, "sent_to": "aramperez57@gmail.com"}
