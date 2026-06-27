@@ -168,6 +168,53 @@ async def health_check():
     }
 
 
+# ── Debug Database ────────────────────────────────────────────────────────────
+@app.get(f"{API_PREFIX}/db-debug", tags=["debug"])
+async def db_debug():
+    from app.core.database import AsyncSessionLocal
+    from sqlalchemy import select
+    from app.modules.messaging.models import Conversation, Message
+    
+    if not AsyncSessionLocal:
+        return {"status": "error", "message": "AsyncSessionLocal is None"}
+        
+    try:
+        async with AsyncSessionLocal() as db:
+            conv_stmt = select(Conversation).limit(20)
+            convs = (await db.execute(conv_stmt)).scalars().all()
+            conv_list = [
+                {
+                    "id": str(c.id),
+                    "reservation_id": str(c.reservation_id) if c.reservation_id else None,
+                    "last_message_preview": c.last_message_preview,
+                    "last_message_at": str(c.last_message_at) if c.last_message_at else None,
+                }
+                for c in convs
+            ]
+            
+            msg_stmt = select(Message).order_by(Message.created_at.desc()).limit(30)
+            msgs = (await db.execute(msg_stmt)).scalars().all()
+            msg_list = [
+                {
+                    "id": str(m.id),
+                    "conversation_id": str(m.conversation_id),
+                    "sender_id": str(m.sender_id),
+                    "message_type": m.message_type,
+                    "content": m.content,
+                    "created_at": str(m.created_at),
+                }
+                for m in msgs
+            ]
+            
+            return {
+                "conversations": conv_list,
+                "messages": msg_list,
+            }
+    except Exception as e:
+        import traceback
+        return {"status": "error", "trace": traceback.format_exc()}
+
+
 # ── Global exception handler ──────────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
