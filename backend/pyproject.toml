@@ -16,6 +16,7 @@ uvicorn = { version = "^0.30.1", extras = ["standard"] }
 sqlalchemy = "^2.0.31"
 asyncpg = "^0.29.0"
 alembic = "^1.13.2"
+greenlet = ">=1.0,<3.2"   # 3.5.x no tiene wheels para el env de Render
 
 # Validación y settings
 pydantic = "^2.8.2"
