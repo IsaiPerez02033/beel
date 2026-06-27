@@ -7,7 +7,8 @@ export default auth(function middleware(req) {
 
   if (isProtected && !req.auth) {
     const loginUrl = new URL("/iniciar-sesion", req.url);
-    loginUrl.searchParams.set("redirect_url", req.nextUrl.pathname);
+    const redirectUrl = req.nextUrl.pathname + req.nextUrl.search;
+    loginUrl.searchParams.set("redirect_url", redirectUrl);
     return NextResponse.redirect(loginUrl);
   }
 });
