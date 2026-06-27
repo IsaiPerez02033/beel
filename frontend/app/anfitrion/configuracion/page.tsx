@@ -24,6 +24,9 @@ interface UserProfile {
   preferred_language: string;
   host_since?: string;
   total_listings: number;
+  bank_name?: string;
+  bank_clabe?: string;
+  bank_account_holder?: string;
 }
 
 type Section = "perfil" | "notificaciones" | "seguridad" | "pagos";
@@ -68,6 +71,14 @@ export default function ConfiguracionAnfitrionPage() {
   const [language, setLanguage] = useState("es");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  // Form state para datos bancarios
+  const [bankName, setBankName] = useState("");
+  const [bankClabe, setBankClabe] = useState("");
+  const [bankAccountHolder, setBankAccountHolder] = useState("");
+  const [savingBank, setSavingBank] = useState(false);
+  const [bankSaved, setBankSaved] = useState(false);
+  const [bankError, setBankError] = useState("");
+
   // Notification prefs (UI only — backend a futuro)
   const [notifReservations, setNotifReservations] = useState(true);
   const [notifMessages, setNotifMessages] = useState(true);
@@ -86,6 +97,9 @@ export default function ConfiguracionAnfitrionPage() {
         setFullName(data.full_name ?? "");
         setPhone(data.phone ?? "");
         setLanguage(data.preferred_language ?? "es");
+        setBankName(data.bank_name ?? "");
+        setBankClabe(data.bank_clabe ?? "");
+        setBankAccountHolder(data.bank_account_holder ?? "");
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -108,6 +122,35 @@ export default function ConfiguracionAnfitrionPage() {
       setError(err instanceof Error ? err.message : "Error al guardar");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveBankDetails(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingBank(true);
+    setBankError("");
+    setBankSaved(false);
+
+    const cleanedClabe = bankClabe.trim();
+    if (cleanedClabe && !/^\d{18}$/.test(cleanedClabe)) {
+      setBankError("La cuenta CLABE debe contener exactamente 18 dígitos numéricos");
+      setSavingBank(false);
+      return;
+    }
+
+    try {
+      const updated = await patch<UserProfile>("/users/me", {
+        bank_name: bankName || null,
+        bank_clabe: cleanedClabe || null,
+        bank_account_holder: bankAccountHolder || null,
+      });
+      setProfile(updated);
+      setBankSaved(true);
+      setTimeout(() => setBankSaved(false), 2500);
+    } catch (err) {
+      setBankError(err instanceof Error ? err.message : "Error al guardar los datos bancarios");
+    } finally {
+      setSavingBank(false);
     }
   }
 
@@ -405,9 +448,81 @@ export default function ConfiguracionAnfitrionPage() {
                   </div>
                 </div>
 
-                <p className="text-caption text-[var(--text-tertiary)] mt-6">
+                <p className="text-caption text-[var(--text-tertiary)] mt-6 mb-4">
                   Próximamente: conecta tu cuenta de MercadoPago para recibir pagos automáticamente
                 </p>
+
+                <div className="divider my-6" />
+
+                <h3 className="text-body font-semibold text-[var(--text-primary)] mb-3">
+                  Datos de Transferencia Bancaria (CLABE)
+                </h3>
+                <p className="text-caption text-[var(--text-secondary)] mb-4">
+                  Registra tus datos bancarios para que el equipo administrativo de Beel pueda transferirte el dinero de tus reservaciones.
+                </p>
+
+                <form onSubmit={handleSaveBankDetails} className="space-y-4">
+                  {bankError && (
+                    <div className="p-3 bg-[var(--color-error-subtle)] border border-[var(--color-error)] text-[var(--color-error)] text-body-sm rounded-lg">
+                      {bankError}
+                    </div>
+                  )}
+                  {bankSaved && (
+                    <div className="p-3 bg-[var(--color-success-subtle)] border border-[var(--color-success)] text-[var(--color-success)] text-body-sm rounded-lg flex items-center gap-1.5">
+                      <Check size={14} /> Datos bancarios actualizados con éxito
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-caption font-medium text-[var(--text-secondary)] mb-1">
+                      Nombre del Titular de la Cuenta
+                    </label>
+                    <input
+                      type="text"
+                      value={bankAccountHolder}
+                      onChange={(e) => setBankAccountHolder(e.target.value)}
+                      placeholder="Ej. Aram Pérez"
+                      className="input w-full"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-caption font-medium text-[var(--text-secondary)] mb-1">
+                        Banco
+                      </label>
+                      <input
+                        type="text"
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        placeholder="Ej. BBVA, Santander"
+                        className="input w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-caption font-medium text-[var(--text-secondary)] mb-1">
+                        Cuenta CLABE (18 dígitos)
+                      </label>
+                      <input
+                        type="text"
+                        value={bankClabe}
+                        onChange={(e) => setBankClabe(e.target.value)}
+                        maxLength={18}
+                        placeholder="012345678901234567"
+                        className="input w-full font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingBank}
+                    className="btn btn-primary"
+                  >
+                    {savingBank ? "Guardando..." : "Guardar datos bancarios"}
+                  </button>
+                </form>
               </div>
             )}
           </div>
