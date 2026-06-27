@@ -29,7 +29,7 @@ let scriptLoading = false;
 const callbacks: (() => void)[] = [];
 
 function loadGoogleMaps(apiKey: string): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (scriptLoaded) { resolve(); return; }
     callbacks.push(resolve);
     if (scriptLoading) return;
@@ -43,6 +43,10 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
     s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps&language=es&region=MX`;
     s.async = true;
     s.defer = true;
+    s.onerror = () => {
+      scriptLoading = false;
+      reject(new Error("No se pudo cargar Google Maps"));
+    };
     document.head.appendChild(s);
   });
 }
@@ -61,6 +65,7 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
   const autocompleteRef = useRef<any>(null);
 
   const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [selected, setSelected] = useState<LocationResult | null>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -110,7 +115,9 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
   // Cargar Google Maps y configurar autocomplete
   useEffect(() => {
     if (!apiKey) return;
-    loadGoogleMaps(apiKey).then(() => setReady(true));
+    loadGoogleMaps(apiKey)
+      .then(() => setReady(true))
+      .catch(() => setLoadError(true));
   }, [apiKey]);
 
   useEffect(() => {
@@ -157,10 +164,21 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     return () => window.google?.maps.event.clearInstanceListeners(ac);
   }, [ready, initMap, onSelect]);
 
-  if (!apiKey) {
+  if (!apiKey || loadError) {
     return (
-      <div className="text-sm text-red-500 bg-red-50 rounded-xl p-4">
-        Falta configurar NEXT_PUBLIC_GOOGLE_MAPS_KEY
+      <div className="space-y-4">
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-4">
+          {loadError
+            ? "No se pudo cargar el mapa. Verifica que la API key de Google Maps esté configurada correctamente en Vercel."
+            : "Falta configurar NEXT_PUBLIC_GOOGLE_MAPS_KEY"}
+        </p>
+        {/* Fallback: campos manuales */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="sm:col-span-2">
+            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Dirección <span className="text-red-500">*</span></label>
+            <input className="input w-full" placeholder="Calle, número, colonia" style={{ fontSize: "16px" }} onChange={(e) => onSelect({ address: e.target.value, neighborhood: "", city: "", state: "", lat: 19.4326, lng: -99.1332 })} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -173,21 +191,22 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
           Dirección <span className="text-red-500">*</span>
         </label>
         <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
-            <Search size={16} />
-          </span>
-          {!ready && (
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400">
+          {!ready ? (
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
               <Loader2 size={16} className="animate-spin" />
+            </span>
+          ) : (
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
+              <Search size={16} />
             </span>
           )}
           <input
             ref={inputRef}
             type="text"
             defaultValue={initialAddress}
-            placeholder="Busca tu dirección exacta…"
+            placeholder={ready ? "Busca tu dirección exacta…" : "Cargando Google Maps…"}
             style={{ fontSize: "16px" }}
-            className="input w-full pl-10 pr-10"
+            className="input w-full pl-10"
             disabled={!ready}
             autoComplete="off"
           />
