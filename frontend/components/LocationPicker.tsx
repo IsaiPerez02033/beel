@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { MapPin, Loader2, Search, X } from "lucide-react";
 
 interface LocationResult {
@@ -68,6 +69,8 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
   onSelectRef.current = onSelect;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
   // Cargar Maps JS para el mapa visual
   useEffect(() => {
@@ -109,6 +112,11 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
 
   function handleInput(val: string) {
     setQuery(val);
+    // Calcular posición del dropdown relativa al viewport para el portal
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX, width: rect.width });
+    }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => search(val), 350);
   }
@@ -192,10 +200,17 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
           </span>
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => handleInput(e.target.value)}
-            onFocus={() => suggestions.length > 0 && setOpen(true)}
+            onFocus={() => {
+              if (suggestions.length > 0 && inputRef.current) {
+                const rect = inputRef.current.getBoundingClientRect();
+                setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX, width: rect.width });
+                setOpen(true);
+              }
+            }}
             placeholder="Busca tu dirección exacta..."
             style={{ fontSize: "16px" }}
             className="input w-full pl-10 pr-10"
@@ -211,9 +226,12 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             </button>
           )}
 
-          {/* Dropdown de sugerencias */}
-          {open && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-lg z-[9999] overflow-hidden">
+          {/* Dropdown via portal — escapa overflow:hidden de cualquier padre */}
+          {open && suggestions.length > 0 && typeof document !== "undefined" && createPortal(
+            <div
+              className="bg-white border border-neutral-200 rounded-xl shadow-xl overflow-hidden"
+              style={{ position: "absolute", top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 99999 }}
+            >
               {suggestions.map((s) => (
                 <button
                   key={s.placeId}
@@ -229,7 +247,8 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
                   </div>
                 </button>
               ))}
-            </div>
+            </div>,
+            document.body
           )}
         </div>
 
