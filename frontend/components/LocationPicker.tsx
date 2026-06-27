@@ -86,47 +86,26 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Buscar sugerencias via Places Autocomplete REST API
+  // Buscar sugerencias via proxy interno (evita CORS)
   const search = useCallback(async (input: string) => {
     if (input.length < 3) { setSuggestions([]); setOpen(false); return; }
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&components=country:mx&language=es&key=${apiKey}`,
-        { mode: "no-cors" }
-      );
-      // no-cors no permite leer la respuesta — usar proxy interno
-      throw new Error("use-proxy");
-    } catch {
-      // Usar la API nueva vía fetch directo (soporta CORS)
-      try {
-        const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": apiKey,
-          },
-          body: JSON.stringify({
-            input,
-            includedRegionCodes: ["mx"],
-            languageCode: "es",
-          }),
-        });
-        const data = await res.json();
-        const suggs: Suggestion[] = (data.suggestions ?? []).map((s: any) => ({
-          placeId: s.placePrediction?.placeId ?? "",
-          description: s.placePrediction?.text?.text ?? "",
-          mainText: s.placePrediction?.structuredFormat?.mainText?.text ?? "",
-          secondaryText: s.placePrediction?.structuredFormat?.secondaryText?.text ?? "",
-        })).filter((s: Suggestion) => s.placeId);
-        setSuggestions(suggs);
-        setOpen(suggs.length > 0);
-      } catch (e) {
-        console.error("Places search error:", e);
-      }
+      const res = await fetch(`/api/places/autocomplete?q=${encodeURIComponent(input)}`);
+      const data = await res.json();
+      const suggs: Suggestion[] = (data.suggestions ?? []).map((s: any) => ({
+        placeId: s.placePrediction?.placeId ?? "",
+        description: s.placePrediction?.text?.text ?? "",
+        mainText: s.placePrediction?.structuredFormat?.mainText?.text ?? "",
+        secondaryText: s.placePrediction?.structuredFormat?.secondaryText?.text ?? "",
+      })).filter((s: Suggestion) => s.placeId);
+      setSuggestions(suggs);
+      setOpen(suggs.length > 0);
+    } catch (e) {
+      console.error("Places search error:", e);
     }
     setLoading(false);
-  }, [apiKey]);
+  }, []);
 
   function handleInput(val: string) {
     setQuery(val);
@@ -134,21 +113,13 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     debounceRef.current = setTimeout(() => search(val), 350);
   }
 
-  // Obtener detalles del lugar seleccionado
+  // Obtener detalles del lugar seleccionado via proxy interno
   async function selectPlace(s: Suggestion) {
     setOpen(false);
     setQuery(s.description);
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://places.googleapis.com/v1/places/${s.placeId}?languageCode=es`,
-        {
-          headers: {
-            "X-Goog-Api-Key": apiKey,
-            "X-Goog-FieldMask": "addressComponents,location,formattedAddress",
-          },
-        }
-      );
+      const res = await fetch(`/api/places/details?id=${encodeURIComponent(s.placeId)}`);
       const place = await res.json();
       const comps: any[] = place.addressComponents ?? [];
       const get = (types: string[]) => {
