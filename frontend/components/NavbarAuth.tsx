@@ -215,38 +215,57 @@ export function NavbarAuthMobile({ onClose }: { onClose: () => void }) {
 
   if (!isSignedIn) {
     return (
-      <>
-        <MobileLink href="/iniciar-sesion" onClick={onClose}>Iniciar sesión</MobileLink>
-        <MobileLink href="/registro" onClick={onClose}>Registrarse</MobileLink>
-      </>
+      <div className="space-y-1 pt-2">
+        <MobileLink href="/iniciar-sesion" onClick={onClose} icon={<User size={18} />}>Iniciar sesión</MobileLink>
+        <MobileLink href="/registro" onClick={onClose} icon={<ShieldCheck size={18} />}>Registrarse</MobileLink>
+      </div>
     );
   }
 
   function toggleMode() {
     if (isHostArea) { onClose(); router.push("/"); }
     else if (verified) { onClose(); router.push("/anfitrion"); }
-    else { setShowHostModal(true); } // abre el modal (no cierra el menú aún)
+    else { setShowHostModal(true); }
   }
 
   return (
     <>
       <BecomeHostModal open={showHostModal} onClose={() => { setShowHostModal(false); onClose(); }} />
+
+      {/* Modo anfitrión/huésped — destacado arriba */}
       <button
         onClick={toggleMode}
-        className="w-full text-left block px-4 py-3 rounded-lg text-body font-medium text-[var(--color-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-body font-semibold text-[var(--color-primary)] bg-[var(--color-primary-light)] hover:bg-[var(--color-primary-light)] transition-colors mb-2"
       >
+        <Briefcase size={18} className="flex-shrink-0" />
         {isHostArea ? "Usar como huésped" : "Modo anfitrión"}
       </button>
-      <MobileLink href="/reservaciones" onClick={onClose}>Viajes</MobileLink>
-      <MobileLink href="/mensajes" onClick={onClose}>Mensajes</MobileLink>
-      <MobileLink href="/anfitrion/configuracion?seccion=perfil" onClick={onClose}>Perfil</MobileLink>
-      <MobileLink href="/anfitrion/configuracion?seccion=seguridad" onClick={onClose}>Configuración y seguridad</MobileLink>
-      <MobileLink href="/ayuda" onClick={onClose}>Centro de ayuda</MobileLink>
-      {isAdmin && <MobileLink href="/admin" onClick={onClose}>Panel Admin</MobileLink>}
+
+      {/* Links principales */}
+      <div className="space-y-0.5">
+        <MobileLink href="/buscar" onClick={onClose} icon={<Map size={18} />}>Explorar</MobileLink>
+        <MobileLink href="/reservaciones" onClick={onClose} icon={<Home size={18} />}>Viajes</MobileLink>
+        <MobileLink href="/mensajes" onClick={onClose} icon={<MessageSquare size={18} />}>Mensajes</MobileLink>
+      </div>
+
+      <div className="border-t border-[var(--border-subtle)] my-3" />
+
+      {/* Cuenta */}
+      <div className="space-y-0.5">
+        <MobileLink href="/anfitrion/configuracion?seccion=perfil" onClick={onClose} icon={<User size={18} />}>Perfil</MobileLink>
+        <MobileLink href="/anfitrion/configuracion?seccion=seguridad" onClick={onClose} icon={<Settings size={18} />}>Configuración y seguridad</MobileLink>
+        <MobileLink href="/ayuda" onClick={onClose} icon={<HelpCircle size={18} />}>Centro de ayuda</MobileLink>
+        {isAdmin && <MobileLink href="/admin" onClick={onClose} icon={<ShieldCheck size={18} />}>Panel Admin</MobileLink>}
+      </div>
+
+      <div className="border-t border-[var(--border-subtle)] my-3" />
+
+      {/* Cerrar sesión */}
       <button
         onClick={() => { onClose(); signOut(); }}
-        className="w-full text-left block px-4 py-3 rounded-lg text-body font-medium text-red-600 hover:bg-red-50 transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-body font-medium text-red-600 hover:bg-red-50 transition-colors"
       >
+        <LogOut size={18} className="flex-shrink-0" />
         Cerrar sesión
       </button>
     </>
@@ -271,9 +290,10 @@ function Divider() {
   return <div className="my-1.5 border-t border-[var(--border-subtle)]" />;
 }
 
-function MobileLink({ href, onClick, children }: { href: string; onClick: () => void; children: React.ReactNode }) {
+function MobileLink({ href, onClick, icon, children }: { href: string; onClick: () => void; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <Link href={href} onClick={onClick} className="block px-4 py-3 rounded-lg text-body font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors">
+    <Link href={href} onClick={onClick} className="flex items-center gap-3 px-4 py-3 rounded-xl text-body font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors">
+      {icon && <span className="text-[var(--text-secondary)] flex-shrink-0">{icon}</span>}
       {children}
     </Link>
   );
