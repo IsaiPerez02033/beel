@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,19 +9,19 @@ import Navbar from "@/components/Navbar";
 import { useApi } from "@/hooks/useApi";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { cn } from "@/lib/utils";
-import { 
-  Send, 
-  ArrowLeft, 
-  Search, 
-  Info, 
-  X, 
-  ChevronRight, 
-  CheckCircle2, 
+import {
+  Send,
+  ArrowLeft,
+  Search,
+  Info,
+  X,
+  CheckCircle2,
   MessageSquare,
   Calendar,
   Users,
   CreditCard,
-  ExternalLink
+  ExternalLink,
+  CornerUpLeft,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -45,6 +45,13 @@ interface Conversation {
   reservation_id?: string;
 }
 
+interface ReplyPreview {
+  id: string;
+  sender_id: string;
+  content?: string;
+  sender_name?: string;
+}
+
 interface Message {
   id: string;
   sender_id: string;
@@ -53,6 +60,8 @@ interface Message {
   message_type: string;
   created_at: string;
   sender?: Participant;
+  reply_to_id?: string;
+  reply_to?: ReplyPreview;
 }
 
 interface PropertyPhoto {
@@ -127,6 +136,8 @@ export default function MensajesPage() {
   const [loadingReservation, setLoadingReservation] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   const activeConv = conversations.find(
     (c) => c.id === activeConvId || c.reservation_id === activeConvId
@@ -228,25 +239,37 @@ export default function MensajesPage() {
   async function handleSend() {
     const text = input.trim();
     if (!text || !activeConvId || sending) return;
-    
+
     setSending(true);
-    setInput(""); // Limpiar input de forma optimista e inmediata para prevenir doble click
-    
+    setInput("");
+    const replyId = replyingTo?.id ?? null;
+    setReplyingTo(null);
+
     try {
       const msg = await post<Message>(`/messaging/${activeConvId}/messages`, {
         body: text,
+        ...(replyId ? { reply_to_id: replyId } : {}),
       });
       setMessages((prev) => {
-        // Evitar duplicados si el mensaje ya llegó vía WebSocket
         if (prev.some((m) => m.id === msg.id)) return prev;
         return [...prev, msg];
       });
     } catch (e) {
       console.error(e);
-      setInput(text); // Restaurar el texto original si la petición falla
+      setInput(text);
+      if (replyId) setReplyingTo(replyingTo);
     } finally {
       setSending(false);
     }
+  }
+
+  function scrollToMessage(id: string) {
+    const el = messageRefs.current[id];
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Flash highlight
+    el.classList.add("bg-yellow-50");
+    setTimeout(() => el.classList.remove("bg-yellow-50"), 1200);
   }
 
   // Filtrar las conversaciones locales por búsqueda y por no leídos
@@ -308,7 +331,7 @@ export default function MensajesPage() {
       const isMine = msg.sender_id === localUserId;
 
       return (
-        <div key={msg.id}>
+        <div key={msg.id} ref={(el) => { messageRefs.current[msg.id] = el; }}>
           {dateSeparator}
           {msg.message_type === "system" ? (
             <div className="flex justify-center my-5">
@@ -317,28 +340,14 @@ export default function MensajesPage() {
               </span>
             </div>
           ) : (
-            <div className={cn("flex my-3", isMine ? "justify-end" : "justify-start")}>
-              <div className="flex flex-col max-w-[70%] lg:max-w-[60%]">
-                {!isMine && (
-                  <span className="text-[11px] text-neutral-400 font-medium mb-1 ml-2">
-                    {msg.sender?.full_name || otherParticipant?.full_name}
-                  </span>
-                )}
-                <div
-                  className={cn(
-                    "px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm",
-                    isMine
-                      ? "bg-[#222222] text-white rounded-tr-none font-normal"
-                      : "bg-[#F7F7F7] text-neutral-800 rounded-tl-none border border-neutral-200/50"
-                  )}
-                >
-                  <p className="whitespace-pre-wrap">{msg.content ?? msg.body}</p>
-                  <div className="flex items-center justify-end gap-1 mt-1.5 opacity-60 text-[9px]">
-                    <span>{format(msgDate, "HH:mm")}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <SwipeableMessage
+              msg={msg}
+              isMine={isMine}
+              otherParticipant={otherParticipant}
+              msgDate={msgDate}
+              onReply={() => setReplyingTo(msg)}
+              onScrollToReply={scrollToMessage}
+            />
           )}
         </div>
       );
@@ -505,6 +514,21 @@ export default function MensajesPage() {
                 {renderMessages()}
                 <div ref={messagesEndRef} />
               </div>
+
+              {/* Barra de reply */}
+              {replyingTo && (
+                <div className="px-5 pt-3 pb-0 flex-shrink-0 flex items-center gap-3 bg-white border-t border-neutral-100">
+                  <div className="flex-1 border-l-4 border-[var(--color-primary)] pl-3 py-1 bg-neutral-50 rounded-r-lg">
+                    <p className="text-[11px] font-semibold text-[var(--color-primary)]">
+                      {replyingTo.sender_id === localUserId ? "Tú" : (replyingTo.sender?.full_name ?? "Usuario")}
+                    </p>
+                    <p className="text-xs text-neutral-500 truncate">{replyingTo.content ?? replyingTo.body}</p>
+                  </div>
+                  <button onClick={() => setReplyingTo(null)} className="p-1 text-neutral-400 hover:text-neutral-700">
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
 
               {/* Caja de Input (Estilo Airbnb) */}
               <div className="p-5 border-t border-neutral-100 bg-white flex-shrink-0">
@@ -741,6 +765,147 @@ export default function MensajesPage() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Componente SwipeableMessage ───────────────────────────────────────────────
+
+function SwipeableMessage({
+  msg,
+  isMine,
+  otherParticipant,
+  msgDate,
+  onReply,
+  onScrollToReply,
+}: {
+  msg: Message;
+  isMine: boolean;
+  otherParticipant: { full_name: string; avatar_url?: string } | null;
+  msgDate: Date;
+  onReply: () => void;
+  onScrollToReply: (id: string) => void;
+}) {
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const [swipeX, setSwipeX] = useState(0);
+  const [swiping, setSwiping] = useState(false);
+  const triggered = useRef(false);
+  const THRESHOLD = 60;
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    triggered.current = false;
+    setSwiping(true);
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+    // Si el gesto es más vertical que horizontal, cancelar swipe
+    if (dy > Math.abs(dx) * 1.5) { setSwiping(false); setSwipeX(0); return; }
+    // Solo swipe hacia la derecha para responder
+    if (dx > 0 && dx < THRESHOLD + 20) setSwipeX(dx);
+    if (dx >= THRESHOLD && !triggered.current) {
+      triggered.current = true;
+      // Vibración táctil en móvil si está disponible
+      if (navigator.vibrate) navigator.vibrate(30);
+    }
+  }
+
+  function onTouchEnd() {
+    if (triggered.current) onReply();
+    setSwipeX(0);
+    setSwiping(false);
+  }
+
+  const progress = Math.min(swipeX / THRESHOLD, 1);
+
+  return (
+    <div
+      className={cn("flex my-3 group", isMine ? "justify-end" : "justify-start")}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Icono de reply que aparece al swipear (izquierda del mensaje) */}
+      {!isMine && (
+        <div
+          className="flex items-center justify-center w-8 mr-1 transition-opacity"
+          style={{ opacity: progress, transform: `scale(${0.6 + 0.4 * progress})` }}
+        >
+          <CornerUpLeft size={18} className="text-[var(--color-primary)]" />
+        </div>
+      )}
+
+      <div
+        className="flex flex-col max-w-[75%] sm:max-w-[70%] lg:max-w-[60%]"
+        style={swiping ? { transform: `translateX(${swipeX}px)`, transition: "none" } : { transition: "transform 0.2s ease" }}
+      >
+        {!isMine && (
+          <span className="text-[11px] text-neutral-400 font-medium mb-1 ml-2">
+            {msg.sender?.full_name || otherParticipant?.full_name}
+          </span>
+        )}
+
+        {/* Burbuja */}
+        <div className="relative">
+          {/* Botón de reply en hover (desktop) */}
+          <button
+            onClick={onReply}
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white border border-neutral-200 shadow-sm text-neutral-500 hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity z-10",
+              isMine ? "-left-9" : "-right-9"
+            )}
+            title="Responder"
+          >
+            <CornerUpLeft size={14} />
+          </button>
+
+          <div
+            className={cn(
+              "px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm",
+              isMine
+                ? "bg-[#222222] text-white rounded-tr-none"
+                : "bg-[#F7F7F7] text-neutral-800 rounded-tl-none border border-neutral-200/50"
+            )}
+          >
+            {/* Cita del mensaje respondido */}
+            {msg.reply_to && (
+              <button
+                onClick={() => onScrollToReply(msg.reply_to!.id)}
+                className={cn(
+                  "w-full text-left mb-2 rounded-lg px-3 py-1.5 border-l-4 text-xs",
+                  isMine
+                    ? "bg-white/10 border-white/60 text-white/80"
+                    : "bg-neutral-200/60 border-neutral-400 text-neutral-600"
+                )}
+              >
+                <p className="font-semibold truncate">
+                  {msg.reply_to.sender_name ?? "Usuario"}
+                </p>
+                <p className="truncate opacity-80">{msg.reply_to.content}</p>
+              </button>
+            )}
+
+            <p className="whitespace-pre-wrap">{msg.content ?? msg.body}</p>
+            <div className="flex items-center justify-end gap-1 mt-1.5 opacity-60 text-[9px]">
+              <span>{format(msgDate, "HH:mm")}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Icono de reply al swipear (derecha, para mensajes propios) */}
+      {isMine && (
+        <div
+          className="flex items-center justify-center w-8 ml-1 transition-opacity"
+          style={{ opacity: progress, transform: `scale(${0.6 + 0.4 * progress})` }}
+        >
+          <CornerUpLeft size={18} className="text-[var(--color-primary)]" />
+        </div>
+      )}
     </div>
   );
 }

@@ -124,6 +124,12 @@ class Message(Base):
     content: Mapped[str] = mapped_column("content", Text, nullable=False)
     metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB)
 
+    reply_to_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("messages.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     deleted_by_sender: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -137,6 +143,9 @@ class Message(Base):
         "Conversation", back_populates="messages"
     )
     sender: Mapped["User"] = relationship("User", foreign_keys=[sender_id], lazy="selectin")
+    reply_to: Mapped[Optional["Message"]] = relationship(
+        "Message", foreign_keys=[reply_to_id], lazy="noload"
+    )
 
     __table_args__ = (
         Index("idx_messages_conversation_created", "conversation_id", "created_at"),

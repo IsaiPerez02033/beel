@@ -233,7 +233,10 @@ async def get_messages(
     """
     query = (
         select(Message)
-        .options(selectinload(Message.sender))
+        .options(
+            selectinload(Message.sender),
+            selectinload(Message.reply_to).selectinload(Message.sender),
+        )
         .where(
             Message.conversation_id == conversation_id,
             Message.deleted_by_sender.is_(False),
@@ -275,6 +278,7 @@ async def send_message(
         message_type=data.message_type,
         content=data.body,
         metadata_=data.metadata,
+        reply_to_id=data.reply_to_id,
     )
     db.add(msg)
 
@@ -332,7 +336,10 @@ async def send_message(
     # al serializar MessageOut (lazy-load fuera del greenlet → 500 → rollback).
     result = await db.execute(
         select(Message)
-        .options(selectinload(Message.sender))
+        .options(
+            selectinload(Message.sender),
+            selectinload(Message.reply_to).selectinload(Message.sender),
+        )
         .where(Message.id == msg.id)
     )
     return result.scalar_one()
