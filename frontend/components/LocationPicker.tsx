@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { MapPin, Loader2, Search } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
 
 interface LocationResult {
   address: string;
@@ -40,7 +40,8 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
       callbacks.length = 0;
     };
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps&language=es&region=MX`;
+    // v=beta para acceder a PlaceAutocompleteElement (nueva API desde marzo 2025)
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=beta&callback=initGoogleMaps&language=es&region=MX`;
     s.async = true;
     s.defer = true;
     s.onerror = () => { scriptLoading = false; reject(new Error("Error al cargar Google Maps")); };
@@ -48,18 +49,12 @@ function loadGoogleMaps(apiKey: string): Promise<void> {
   });
 }
 
-function extractComponent(components: any[], types: string[]): string {
-  const c = components.find((c: any) => types.some((t) => c.types.includes(t)));
-  return c?.long_name ?? "";
-}
-
 export default function LocationPicker({ onSelect, initialAddress = "" }: Props) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
-  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
-  // Guardar onSelect en ref para que el useEffect no se reinicie cuando cambia
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
 
@@ -68,7 +63,6 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
   const [selected, setSelected] = useState<LocationResult | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  // Cargar Google Maps una sola vez
   useEffect(() => {
     if (!apiKey) return;
     loadGoogleMaps(apiKey)
@@ -76,7 +70,6 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
       .catch(() => setLoadError(true));
   }, [apiKey]);
 
-  // Inicializar mapa
   const initMap = useCallback((lat: number, lng: number, result: LocationResult) => {
     if (!mapRef.current || !window.google) return;
     if (mapInstanceRef.current) {
@@ -122,33 +115,40 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     });
   }, []);
 
-  // Configurar autocomplete — solo corre cuando ready cambia a true
   useEffect(() => {
-    if (!ready || !inputRef.current) return;
+    if (!ready || !containerRef.current) return;
 
-    const ac = new window.google.maps.places.Autocomplete(inputRef.current, {
+    // Nueva API: PlaceAutocompleteElement (reemplaza Autocomplete desde marzo 2025)
+    const pac = new window.google.maps.places.PlaceAutocompleteElement({
       componentRestrictions: { country: "mx" },
-      fields: ["address_components", "geometry", "formatted_address"],
       types: ["address"],
     });
 
-    const listener = ac.addListener("place_changed", () => {
-      const place = ac.getPlace();
-      if (!place.geometry?.location) return;
+    // Estilos para que se vea como el resto de inputs de Beel
+    pac.style.width = "100%";
+    pac.style.fontSize = "16px";
 
-      const lat = place.geometry.location.lat();
-      const lng = place.geometry.location.lng();
-      const comps = place.address_components ?? [];
+    containerRef.current.appendChild(pac);
 
-      const street = extractComponent(comps, ["route"]);
-      const number = extractComponent(comps, ["street_number"]);
-      const colonia = extractComponent(comps, ["sublocality", "sublocality_level_1", "neighborhood"]);
-      const city =
-        extractComponent(comps, ["locality"]) ||
-        extractComponent(comps, ["administrative_area_level_3"]) ||
-        extractComponent(comps, ["administrative_area_level_2"]);
-      const state = extractComponent(comps, ["administrative_area_level_1"]);
-      const address = number ? `${street} ${number}` : street || place.formatted_address || "";
+    const listener = pac.addEventListener("gmp-placeselect", async (e: any) => {
+      const place = e.place;
+      await place.fetchFields({ fields: ["addressComponents", "location", "formattedAddress"] });
+
+      const comps = place.addressComponents ?? [];
+
+      const get = (types: string[]) => {
+        const c = comps.find((c: any) => types.some((t: string) => c.types.includes(t)));
+        return c?.longText ?? "";
+      };
+
+      const street = get(["route"]);
+      const number = get(["street_number"]);
+      const colonia = get(["sublocality", "sublocality_level_1", "neighborhood"]);
+      const city = get(["locality"]) || get(["administrative_area_level_3"]) || get(["administrative_area_level_2"]);
+      const state = get(["administrative_area_level_1"]);
+      const address = number ? `${street} ${number}` : street || place.formattedAddress || "";
+      const lat = place.location?.lat() ?? 19.4326;
+      const lng = place.location?.lng() ?? -99.1332;
 
       const result: LocationResult = { address, neighborhood: colonia, city, state, lat, lng };
       setSelected(result);
@@ -157,17 +157,16 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     });
 
     return () => {
-      window.google?.maps.event.removeListener(listener);
+      if (listener) pac.removeEventListener("gmp-placeselect", listener);
+      if (containerRef.current?.contains(pac)) containerRef.current.removeChild(pac);
     };
-  }, [ready, initMap]); // onSelect NO está aquí — evita reinicio en cada render
+  }, [ready, initMap]);
 
   if (!apiKey || loadError) {
     return (
       <div className="space-y-3">
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-4">
-          {loadError
-            ? "No se pudo cargar Google Maps. Verifica la API key en Vercel."
-            : "Falta configurar NEXT_PUBLIC_GOOGLE_MAPS_KEY"}
+          No se pudo cargar Google Maps. Verifica la API key en Vercel.
         </p>
         <div>
           <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">
@@ -188,33 +187,24 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
 
   return (
     <div className="space-y-4">
-      {/* Campo de búsqueda */}
       <div>
         <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">
           Dirección <span className="text-red-500">*</span>
         </label>
-        <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
-            {ready ? <Search size={16} /> : <Loader2 size={16} className="animate-spin" />}
-          </span>
-          <input
-            ref={inputRef}
-            type="text"
-            defaultValue={initialAddress}
-            placeholder={ready ? "Busca tu direccion exacta..." : "Cargando..."}
-            style={{ fontSize: "16px" }}
-            className="input w-full pl-10"
-            autoComplete="new-password"
-            spellCheck={false}
-            data-form-type="other"
-          />
-        </div>
+        {!ready ? (
+          <div className="input w-full flex items-center gap-2 text-neutral-400">
+            <Loader2 size={16} className="animate-spin" />
+            <span style={{ fontSize: "16px" }}>Cargando...</span>
+          </div>
+        ) : (
+          /* PlaceAutocompleteElement se monta aquí via useEffect */
+          <div ref={containerRef} className="w-full [&>*]:w-full [&_input]:text-base [&_input]:rounded-xl [&_input]:border [&_input]:border-neutral-200 [&_input]:px-4 [&_input]:py-2.5 [&_input]:outline-none focus-within:[&_input]:border-neutral-900 focus-within:[&_input]:ring-1 focus-within:[&_input]:ring-neutral-900" />
+        )}
         <p className="text-[11px] text-[var(--text-tertiary)] mt-1.5">
           Escribe la direccion y selecciona una opcion de la lista
         </p>
       </div>
 
-      {/* Mapa */}
       {selected && (
         <div className="rounded-2xl overflow-hidden border border-neutral-200 shadow-sm">
           <div ref={mapRef} className="w-full h-56 sm:h-64 bg-neutral-100" />
@@ -235,42 +225,25 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
         </div>
       )}
 
-      {/* Campos editables post-seleccion */}
       {selected && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
-            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">
-              Colonia / Fraccionamiento
-            </label>
-            <input
-              className="input w-full"
-              value={selected.neighborhood}
+            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Colonia / Fraccionamiento</label>
+            <input className="input w-full" value={selected.neighborhood} style={{ fontSize: "16px" }}
               onChange={(e) => { const u = { ...selected, neighborhood: e.target.value }; setSelected(u); onSelectRef.current(u); }}
-              placeholder="Ej: Centro Historico"
-              style={{ fontSize: "16px" }}
-            />
+              placeholder="Ej: Centro Historico" />
           </div>
           <div>
-            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">
-              Ciudad <span className="text-red-500">*</span>
-            </label>
-            <input
-              className="input w-full"
-              value={selected.city}
+            <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Ciudad <span className="text-red-500">*</span></label>
+            <input className="input w-full" value={selected.city} style={{ fontSize: "16px" }}
               onChange={(e) => { const u = { ...selected, city: e.target.value }; setSelected(u); onSelectRef.current(u); }}
-              placeholder="Ej: Guadalajara"
-              style={{ fontSize: "16px" }}
-            />
+              placeholder="Ej: Guadalajara" />
           </div>
           <div>
             <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1">Estado</label>
-            <input
-              className="input w-full"
-              value={selected.state}
+            <input className="input w-full" value={selected.state} style={{ fontSize: "16px" }}
               onChange={(e) => { const u = { ...selected, state: e.target.value }; setSelected(u); onSelectRef.current(u); }}
-              placeholder="Ej: Jalisco"
-              style={{ fontSize: "16px" }}
-            />
+              placeholder="Ej: Jalisco" />
           </div>
         </div>
       )}
