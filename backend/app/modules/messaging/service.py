@@ -322,7 +322,15 @@ async def send_message(
     )
 
     logger.debug("Mensaje %s enviado en conv %s", msg.id, conversation.id)
-    return msg
+
+    # Re-consultar con la relación `sender` cargada para evitar MissingGreenlet
+    # al serializar MessageOut (lazy-load fuera del greenlet → 500 → rollback).
+    result = await db.execute(
+        select(Message)
+        .options(selectinload(Message.sender))
+        .where(Message.id == msg.id)
+    )
+    return result.scalar_one()
 
 
 async def mark_read(
