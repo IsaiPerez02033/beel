@@ -30,7 +30,13 @@ class MessageOut(BaseModel):
     sender_id: uuid.UUID
     message_type: str = "text"
     content: Optional[str] = None
-    metadata_: Optional[dict] = Field(None, alias="metadata")
+    # OJO: la columna en BD se llama "metadata", pero ese nombre choca con el
+    # atributo reservado SQLAlchemy `Base.metadata` (un objeto MetaData()).
+    # En el modelo el JSONB real vive en `metadata_`, así que leemos de ahí
+    # (validation_alias) y serializamos como "metadata" (serialization_alias).
+    metadata_: Optional[dict] = Field(
+        None, validation_alias="metadata_", serialization_alias="metadata"
+    )
     is_read: bool = False
     deleted_by_sender: bool = False
     read_at: Optional[datetime] = None
@@ -56,6 +62,13 @@ class MessageOut(BaseModel):
     @classmethod
     def _default_bool(cls, v):
         return bool(v) if v is not None else False
+
+    # Defensa extra: si por cualquier razón llega un MetaData() u otro objeto
+    # no-dict, lo descartamos en vez de romper la validación.
+    @field_validator("metadata_", mode="before")
+    @classmethod
+    def _clean_metadata(cls, v):
+        return v if isinstance(v, dict) else None
 
 
 class MessageListOut(BaseModel):
