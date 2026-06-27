@@ -27,6 +27,8 @@ interface FormData {
   property_type: PropertyType;
   // Paso 2 — Ubicación
   address: string;
+  street: string;
+  postal_code: string;
   neighborhood: string;
   city: string;
   state: string;
@@ -54,7 +56,7 @@ interface FormData {
 
 const INITIAL: FormData = {
   title: "", description: "", property_type: "casa",
-  address: "", neighborhood: "", city: "", state: "", lat: null, lng: null,
+  address: "", street: "", postal_code: "", neighborhood: "", city: "", state: "", lat: null, lng: null,
   max_guests: 2, bedrooms: 1, beds: 1, bathrooms: 1,
   price_per_night: "", cleaning_fee: "", security_deposit: "",
   min_stay_nights: 1,
@@ -434,6 +436,8 @@ function Step2({ form, set }: StepProps) {
         initialAddress={form.address}
         onSelect={(result) => {
           set("address", result.address);
+          set("street", result.street);
+          set("postal_code", result.postal_code);
           set("neighborhood", result.neighborhood);
           set("city", result.city);
           set("state", result.state);
