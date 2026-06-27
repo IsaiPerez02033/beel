@@ -27,6 +27,11 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
   const connect = useCallback(async () => {
     if (!conversationId || !activeRef.current) return;
 
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
     const token = await getToken();
     if (!token) return;
 

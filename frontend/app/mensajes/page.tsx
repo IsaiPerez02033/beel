@@ -203,17 +203,20 @@ export default function MensajesPage() {
   // WebSocket: recibir mensajes en tiempo real
   const { send: wsSend } = useWebSocket(activeConvId, {
     onMessage: (data) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: data.id,
-          sender_id: data.sender_id,
-          body: data.body,
-          message_type: data.message_type ?? "text",
-          created_at: data.created_at,
-          sender: { id: data.sender_id, full_name: data.sender_name },
-        },
-      ]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === data.id)) return prev;
+        return [
+          ...prev,
+          {
+            id: data.id,
+            sender_id: data.sender_id,
+            body: data.body,
+            message_type: data.message_type ?? "text",
+            created_at: data.created_at,
+            sender: { id: data.sender_id, full_name: data.sender_name },
+          },
+        ];
+      });
     },
   });
 
@@ -223,16 +226,24 @@ export default function MensajesPage() {
   }, [messages]);
 
   async function handleSend() {
-    if (!input.trim() || !activeConvId || sending) return;
+    const text = input.trim();
+    if (!text || !activeConvId || sending) return;
+    
     setSending(true);
+    setInput(""); // Limpiar input de forma optimista e inmediata para prevenir doble click
+    
     try {
       const msg = await post<Message>(`/messaging/${activeConvId}/messages`, {
-        body: input.trim(),
+        body: text,
       });
-      setMessages((prev) => [...prev, msg]);
-      setInput("");
+      setMessages((prev) => {
+        // Evitar duplicados si el mensaje ya llegó vía WebSocket
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
     } catch (e) {
       console.error(e);
+      setInput(text); // Restaurar el texto original si la petición falla
     } finally {
       setSending(false);
     }
