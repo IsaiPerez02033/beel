@@ -229,35 +229,37 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
 
         {/* Input con dropdown custom */}
         <div ref={containerRef} className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
-          </span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => handleInput(e.target.value)}
-            onFocus={() => {
-              if (suggestions.length > 0 && inputRef.current) {
-                const rect = inputRef.current.getBoundingClientRect();
-                setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX, width: rect.width });
-                setOpen(true);
-              }
-            }}
-            placeholder="Busca tu dirección exacta..."
-            style={{ fontSize: "16px" }}
-            className="input w-full pl-11 pr-10"
-            autoComplete="new-password"
-            spellCheck={false}
-          />
-          {query && (
-            <button
-              onClick={() => { setQuery(""); setSuggestions([]); setOpen(false); setSelected(null); }}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700"
-            >
-              <X size={16} />
-            </button>
-          )}
+          <div className="input w-full flex items-center gap-2 p-0 overflow-hidden focus-within:ring-1 focus-within:ring-neutral-900 focus-within:border-neutral-900">
+            <span className="pl-3 flex-shrink-0 text-neutral-400 pointer-events-none">
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+            </span>
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => handleInput(e.target.value)}
+              onFocus={() => {
+                if (suggestions.length > 0 && inputRef.current) {
+                  const rect = inputRef.current.getBoundingClientRect();
+                  setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX, width: rect.width });
+                  setOpen(true);
+                }
+              }}
+              placeholder="Busca tu dirección exacta..."
+              style={{ fontSize: "16px" }}
+              className="flex-1 py-2.5 pr-2 outline-none border-none bg-transparent text-neutral-800 placeholder-neutral-400 min-w-0"
+              autoComplete="new-password"
+              spellCheck={false}
+            />
+            {query && (
+              <button
+                onClick={() => { setQuery(""); setSuggestions([]); setOpen(false); setSelected(null); }}
+                className="pr-3 flex-shrink-0 text-neutral-400 hover:text-neutral-700"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
 
           {/* Dropdown via portal — escapa overflow:hidden de cualquier padre */}
           {open && suggestions.length > 0 && typeof document !== "undefined" && createPortal(
