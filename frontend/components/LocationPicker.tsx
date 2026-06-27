@@ -139,7 +139,8 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
       const colonia = get(["sublocality", "sublocality_level_1", "neighborhood"]);
       const city = get(["locality"]) || get(["administrative_area_level_3"]) || get(["administrative_area_level_2"]);
       const state = get(["administrative_area_level_1"]);
-      const address = number ? `${street} ${number}` : street || place.formattedAddress || s.mainText;
+      // Si hay calle y número úsalos; si no, usar la dirección formateada completa de Google
+      const address = number ? `${street} ${number}` : street || place.formattedAddress?.split(",")[0] || s.mainText;
       const lat = place.location?.latitude ?? 19.4326;
       const lng = place.location?.longitude ?? -99.1332;
 

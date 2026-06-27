@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
       input: q,
       includedRegionCodes: ["mx"],
       languageCode: "es",
+      includedPrimaryTypes: ["street_address", "route", "premise", "subpremise"],
     }),
   });
 
