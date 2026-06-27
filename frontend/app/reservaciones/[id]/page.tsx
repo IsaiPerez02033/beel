@@ -207,6 +207,21 @@ export default function ReservationDetailPage() {
 
             <div className="divider my-6" />
 
+            {/* Anfitrión */}
+            <div className="flex items-center gap-3 mb-6">
+              {reservation.host?.avatar_url ? (
+                <Image src={reservation.host.avatar_url} alt={reservation.host.full_name} width={40} height={40} className="rounded-full object-cover" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center text-[var(--color-primary)] font-semibold">
+                  {reservation.host?.full_name?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p className="text-caption text-[var(--text-tertiary)]">Anfitrión</p>
+                <p className="text-body font-medium text-[var(--text-primary)]">{reservation.host?.full_name}</p>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between">
               <p className="text-body text-[var(--text-secondary)]">Total pagado</p>
               <p className="text-heading font-semibold text-[var(--text-primary)]">
@@ -220,15 +235,12 @@ export default function ReservationDetailPage() {
           <div className="mt-4 space-y-2">
             {/* Botón de pago — siempre visible si la reserva no está pagada */}
             <PayButton reservationId={id} initialUrl={checkoutUrl} />
-            {reservation.status === "confirmed" && (
-              <Link
-                href={`/mensajes?conv=${reservation.id}`}
-                className="btn btn-outline w-full justify-center"
-              >
-                Contactar al{" "}
-                {reservation.host?.full_name ?? "anfitrión"}
-              </Link>
-            )}
+            <Link
+              href={`/mensajes?conv=${reservation.id}`}
+              className="btn btn-outline w-full justify-center"
+            >
+              Contactar a {reservation.host?.full_name ?? "el anfitrión"}
+            </Link>
             
             <button
               onClick={handleCancel}
