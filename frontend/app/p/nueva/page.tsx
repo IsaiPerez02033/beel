@@ -289,7 +289,7 @@ export default function NuevaPropiedadPage() {
         )}
 
         {/* Steps */}
-        <div className="card p-6">
+        <div className="card p-6 overflow-visible">
           {step === 0 && <Step1 form={form} set={set} />}
           {step === 1 && <Step2 form={form} set={set} />}
           {step === 2 && <Step3 form={form} set={set} />}
