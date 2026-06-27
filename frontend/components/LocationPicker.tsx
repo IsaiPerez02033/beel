@@ -191,15 +191,9 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
           Dirección <span className="text-red-500">*</span>
         </label>
         <div className="relative">
-          {!ready ? (
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
-              <Loader2 size={16} className="animate-spin" />
-            </span>
-          ) : (
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
-              <Search size={16} />
-            </span>
-          )}
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none text-sm">
+            {ready ? "🔍" : "⏳"}
+          </span>
           <input
             ref={inputRef}
             type="text"

@@ -10,7 +10,7 @@ const apiOrigin = (() => {
 const wsOrigin = apiOrigin.replace(/^http/, "ws");
 
 const cspHeader = [
-  "default-src 'self'",
+  "default-src 'self' 'unsafe-inline' data: blob:",
   `script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.mercadopago.com.ar https://www.mercadopago.com https://*.mercadopago.com https://*.google.com https://www.googletagmanager.com https://maps.googleapis.com https://maps.gstatic.com`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com`,
   `img-src 'self' data: blob: ${apiOrigin} https://lh3.googleusercontent.com https://*.googleusercontent.com https://images.unsplash.com https://*.supabase.co https://*.cloudfront.net https://www.mercadopago.com https://www.google.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com`,
