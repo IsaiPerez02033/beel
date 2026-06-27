@@ -11,6 +11,8 @@ export async function GET(req: NextRequest) {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": KEY,
+      "Referer": "https://beel-azure.vercel.app/",
+      "Origin": "https://beel-azure.vercel.app",
     },
     body: JSON.stringify({
       input: q,
@@ -19,12 +21,13 @@ export async function GET(req: NextRequest) {
     }),
   });
 
+  const text = await res.text();
   if (!res.ok) {
-    const err = await res.text();
-    console.error("Places autocomplete error:", err);
-    return NextResponse.json({ suggestions: [] });
+    console.error("Places autocomplete error:", res.status, text);
+    return NextResponse.json({ suggestions: [], _error: text }, { status: 200 });
   }
 
-  const data = await res.json();
+  const data = JSON.parse(text);
+  console.log("Places autocomplete ok, suggestions:", (data.suggestions ?? []).length);
   return NextResponse.json(data);
 }

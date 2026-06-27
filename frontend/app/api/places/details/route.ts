@@ -12,6 +12,8 @@ export async function GET(req: NextRequest) {
       headers: {
         "X-Goog-Api-Key": KEY,
         "X-Goog-FieldMask": "addressComponents,location,formattedAddress",
+        "Referer": "https://beel-azure.vercel.app/",
+        "Origin": "https://beel-azure.vercel.app",
       },
     }
   );
