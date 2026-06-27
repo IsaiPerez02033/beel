@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ── Participante ──────────────────────────────────────────────────────────────
@@ -24,10 +24,22 @@ class ParticipantOut(BaseModel):
 
 # ── Mensaje ───────────────────────────────────────────────────────────────────
 
+class ReplyPreviewOut(BaseModel):
+    """Vista reducida del mensaje citado (para mostrar dentro de la burbuja)."""
+    id: uuid.UUID
+    sender_id: uuid.UUID
+    content: Optional[str] = None
+    sender_name: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 class MessageOut(BaseModel):
     id: uuid.UUID
     conversation_id: uuid.UUID
     sender_id: uuid.UUID
+    reply_to_id: Optional[uuid.UUID] = None
+    reply_to: Optional[ReplyPreviewOut] = None
     message_type: str = "text"
     content: Optional[str] = None
     # OJO: la columna en BD se llama "metadata", pero ese nombre choca con el
@@ -63,12 +75,24 @@ class MessageOut(BaseModel):
     def _default_bool(cls, v):
         return bool(v) if v is not None else False
 
-    # Defensa extra: si por cualquier razón llega un MetaData() u otro objeto
-    # no-dict, lo descartamos en vez de romper la validación.
     @field_validator("metadata_", mode="before")
     @classmethod
     def _clean_metadata(cls, v):
         return v if isinstance(v, dict) else None
+
+    @field_validator("reply_to", mode="before")
+    @classmethod
+    def _build_reply_preview(cls, v):
+        """Convierte el ORM Message a dict con sender_name para evitar lazy-load."""
+        if v is None or isinstance(v, dict):
+            return v
+        sender = getattr(v, "sender", None)
+        return {
+            "id": v.id,
+            "sender_id": v.sender_id,
+            "content": v.content,
+            "sender_name": getattr(sender, "full_name", None) if sender else None,
+        }
 
 
 class MessageListOut(BaseModel):
@@ -104,9 +128,10 @@ class ConversationListOut(BaseModel):
 # ── Mutaciones ────────────────────────────────────────────────────────────────
 
 class MessageCreateIn(BaseModel):
-    body: str = Field(..., min_length=1, max_length=4000)  # input field, mapped to 'content' in DB
+    body: str = Field(..., min_length=1, max_length=4000)
     message_type: str = Field(default="text", pattern="^(text|system)$")
     metadata: Optional[dict] = None
+    reply_to_id: Optional[uuid.UUID] = None
 
 
 class ConversationStartIn(BaseModel):
