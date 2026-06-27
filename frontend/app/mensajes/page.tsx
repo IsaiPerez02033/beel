@@ -23,6 +23,7 @@ import {
   ExternalLink,
   CornerUpLeft,
 } from "lucide-react";
+import MessageReactions from "@/components/MessageReactions";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -52,6 +53,12 @@ interface ReplyPreview {
   sender_name?: string;
 }
 
+interface Reaction {
+  emoji: string;
+  count: number;
+  user_ids: string[];
+}
+
 interface Message {
   id: string;
   sender_id: string;
@@ -60,6 +67,7 @@ interface Message {
   message_type: string;
   created_at: string;
   sender?: Participant;
+  reactions?: Reaction[];
   reply_to_id?: string;
   reply_to?: ReplyPreview;
 }
@@ -114,7 +122,7 @@ export default function MensajesPage() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { get, post } = useApi();
+  const { get, post, del } = useApi();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(
@@ -263,6 +271,23 @@ export default function MensajesPage() {
     }
   }
 
+  async function handleReaction(messageId: string, emoji: string, hasReacted: boolean) {
+    if (!activeConvId) return;
+    try {
+      let updatedMsg: Message;
+      if (hasReacted) {
+        updatedMsg = await del<Message>(`/messaging/${activeConvId}/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`);
+      } else {
+        updatedMsg = await post<Message>(`/messaging/${activeConvId}/messages/${messageId}/reactions`, { emoji });
+      }
+      if (updatedMsg?.reactions !== undefined) {
+        setMessages((prev) => prev.map((m) => m.id === messageId ? { ...m, reactions: updatedMsg.reactions } : m));
+      }
+    } catch (e) {
+      console.error("Reaction error:", e);
+    }
+  }
+
   function scrollToMessage(id: string) {
     const el = messageRefs.current[id];
     if (!el) return;
@@ -347,6 +372,9 @@ export default function MensajesPage() {
               msgDate={msgDate}
               onReply={() => setReplyingTo(msg)}
               onScrollToReply={scrollToMessage}
+              currentUserId={localUserId}
+              conversationId={activeConvId!}
+              onReact={handleReaction}
             />
           )}
         </div>
@@ -785,6 +813,9 @@ function SwipeableMessage({
   msgDate,
   onReply,
   onScrollToReply,
+  currentUserId,
+  conversationId,
+  onReact,
 }: {
   msg: Message;
   isMine: boolean;
@@ -792,6 +823,9 @@ function SwipeableMessage({
   msgDate: Date;
   onReply: () => void;
   onScrollToReply: (id: string) => void;
+  currentUserId: string;
+  conversationId: string;
+  onReact: (messageId: string, emoji: string, hasReacted: boolean) => void;
 }) {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -903,6 +937,18 @@ function SwipeableMessage({
           </div>
         </div>
       </div>
+
+      {/* Reacciones */}
+      {(msg.reactions && msg.reactions.length > 0 || true) && (
+        <MessageReactions
+          messageId={msg.id}
+          conversationId={conversationId}
+          reactions={msg.reactions ?? []}
+          currentUserId={currentUserId}
+          isMine={isMine}
+          onReact={onReact}
+        />
+      )}
 
       {/* Icono de reply al swipear (derecha, para mensajes propios) */}
       {isMine && (

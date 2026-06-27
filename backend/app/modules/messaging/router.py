@@ -19,6 +19,7 @@ from app.modules.messaging.schemas import (
     MessageCreateIn,
     MessageListOut,
     MessageOut,
+    ReactionIn,
 )
 from app.modules.users import service as user_service
 from app.core.limiter import limiter
@@ -107,6 +108,46 @@ async def send_message(
     _assert_participant(conv, user.id)
 
     msg = await service.send_message(db, conv, user, data)
+    return msg
+
+
+@router.post("/{conversation_id}/messages/{message_id}/reactions", response_model=MessageOut)
+async def add_reaction(
+    conversation_id: uuid.UUID,
+    message_id: uuid.UUID,
+    data: ReactionIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    conv = await service.get_conversation(db, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    _assert_participant(conv, user.id)
+    msg = await service.add_reaction(db, message_id, user.id, data.emoji)
+    await db.commit()
+    return msg
+
+
+@router.delete("/{conversation_id}/messages/{message_id}/reactions/{emoji}", response_model=MessageOut)
+async def remove_reaction(
+    conversation_id: uuid.UUID,
+    message_id: uuid.UUID,
+    emoji: str,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    conv = await service.get_conversation(db, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    _assert_participant(conv, user.id)
+    msg = await service.remove_reaction(db, message_id, user.id, emoji)
+    await db.commit()
     return msg
 
 

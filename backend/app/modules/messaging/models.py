@@ -19,8 +19,8 @@ from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import (
-    Boolean, DateTime, ForeignKey, Index,
-    String, Text, UniqueConstraint, func,
+    Boolean, DateTime, ForeignKey, Index, String, Text,
+    UniqueConstraint, func,
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -32,66 +32,30 @@ if TYPE_CHECKING:
 
 
 class Conversation(Base):
-    """
-    Hilo de mensajes entre un guest y un host.
-    Una sola conversación por par (guest_id, host_id, property_id).
-    """
     __tablename__ = "conversations"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    guest_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
-    host_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
-    property_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("properties.id", ondelete="SET NULL"),
-    )
-    reservation_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("reservations.id", ondelete="SET NULL"),
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    guest_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    host_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    property_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("properties.id", ondelete="SET NULL"))
+    reservation_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("reservations.id", ondelete="SET NULL"))
 
-    # Últimos mensajes cacheados (evita JOIN al listar inbox)
     last_message_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     last_message_preview: Mapped[Optional[str]] = mapped_column(String(255))
-
-    # Contadores de no leídos por participante
     unread_count_guest: Mapped[int] = mapped_column("unread_count_guest", default=0)
     unread_count_host: Mapped[int] = mapped_column("unread_count_host", default=0)
-
     is_pre_booking: Mapped[bool] = mapped_column("is_pre_booking", Boolean, default=True)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
-    last_message_sender_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
-    )
+    last_message_sender_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    # Relaciones
     guest: Mapped["User"] = relationship("User", foreign_keys=[guest_id], lazy="selectin")
     host: Mapped["User"] = relationship("User", foreign_keys=[host_id], lazy="selectin")
-    messages: Mapped[list["Message"]] = relationship(
-        "Message", back_populates="conversation", lazy="noload",
-        order_by="Message.created_at",
-    )
+    messages: Mapped[list["Message"]] = relationship("Message", back_populates="conversation", lazy="noload", order_by="Message.created_at")
 
     __table_args__ = (
-        # Una sola conversación por (guest, host, propiedad)
         UniqueConstraint("guest_id", "host_id", "property_id", name="uq_conversation"),
         Index("idx_conversations_guest", "guest_id"),
         Index("idx_conversations_host", "host_id"),
@@ -101,51 +65,47 @@ class Conversation(Base):
         return f"<Conversation id={self.id} guest={self.guest_id} host={self.host_id}>"
 
 
+class MessageReaction(Base):
+    """Reacción de emoji a un mensaje."""
+    __tablename__ = "message_reactions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    message_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    emoji: Mapped[str] = mapped_column(String(10), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    message: Mapped["Message"] = relationship("Message", back_populates="reactions")
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
+
+    __table_args__ = (
+        UniqueConstraint("message_id", "user_id", "emoji", name="uq_reaction"),
+    )
+
+
 class Message(Base):
     """Mensaje individual dentro de una conversación."""
     __tablename__ = "messages"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    conversation_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("conversations.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    sender_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+    sender_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    reply_to_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("messages.id", ondelete="SET NULL"), nullable=True)
 
     message_type: Mapped[str] = mapped_column(String(20), default="text")
     content: Mapped[str] = mapped_column("content", Text, nullable=False)
     metadata_: Mapped[Optional[dict]] = mapped_column("metadata", JSONB)
 
-    reply_to_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("messages.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     deleted_by_sender: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
-    # Relaciones
-    conversation: Mapped["Conversation"] = relationship(
-        "Conversation", back_populates="messages"
-    )
+    conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="messages")
     sender: Mapped["User"] = relationship("User", foreign_keys=[sender_id], lazy="selectin")
-    reply_to: Mapped[Optional["Message"]] = relationship(
-        "Message", foreign_keys=[reply_to_id], lazy="noload"
-    )
+    reply_to: Mapped[Optional["Message"]] = relationship("Message", foreign_keys=[reply_to_id], lazy="noload")
+    reactions: Mapped[list["MessageReaction"]] = relationship("MessageReaction", back_populates="message", lazy="selectin", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_messages_conversation_created", "conversation_id", "created_at"),
