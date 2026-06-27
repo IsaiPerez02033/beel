@@ -91,8 +91,17 @@ async def get_or_create_conversation(
 async def get_conversation(
     db: AsyncSession, conversation_id: uuid.UUID
 ) -> Optional[Conversation]:
+    # 1. Buscar por ID de conversación
     result = await db.execute(
         _conv_query().where(Conversation.id == conversation_id)
+    )
+    conv = result.scalar_one_or_none()
+    if conv:
+        return conv
+
+    # 2. Si no se encuentra, buscar por ID de reserva
+    result = await db.execute(
+        _conv_query().where(Conversation.reservation_id == conversation_id)
     )
     return result.scalar_one_or_none()
 

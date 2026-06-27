@@ -302,6 +302,24 @@ async def create_reservation(
 
     await db.flush()
 
+    # Inicializar conversación de mensajería para esta reserva
+    try:
+        from app.modules.messaging.service import get_or_create_conversation, send_system_message
+        conv, created = await get_or_create_conversation(
+            db,
+            guest_id=guest.id,
+            host_id=property_.host_id,
+            property_id=property_.id,
+            reservation_id=reservation.id,
+        )
+        if created:
+            msg_text = f"Nueva solicitud de reserva para {property_.title} ({data.check_in} → {data.check_out})."
+            if initial_status == "confirmed":
+                msg_text = f"Reserva confirmada en {property_.title} ({data.check_in} → {data.check_out})."
+            await send_system_message(db, conv, msg_text)
+    except Exception as e:
+        logger.error("Error al crear conversación para reserva: %s", e)
+
     logger.info(
         "Reserva %s creada (%s) | propiedad=%s guest=%s",
         reservation.id, initial_status, property_.id, guest.id,
