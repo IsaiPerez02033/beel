@@ -60,6 +60,8 @@ export default function ReservationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [loadingPayment, setLoadingPayment] = useState(false);
   const [modalNotification, setModalNotification] = useState<{
     type: "success" | "error";
     title: string;
@@ -100,7 +102,21 @@ export default function ReservationDetailPage() {
       return;
     }
     get<ReservationDetail>(`/reservations/${id}`)
-      .then(setReservation)
+      .then((r) => {
+        setReservation(r);
+        // Si hay pago pendiente, recuperar el URL de MercadoPago
+        if (r.status === "pending" || r.status === "confirmed") {
+          get<{ checkout_url: string; sandbox_init_point: string }>(
+            `/payments/checkout/${id}`
+          )
+            .then((c) => {
+              const url = process.env.NODE_ENV === "development"
+                ? c.sandbox_init_point : c.checkout_url;
+              if (url) setCheckoutUrl(url);
+            })
+            .catch(() => {}); // silencioso si no hay pago creado aún
+        }
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [isSignedIn, isLoaded, id, get, router]);
@@ -202,6 +218,8 @@ export default function ReservationDetailPage() {
 
         {(reservation.status === "pending" || reservation.status === "confirmed") && (
           <div className="mt-4 space-y-2">
+            {/* Botón de pago — siempre visible si la reserva no está pagada */}
+            <PayButton reservationId={id} initialUrl={checkoutUrl} />
             {reservation.status === "confirmed" && (
               <Link
                 href={`/mensajes?conv=${reservation.id}`}
@@ -309,5 +327,45 @@ export default function ReservationDetailPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function PayButton({ reservationId, initialUrl }: { reservationId: string; initialUrl: string | null }) {
+  const { get, post } = useApi();
+  const [url, setUrl] = useState<string | null>(initialUrl);
+  const [loading, setLoading] = useState(false);
+
+  // Sincronizar si initialUrl llega después (carga asíncrona)
+  useEffect(() => { if (initialUrl) setUrl(initialUrl); }, [initialUrl]);
+
+  async function handleClick() {
+    if (url) { window.location.href = url; return; }
+    setLoading(true);
+    try {
+      // Intentar recuperar URL existente, si no existe crear uno nuevo
+      const checkout = await get<{ checkout_url: string; sandbox_init_point: string }>(
+        `/payments/checkout/${reservationId}`
+      ).catch(() => null) ?? await post<{ checkout_url: string; sandbox_init_point: string }>(
+        `/payments/checkout/${reservationId}`, {}
+      );
+      const target = process.env.NODE_ENV === "development"
+        ? checkout.sandbox_init_point : checkout.checkout_url;
+      setUrl(target);
+      window.location.href = target;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      className="btn btn-primary w-full justify-center py-3 gap-2"
+    >
+      {loading ? "Cargando..." : "Completar pago con MercadoPago →"}
+    </button>
   );
 }

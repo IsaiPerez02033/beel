@@ -87,6 +87,25 @@ async def create_checkout(
     return CheckoutOut(**urls)
 
 
+@router.get("/checkout/{reservation_id}", response_model=CheckoutOut)
+async def get_checkout(
+    reservation_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Retorna el URL de pago de una reserva pendiente (sin crear uno nuevo)."""
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    payment = await payment_service.get_payment_by_reservation(db, reservation_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="No hay pago pendiente para esta reserva")
+
+    urls = await payment_service.get_checkout_urls(payment)
+    return CheckoutOut(**urls)
+
+
 @router.get("/admin/list", response_model=AdminPaymentListOut)
 async def list_payments_admin(
     admin_user=Depends(_require_admin),
