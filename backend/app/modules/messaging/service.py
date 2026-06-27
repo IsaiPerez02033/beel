@@ -317,7 +317,7 @@ async def send_message(
             "sender_name": sender.full_name,
             "body": msg.content,
             "message_type": msg.message_type,
-            "created_at": msg.created_at.isoformat(),
+            "created_at": (msg.created_at or datetime.now(timezone.utc)).isoformat(),
         },
     )
 

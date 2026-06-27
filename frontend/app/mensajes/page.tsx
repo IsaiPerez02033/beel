@@ -302,7 +302,7 @@ export default function MensajesPage() {
           {msg.message_type === "system" ? (
             <div className="flex justify-center my-5">
               <span className="text-xs text-neutral-500 bg-neutral-50 border border-neutral-200/50 px-4 py-2 rounded-xl max-w-md text-center shadow-sm font-medium">
-                {msg.body}
+                {msg.content ?? msg.body}
               </span>
             </div>
           ) : (
