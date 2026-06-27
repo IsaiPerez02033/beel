@@ -191,16 +191,13 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
           Dirección <span className="text-red-500">*</span>
         </label>
         <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none text-sm">
-            {ready ? "🔍" : "⏳"}
-          </span>
           <input
             ref={inputRef}
             type="text"
             defaultValue={initialAddress}
-            placeholder={ready ? "Busca tu dirección exacta…" : "Cargando Google Maps…"}
+            placeholder={ready ? "Busca tu direccion exacta..." : "Cargando..."}
             style={{ fontSize: "16px" }}
-            className="input w-full pl-10"
+            className="input w-full"
             disabled={!ready}
             autoComplete="off"
           />
