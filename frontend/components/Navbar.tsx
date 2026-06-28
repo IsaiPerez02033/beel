@@ -67,7 +67,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
               priority
             />
             <Image
-              src="/beel_logo_white_green.png"
+              src="/beel_logo_t.svg"
               alt="Beel"
               width={110}
               height={42}
