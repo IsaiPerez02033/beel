@@ -213,7 +213,13 @@ export default function DateRangePicker({
       {open && (
         <div
           ref={popoverRef}
-          style={{ position: "fixed", top: popoverPos.top, left: popoverPos.left, zIndex: 9999 }}
+          style={{
+            position: "fixed",
+            top: popoverPos.top,
+            left: popoverPos.left,
+            zIndex: 9999,
+            borderTop: "3px solid var(--color-primary)",
+          }}
           className="bg-white rounded-2xl shadow-2xl border border-[var(--border-subtle)] p-5 select-none"
         >
           <p className="text-caption text-[var(--text-secondary)] text-center mb-3 font-medium">
@@ -279,7 +285,8 @@ export default function DateRangePicker({
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="btn btn-primary text-body-sm px-5 py-1.5"
+              className="text-body-sm px-5 py-1.5 rounded-xl font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+              style={{ background: "var(--color-primary)" }}
             >
               Listo
             </button>
