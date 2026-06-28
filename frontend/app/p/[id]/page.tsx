@@ -135,7 +135,7 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
             <div className="divider" />
 
             {/* Host */}
-            <div className="flex items-center gap-3">
+            <Link href={`/u/${property.host.id}`} className="flex items-center gap-3 group hover:opacity-90 transition-opacity">
               {property.host.avatar_url ? (
                 <Image
                   src={property.host.avatar_url}
@@ -150,7 +150,7 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
                 </div>
               )}
               <div>
-                <p className="text-body font-medium text-[var(--text-primary)]">
+                <p className="text-body font-medium text-[var(--text-primary)] group-hover:text-[var(--color-primary)] transition-colors">
                   Anfitrión: {property.host.full_name}
                 </p>
                 <p className="text-caption text-[var(--text-tertiary)]">
@@ -162,9 +162,10 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
                       if (!isNaN(year)) return ` · Anfitrión desde ${year}`;
                       return null;
                     })()}
+                  {" · Ver perfil →"}
                 </p>
               </div>
-            </div>
+            </Link>
 
             <div className="divider" />
 

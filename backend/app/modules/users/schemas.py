@@ -46,6 +46,33 @@ class UserPublicOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class HostReviewOut(BaseModel):
+    """Reseña de un huésped sobre una propiedad del anfitrión."""
+    id: uuid.UUID
+    reviewer_name: str
+    reviewer_avatar: Optional[str] = None
+    overall_rating: int
+    comment: Optional[str] = None
+    property_title: Optional[str] = None
+    created_at: datetime
+
+
+class HostProfileOut(BaseModel):
+    """Perfil público de anfitrión con métricas, propiedades y reseñas."""
+    id: uuid.UUID
+    full_name: str
+    avatar_url: Optional[str]
+    is_identity_verified: bool
+    role: str
+    host_since: Optional[datetime]
+    created_at: datetime
+    total_listings: int
+    avg_rating: Optional[float] = None
+    total_reviews: int = 0
+    properties: list = []
+    reviews: list[HostReviewOut] = []
+
+
 class UserMeOut(BaseModel):
     """Info completa del usuario autenticado (/users/me)."""
     id: uuid.UUID
