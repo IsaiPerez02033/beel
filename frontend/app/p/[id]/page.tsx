@@ -245,7 +245,7 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
             </div>
 
             {/* Mapa de ubicación aproximada */}
-            {property.latitude && property.longitude && (
+            {(property.latitude_approx || property.latitude) && (property.longitude_approx || property.longitude) && (
               <>
                 <div className="divider" />
                 <div>
@@ -253,7 +253,11 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
                   <p className="text-body-sm text-[var(--text-secondary)] mb-4">
                     {property.neighborhood ? `${property.neighborhood}, ` : ""}{property.city}{property.state ? `, ${property.state}` : ""}
                   </p>
-                  <PropertyMap lat={property.latitude} lng={property.longitude} title={property.title} />
+                  <PropertyMap
+                    lat={Number(property.latitude_approx ?? property.latitude)}
+                    lng={Number(property.longitude_approx ?? property.longitude)}
+                    title={property.title}
+                  />
                   <p className="text-caption text-[var(--text-tertiary)] mt-2">
                     La dirección exacta se comparte con huéspedes confirmados.
                   </p>
