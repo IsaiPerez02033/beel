@@ -41,7 +41,7 @@ export default async function HomePage() {
         }}
       >
         {/* Patrón Maya SVG — marca de agua sutil */}
-        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.045 }}>
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.13 }}>
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="maya-pattern" x="0" y="0" width="160" height="160" patternUnits="userSpaceOnUse">
