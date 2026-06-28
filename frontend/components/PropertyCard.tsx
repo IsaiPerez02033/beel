@@ -157,7 +157,7 @@ export default function PropertyCard({
               {property.host.full_name.charAt(0).toUpperCase()}
             </div>
           )}
-          <span className="text-[11px] font-semibold text-[var(--text-primary)] leading-none">
+          <span className="text-[11px] font-semibold text-[#2C2C2A] leading-none">
             {property.host.full_name.split(" ")[0]}
           </span>
         </div>
