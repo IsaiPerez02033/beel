@@ -69,6 +69,8 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
   const markerRef = useRef<any>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const selectedRef = useRef<LocationResult | null>(null);
+  selectedRef.current = selected;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -156,6 +158,39 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     setLoading(false);
   }
 
+  // Fallback: geocodifica el texto escrito/pegado cuando el usuario no elige
+  // una sugerencia (p.ej. pega la dirección completa desde Google Maps).
+  const geocodeTypedAddress = useCallback(() => {
+    const text = query.trim();
+    if (!text || selectedRef.current || !window.google?.maps) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address: text, region: "MX", language: "es" }, (results: any[], status: string) => {
+      if (status !== "OK" || !results?.[0]) return;
+      const r = results[0];
+      const comps: any[] = r.address_components ?? [];
+      const get = (types: string[]) => {
+        const c = comps.find((c: any) => types.some((t: string) => c.types.includes(t)));
+        return c?.long_name ?? "";
+      };
+      const streetName = get(["route"]);
+      const number = get(["street_number"]);
+      const colonia = get(["sublocality", "sublocality_level_1", "neighborhood"]);
+      const city = get(["locality"]) || get(["administrative_area_level_3"]) || get(["administrative_area_level_2"]);
+      const state = get(["administrative_area_level_1"]);
+      const postal_code = get(["postal_code"]);
+      const address = number ? `${streetName} ${number}` : streetName || r.formatted_address.split(",")[0];
+      const lat = r.geometry.location.lat();
+      const lng = r.geometry.location.lng();
+      const result: LocationResult = { address, street: streetName, postal_code, neighborhood: colonia, city, state, lat, lng };
+      setQuery(r.formatted_address);
+      setOpen(false);
+      setSuggestions([]);
+      setSelected(result);
+      onSelectRef.current(result);
+      initMap(lat, lng, result);
+    });
+  }, [query]);
+
   const initMap = useCallback((lat: number, lng: number, result: LocationResult) => {
     if (!window.google) return;
     if (mapInstanceRef.current) {
@@ -238,6 +273,10 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
               type="text"
               value={query}
               onChange={(e) => handleInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); geocodeTypedAddress(); }
+              }}
+              onBlur={() => { setTimeout(geocodeTypedAddress, 200); }}
               onFocus={() => {
                 if (suggestions.length > 0 && inputRef.current) {
                   const rect = inputRef.current.getBoundingClientRect();
