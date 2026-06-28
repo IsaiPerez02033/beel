@@ -12,6 +12,7 @@ import Price from "@/components/Price";
 import type { Property } from "@/types";
 import Link from "next/link";
 import PropertyMap from "@/components/PropertyMap";
+import ReportButton from "@/components/ReportButton";
 
 interface PageProps {
   params: { id: string };
@@ -268,6 +269,14 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
             {/* Reseñas */}
             <div className="divider" />
             <PropertyReviews propertyId={property.id} />
+
+            {/* Reportar anuncio */}
+            <div className="mt-8 flex justify-center">
+              <ReportButton
+                targetTitle={property.title}
+                targetType="property"
+              />
+            </div>
           </div>
 
           {/* ── Widget de reserva (sticky) ─────────────────────────────── */}

@@ -24,6 +24,7 @@ import {
   CornerUpLeft,
 } from "lucide-react";
 import MessageReactions from "@/components/MessageReactions";
+import ReportButton from "@/components/ReportButton";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -796,6 +797,15 @@ export default function MensajesPage() {
                 No hay información de reserva vinculada a esta conversación.
               </div>
             )}
+
+            {/* Reportar usuario */}
+            <div className="p-5 border-t border-neutral-100 flex justify-center">
+              <ReportButton
+                targetType="user"
+                targetTitle={otherParticipant?.full_name}
+                label="Reportar a este usuario"
+              />
+            </div>
           </aside>
           </>
         )}
