@@ -57,12 +57,21 @@ export default function Navbar({ transparent = false }: NavbarProps) {
         {/* Logo (zona izquierda, mismo peso que la derecha) */}
         <div className="flex-1 flex items-center min-w-0">
           <Link href="/" className="flex-shrink-0 flex items-center">
+            {/* Logo según tema (negro en claro, blanco en oscuro) */}
             <Image
-              src="/beel_logo_transpa.svg"
+              src="/beel_logo_black_white.png"
               alt="Beel"
-              width={42}
+              width={110}
               height={42}
-              className="h-10 w-auto"
+              className="h-10 w-auto block dark:hidden"
+              priority
+            />
+            <Image
+              src="/beel_logo_white_green.png"
+              alt="Beel"
+              width={110}
+              height={42}
+              className="h-10 w-auto hidden dark:block"
               priority
             />
           </Link>
