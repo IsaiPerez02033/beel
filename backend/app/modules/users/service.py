@@ -74,6 +74,10 @@ async def update_user(
     for field, value in update_data.items():
         setattr(user, field, value)
     await db.flush()
+    # Refrescar para cargar valores generados por la BD (p.ej. updated_at vía
+    # trigger) en __dict__, evitando lazy-loads durante la serialización de la
+    # respuesta cuando la sesión ya cerró (DetachedInstanceError).
+    await db.refresh(user)
     return user
 
 
