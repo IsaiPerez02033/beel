@@ -16,6 +16,11 @@ class PropertySnapshotOut(BaseModel):
     city: str
     neighborhood: Optional[str]
     photos: list[dict] = []  # [{url, is_primary}]
+    # Solo se incluye si el solicitante es el huésped con reserva confirmada
+    address: Optional[str] = None
+    state: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     model_config = {"from_attributes": True}
 
