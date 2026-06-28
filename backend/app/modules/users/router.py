@@ -119,6 +119,7 @@ async def get_me(
 
 @router.patch("/me", response_model=UserMeOut)
 async def update_me(
+    request: Request,
     data: UserUpdateIn,
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
@@ -128,7 +129,59 @@ async def update_me(
     user = await service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Si está actualizando la CLABE, guardar auditoría y enviar email
+    new_clabe = getattr(data, "bank_clabe", None)
+    clabe_changed = new_clabe and new_clabe != user.bank_clabe
+    if clabe_changed:
+        from datetime import datetime, timezone
+        client_ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown")
+        user.bank_clabe_set_at = datetime.now(timezone.utc)
+        user.bank_clabe_set_ip = client_ip.split(",")[0].strip()[:45]
+
     updated = await service.update_user(db, user, data)
+
+    # Email de confirmación al registrar CLABE
+    if clabe_changed and updated.email and new_clabe:
+        try:
+            from app.core.email import _send
+            last4 = new_clabe[-4:]
+            import asyncio
+            asyncio.ensure_future(_send(
+                to_email=updated.email,
+                to_name=updated.full_name,
+                subject="Cuenta bancaria registrada en Beel",
+                html=f"""
+                <div style="font-family:Arial,sans-serif;padding:32px;background:#F1EFE8;">
+                  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
+                    <h2 style="color:#147A5C;margin:0 0 16px;">Cuenta bancaria registrada</h2>
+                    <p style="color:#5C5A57;font-size:15px;line-height:1.6;margin:0 0 16px;">
+                      Hola <strong>{updated.full_name}</strong>, registraste una cuenta bancaria en Beel:
+                    </p>
+                    <div style="background:#F8F7F4;border-radius:10px;padding:16px;margin-bottom:16px;">
+                      <p style="margin:0 0 6px;font-size:13px;color:#9C9A96;">Titular</p>
+                      <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#2C2C2A;">{updated.bank_account_holder or updated.full_name}</p>
+                      <p style="margin:0 0 6px;font-size:13px;color:#9C9A96;">Banco</p>
+                      <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#2C2C2A;">{updated.bank_name or "No especificado"}</p>
+                      <p style="margin:0 0 6px;font-size:13px;color:#9C9A96;">CLABE (últimos 4 dígitos)</p>
+                      <p style="margin:0;font-size:18px;font-weight:700;color:#147A5C;font-family:monospace;">••• ••• ••• ••• {last4}</p>
+                    </div>
+                    <p style="color:#5C5A57;font-size:14px;line-height:1.6;margin:0 0 8px;">
+                      Fecha: <strong>{user.bank_clabe_set_at.strftime('%d/%m/%Y %H:%M') if user.bank_clabe_set_at else 'ahora'} UTC</strong>
+                    </p>
+                    <div style="background:#FEF3CD;border-radius:10px;padding:12px;margin-top:16px;">
+                      <p style="margin:0;font-size:13px;color:#92610A;">
+                        ⚠️ Si <strong>no fuiste tú</strong> quien registró esta cuenta, contáctanos de inmediato a <a href="mailto:mexicobeel@gmail.com" style="color:#92610A;">mexicobeel@gmail.com</a>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                """,
+            ))
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error("Error enviando email CLABE: %s", e)
+
     return updated
 
 

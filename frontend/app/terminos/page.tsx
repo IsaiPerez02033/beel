@@ -78,6 +78,28 @@ export default function TerminosPage() {
             ]} />
           </Section>
 
+          <Section title="6 bis. Datos bancarios y responsabilidad de transferencias">
+            <p>
+              El anfitrión es el <strong>único responsable</strong> de registrar correctamente
+              su Clave Bancaria Estandarizada (CLABE) en la plataforma. Beel realiza las
+              transferencias de pago únicamente a la cuenta CLABE registrada por el propio
+              anfitrión en su perfil de configuración.
+            </p>
+            <p className="mt-3">
+              Al registrar o actualizar su CLABE, el anfitrión:
+            </p>
+            <Ul items={[
+              "Confirma que la CLABE ingresada es correcta y le pertenece.",
+              "Acepta que Beel enviará un correo de confirmación a su email registrado con los últimos 4 dígitos de la CLABE y la fecha/hora del registro.",
+              "Reconoce que Beel guarda la dirección IP y timestamp del momento en que se registró la CLABE como evidencia del acto.",
+              "Exonera a Beel de toda responsabilidad por transferencias realizadas a cuentas incorrectas proporcionadas por el propio anfitrión.",
+            ]} />
+            <p className="mt-3">
+              Si el anfitrión sospecha que alguien modificó su CLABE sin su consentimiento, debe
+              notificarlo de inmediato a <strong>mexicobeel@gmail.com</strong>.
+            </p>
+          </Section>
+
           <Section title="7. Responsabilidades del huésped">
             <Ul items={[
               "Usar la propiedad de forma responsable y conforme a las reglas del anfitrión.",
