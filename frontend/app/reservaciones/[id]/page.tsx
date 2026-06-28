@@ -243,9 +243,22 @@ export default function ReservationDetailPage() {
                   <CheckCircle2 size={14} /> Pagado
                 </span>
               ) : paymentStatus === "pending" ? (
-                <span className="flex items-center gap-1.5 text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg text-body-sm font-medium">
-                  ⏳ Pendiente
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg text-body-sm font-medium">
+                    ⏳ Pendiente
+                  </span>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const updated = await post<{ status: string }>(`/payments/${id}/sync`, {});
+                        setPaymentStatus(updated.status);
+                      } catch {}
+                    }}
+                    className="text-caption text-[var(--color-primary)] hover:underline"
+                  >
+                    Sincronizar
+                  </button>
+                </div>
               ) : paymentStatus ? (
                 <span className="text-body-sm text-[var(--text-secondary)] bg-[var(--bg-subtle)] px-3 py-1 rounded-lg border border-[var(--border-subtle)]">
                   {paymentStatus}

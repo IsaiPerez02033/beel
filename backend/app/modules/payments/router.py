@@ -87,6 +87,24 @@ async def create_checkout(
     return CheckoutOut(**urls)
 
 
+@router.post("/{reservation_id}/sync", response_model=PaymentOut)
+async def sync_payment(
+    reservation_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Sincroniza el estado del pago con MercadoPago (por si el webhook no llegó)."""
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    payment = await payment_service.get_payment_by_reservation(db, reservation_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="No hay pago para esta reserva")
+    payment = await payment_service.sync_payment_status(db, payment)
+    await db.commit()
+    return payment
+
+
 @router.get("/checkout/{reservation_id}", response_model=CheckoutOut)
 async def get_checkout(
     reservation_id: uuid.UUID,
