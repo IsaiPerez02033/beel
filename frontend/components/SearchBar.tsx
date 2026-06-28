@@ -132,11 +132,11 @@ export default function SearchBar({
           )}
         >
           <div
-            className="flex flex-col justify-center flex-1 cursor-pointer items-start sm:items-start"
+            className="flex flex-col justify-center flex-1 cursor-pointer items-center sm:items-start"
             onClick={() => setActiveField("guests")}
           >
             <span className="search-bar-label">Huéspedes</span>
-            <div className="flex items-center gap-2 sm:justify-start justify-center w-full">
+            <div className="flex items-center gap-2">
               <button type="button" onClick={(e) => { e.stopPropagation(); setHuespedes(Math.max(1, huespedes - 1)); }}
                 className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm leading-none hover:border-[var(--border-strong)] transition-colors">−</button>
               <span className="search-bar-value min-w-[1.5ch] text-center">{huespedes}</span>
