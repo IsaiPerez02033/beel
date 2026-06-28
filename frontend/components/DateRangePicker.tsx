@@ -72,7 +72,8 @@ export default function DateRangePicker({
     setOpen(true);
   }, []);
 
-  // Cerrar al click fuera
+  // Cerrar al click fuera — usar "click" en vez de "mousedown"
+  // para evitar que el listener cierre el popover antes de que el onClick del trigger lo abra
   useEffect(() => {
     if (!open) return;
     function handle(e: MouseEvent) {
@@ -82,8 +83,14 @@ export default function DateRangePicker({
       ) return;
       setOpen(false);
     }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
+    // Pequeño delay para que el onClick del trigger se ejecute primero
+    const timer = setTimeout(() => {
+      document.addEventListener("click", handle);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("click", handle);
+    };
   }, [open]);
 
   // Reposicionar al scroll/resize
