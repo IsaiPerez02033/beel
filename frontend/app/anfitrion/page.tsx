@@ -66,6 +66,7 @@ export default function AnfitrionPage() {
   // Gate de verificación: null = cargando, true/false = resultado
   const [verified, setVerified] = useState<boolean | null>(null);
   const [showHostModal, setShowHostModal] = useState(false);
+  const [hasClabe, setHasClabe] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -74,10 +75,11 @@ export default function AnfitrionPage() {
       return;
     }
     // Verificar que el usuario esté verificado antes de mostrar el panel
-    get<{ is_phone_verified: boolean; is_identity_verified: boolean }>("/users/me")
+    get<{ is_phone_verified: boolean; is_identity_verified: boolean; bank_clabe?: string }>("/users/me")
       .then((u) => {
         const ok = !!u.is_phone_verified && !!u.is_identity_verified;
         setVerified(ok);
+        setHasClabe(!!u.bank_clabe);
         if (ok) fetchData();
         else setLoading(false);
       })
@@ -209,6 +211,27 @@ export default function AnfitrionPage() {
             Nueva propiedad
           </Link>
         </div>
+
+        {/* Banner: falta CLABE */}
+        {hasClabe === false && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <AlertCircle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-body-sm font-semibold text-amber-800">
+                Agrega tu cuenta bancaria para recibir pagos
+              </p>
+              <p className="text-caption text-amber-700 mt-0.5">
+                Cuando tengas una reserva pagada, Beel no podrá transferirte el dinero sin tu CLABE. Agrégala ahora para no perder tiempo cuando llegue tu primer pago.
+              </p>
+              <Link
+                href="/anfitrion/configuracion?seccion=pagos"
+                className="inline-block mt-2 text-body-sm font-semibold text-amber-800 underline hover:no-underline"
+              >
+                Agregar cuenta bancaria →
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         {loading ? (

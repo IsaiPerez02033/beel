@@ -397,6 +397,35 @@ async def approve_payout(
             detail=f"El payout ya fue procesado (status: '{payment.payout_status}')",
         )
 
+    # Verificar que el anfitrión tiene CLABE registrada
+    from app.modules.users.models import User
+    from app.modules.reservations.models import Reservation
+    from sqlalchemy import select as _select
+    res_result = await db.execute(_select(Reservation).where(Reservation.id == payment.reservation_id))
+    reservation = res_result.scalar_one_or_none()
+    host_id = reservation.host_id if reservation else None
+    host = await db.get(User, host_id) if host_id else None
+    if not host or not host.bank_clabe:
+        # Notificar al anfitrión para que agregue su CLABE
+        try:
+            from app.modules.notifications.service import create_notification
+            async with db.begin_nested():
+                await create_notification(
+                    db,
+                    user_id=host_id,
+                    type="bank_details_required",
+                    title="Agrega tu cuenta bancaria para recibir tu pago",
+                    body="Tienes un pago listo pero necesitas registrar tu CLABE en Configuración → Pagos para recibirlo.",
+                    data={"reservation_id": str(payment.reservation_id)},
+                )
+        except Exception as e:
+            logger.error("Error al notificar CLABE faltante: %s", e)
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail="NO_CLABE: El anfitrión no tiene cuenta bancaria (CLABE) registrada. Se le notificó para que la agregue en Configuración.",
+        )
+
     payment.payout_status = "approved"
     payment.beel_approved_at = datetime.now(timezone.utc)
     payment.beel_approved_by = admin_user_id
