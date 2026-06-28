@@ -124,7 +124,7 @@ export default function SearchBar({
           onCheckOut={setCheckOut}
         />
 
-        {/* Huéspedes + botón */}
+        {/* Huéspedes + botón buscar (desktop: inline / móvil: separados) */}
         <div
           className={cn(
             "search-bar-field flex items-center justify-between gap-3 rounded-r-2xl border-r-0",
@@ -137,43 +137,28 @@ export default function SearchBar({
           >
             <span className="search-bar-label">Huéspedes</span>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setHuespedes(Math.max(1, huespedes - 1));
-                }}
-                className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm leading-none hover:border-[var(--border-strong)] transition-colors"
-              >
-                −
-              </button>
-              <span className="search-bar-value min-w-[1.5ch] text-center">
-                {huespedes}
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setHuespedes(Math.min(16, huespedes + 1));
-                }}
-                className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm leading-none hover:border-[var(--border-strong)] transition-colors"
-              >
-                +
-              </button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); setHuespedes(Math.max(1, huespedes - 1)); }}
+                className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm leading-none hover:border-[var(--border-strong)] transition-colors">−</button>
+              <span className="search-bar-value min-w-[1.5ch] text-center">{huespedes}</span>
+              <button type="button" onClick={(e) => { e.stopPropagation(); setHuespedes(Math.min(16, huespedes + 1)); }}
+                className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm leading-none hover:border-[var(--border-strong)] transition-colors">+</button>
             </div>
           </div>
 
-          {/* Botón buscar — circular en desktop, pill full-width en móvil */}
-          <button
-            onClick={handleSearch}
-            className="flex-shrink-0 sm:w-10 sm:h-10 sm:rounded-full w-full h-11 rounded-xl bg-[var(--color-primary)] text-white flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm mt-1 sm:mt-0"
-            aria-label="Buscar"
-          >
+          {/* Botón circular solo en desktop */}
+          <button onClick={handleSearch} aria-label="Buscar"
+            className="hidden sm:flex flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] text-white items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm">
             <Search size={16} />
-            <span className="sm:hidden text-body-sm font-medium">Buscar</span>
           </button>
         </div>
       </div>
+
+      {/* Botón buscar full-width solo en móvil — fuera del card */}
+      <button onClick={handleSearch}
+        className="sm:hidden mt-3 w-full h-12 rounded-2xl bg-[var(--color-primary)] text-white flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm font-medium">
+        <Search size={16} />
+        Buscar
+      </button>
     </div>
   );
 }
