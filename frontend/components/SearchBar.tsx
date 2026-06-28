@@ -163,13 +163,14 @@ export default function SearchBar({
             </div>
           </div>
 
-          {/* Botón buscar */}
+          {/* Botón buscar — circular en desktop, pill full-width en móvil */}
           <button
             onClick={handleSearch}
-            className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm"
+            className="flex-shrink-0 sm:w-10 sm:h-10 sm:rounded-full w-full h-11 rounded-xl bg-[var(--color-primary)] text-white flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm mt-1 sm:mt-0"
             aria-label="Buscar"
           >
             <Search size={16} />
+            <span className="sm:hidden text-body-sm font-medium">Buscar</span>
           </button>
         </div>
       </div>
