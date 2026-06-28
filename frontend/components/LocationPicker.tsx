@@ -253,7 +253,12 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             />
             {query && (
               <button
-                onClick={() => { setQuery(""); setSuggestions([]); setOpen(false); setSelected(null); }}
+                onClick={() => {
+                  setQuery(""); setSuggestions([]); setOpen(false); setSelected(null);
+                  // Limpiar el mapa para que la próxima selección lo recree en el div nuevo
+                  mapInstanceRef.current = null;
+                  markerRef.current = null;
+                }}
                 className="pr-3 flex-shrink-0 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
               >
                 <X size={16} />
