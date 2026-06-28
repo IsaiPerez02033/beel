@@ -69,9 +69,9 @@ export default function Navbar({ transparent = false }: NavbarProps) {
             <Image
               src="/beel_logo_t.svg"
               alt="Beel"
-              width={110}
-              height={42}
-              className="h-10 w-auto hidden dark:block"
+              width={150}
+              height={57}
+              className="h-14 w-auto hidden dark:block"
               priority
             />
           </Link>
