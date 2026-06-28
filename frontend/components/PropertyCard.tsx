@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, Zap, Home, Building2, Trees, Ship, Bed, Hotel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatRating } from "@/lib/utils";
 import Price from "@/components/Price";
@@ -43,6 +43,17 @@ export default function PropertyCard({
   const locationLabel = [property.neighborhood, property.city]
     .filter(Boolean)
     .join(", ");
+
+  // Badge de tipo de propiedad
+  const TYPE_CONFIG: Record<string, { icon: React.ReactNode; label: string }> = {
+    casa:         { icon: <Home size={10} />,      label: "Casa" },
+    departamento: { icon: <Building2 size={10} />, label: "Depto" },
+    cabaña:       { icon: <Trees size={10} />,     label: "Cabaña" },
+    villa:        { icon: <Ship size={10} />,      label: "Villa" },
+    habitacion:   { icon: <Bed size={10} />,       label: "Hab." },
+    hostal:       { icon: <Hotel size={10} />,     label: "Hostal" },
+  };
+  const typeConfig = TYPE_CONFIG[property.property_type] ?? { icon: <Home size={10} />, label: property.property_type };
 
   return (
     <Link
@@ -107,9 +118,18 @@ export default function PropertyCard({
         {/* Guardar (próximamente) */}
         {/* Botón oculto hasta implementar favoritos en backend */}
 
-        {/* Badge reserva inmediata */}
+        {/* Badge tipo de propiedad — esquina superior derecha */}
+        <div className="absolute top-2.5 right-2.5 z-10">
+          <span className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold backdrop-blur-md"
+            style={{ background: "rgba(255,255,255,0.85)", color: "var(--color-tierra)" }}>
+            {typeConfig.icon}
+            {typeConfig.label}
+          </span>
+        </div>
+
+        {/* Badge reserva inmediata — esquina superior izquierda */}
         {property.instant_booking && (
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-2.5 left-2.5 z-10">
             <span className="badge badge-fast gap-1">
               <Zap size={9} className="fill-current" />
               Reserva ya
@@ -117,45 +137,45 @@ export default function PropertyCard({
           </div>
         )}
 
-        {/* Host chip */}
-        <div className="host-chip">
+        {/* Host chip — glassmorphism */}
+        <div className="host-chip" style={{
+          background: "rgba(255,255,255,0.82)",
+          backdropFilter: "blur(8px)",
+          borderBottom: "2px solid var(--color-accent)",
+          borderRadius: "8px",
+        }}>
           {property.host.avatar_url ? (
             <Image
               src={property.host.avatar_url}
               alt={property.host.full_name}
               width={20}
               height={20}
-              className="rounded-full object-cover"
+              className="rounded-full object-cover ring-1 ring-white"
             />
           ) : (
             <div className="avatar avatar-sm" style={{ width: 20, height: 20, fontSize: 9 }}>
               {property.host.full_name.charAt(0).toUpperCase()}
             </div>
           )}
-          <span className="text-[11px] font-medium text-[var(--text-primary)] leading-none">
+          <span className="text-[11px] font-semibold text-[var(--text-primary)] leading-none">
             {property.host.full_name.split(" ")[0]}
           </span>
         </div>
       </div>
 
       {/* Info */}
-      <div className="p-3 flex flex-col gap-1">
-        {/* Fila top: ubicación + rating */}
+      <div className="p-3 pt-2.5 flex flex-col gap-0.5">
+        {/* Fila top: título + rating */}
         <div className="flex items-start justify-between gap-2">
-          <p className="text-body font-medium text-[var(--text-primary)] line-clamp-1 flex-1">
+          <p className="text-body font-semibold text-[var(--text-primary)] line-clamp-1 flex-1">
             {property.title}
           </p>
           {property.avg_rating && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Star size={12} className="fill-[var(--color-accent)] text-[var(--color-accent)]" />
-              <span className="text-caption font-medium text-[var(--text-primary)]">
+            <div className="flex items-center gap-0.5 flex-shrink-0 bg-[var(--color-accent-light)] px-1.5 py-0.5 rounded-md">
+              <Star size={10} className="fill-[var(--color-accent)] text-[var(--color-accent)]" />
+              <span className="text-[11px] font-bold text-[var(--color-accent-dark)]">
                 {formatRating(property.avg_rating)}
               </span>
-              {property.total_reviews > 0 && (
-                <span className="text-caption text-[var(--text-tertiary)]">
-                  ({property.total_reviews})
-                </span>
-              )}
             </div>
           )}
         </div>
@@ -167,15 +187,20 @@ export default function PropertyCard({
 
         {/* Capacidad */}
         <p className="text-caption text-[var(--text-tertiary)]">
-          {property.bedrooms} hab · {property.beds} camas · {property.bathrooms} baños
+          hasta {property.max_guests} huéspedes · {property.bedrooms} hab
         </p>
 
-        {/* Precio */}
-        <div className="flex items-baseline gap-1 mt-0.5">
-          <span className="text-body font-semibold text-[var(--text-primary)]">
-            {<Price amount={property.price_per_night} />}
+        {/* Precio — más visual */}
+        <div className="flex items-baseline gap-1 mt-1 pt-1.5 border-t border-[var(--border-subtle)]">
+          <span className="text-body font-bold text-[var(--text-primary)]">
+            <Price amount={property.price_per_night} />
           </span>
-          <span className="text-caption text-[var(--text-secondary)]">noche</span>
+          <span className="text-caption text-[var(--text-tertiary)]">/ noche</span>
+          {property.total_reviews > 0 && (
+            <span className="text-caption text-[var(--text-tertiary)] ml-auto">
+              {property.total_reviews} reseñas
+            </span>
+          )}
         </div>
       </div>
     </Link>
