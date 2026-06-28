@@ -30,11 +30,11 @@ function fmtDisplay(s: string): string | null {
   try { return format(parseISO(s), "d MMM", { locale: es }); } catch { return null; }
 }
 
-// Posiciona el popover: abajo del trigger, o arriba si no cabe; clamp horizontal.
+// Posiciona el popover: siempre abajo del trigger, nunca arriba.
+// Si no cabe en el viewport, se puede hacer scroll para verlo.
 function computePos(r: DOMRect): { top: number; left: number } {
-  const W = 340, H = 430, M = 8;
-  const spaceBelow = window.innerHeight - r.bottom;
-  const top = spaceBelow < H + M ? Math.max(M, r.top - H - M) : r.bottom + M;
+  const W = 320, M = 8;
+  const top = r.bottom + M;
   let left = r.left;
   if (left + W > window.innerWidth - M) left = Math.max(M, window.innerWidth - W - M);
   return { top, left };
@@ -59,7 +59,15 @@ export default function DateRangePicker({
   const openWithPos = useCallback((which: "from" | "to") => {
     setSelecting(which);
     if (triggerRef.current) {
-      setPopoverPos(computePos(triggerRef.current.getBoundingClientRect()));
+      const r = triggerRef.current.getBoundingClientRect();
+      setPopoverPos(computePos(r));
+      // Si el popover no cabe abajo, hacer scroll suave para que sea visible
+      const calH = 380;
+      if (window.innerHeight - r.bottom < calH + 16) {
+        setTimeout(() => {
+          window.scrollBy({ top: calH - (window.innerHeight - r.bottom) + 24, behavior: "smooth" });
+        }, 50);
+      }
     }
     setOpen(true);
   }, []);
@@ -220,7 +228,7 @@ export default function DateRangePicker({
             zIndex: 9999,
             borderTop: "3px solid var(--color-primary)",
           }}
-          className="bg-white rounded-2xl shadow-2xl border border-[var(--border-subtle)] p-5 select-none"
+          className="bg-white rounded-2xl shadow-2xl border border-[var(--border-subtle)] p-4 select-none w-[320px]"
         >
           <p className="text-caption text-[var(--text-secondary)] text-center mb-3 font-medium">
             {selecting === "from" ? "¿Cuándo llegas?" : "¿Cuándo sales?"}
