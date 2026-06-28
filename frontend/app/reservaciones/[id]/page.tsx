@@ -62,6 +62,7 @@ export default function ReservationDetailPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [loadingPayment, setLoadingPayment] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const [modalNotification, setModalNotification] = useState<{
     type: "success" | "error";
     title: string;
@@ -105,17 +106,22 @@ export default function ReservationDetailPage() {
       .then((r) => {
         setReservation(r);
         // Si hay pago pendiente, recuperar el URL de MercadoPago
-        if (r.status === "pending" || r.status === "confirmed") {
-          get<{ checkout_url: string; sandbox_init_point: string }>(
-            `/payments/checkout/${id}`
-          )
-            .then((c) => {
+        // Obtener estado del pago
+        get<{ status: string; payout_status: string; checkout_url?: string; sandbox_init_point?: string }>(
+          `/payments/${id}`
+        ).then((p) => {
+          setPaymentStatus(p.status);
+          // Si el pago no está aprobado, recuperar URL de checkout
+          if (p.status !== "approved") {
+            get<{ checkout_url: string; sandbox_init_point: string }>(
+              `/payments/checkout/${id}`
+            ).then((c) => {
               const url = process.env.NODE_ENV === "development"
                 ? c.sandbox_init_point : c.checkout_url;
               if (url) setCheckoutUrl(url);
-            })
-            .catch(() => {}); // silencioso si no hay pago creado aún
-        }
+            }).catch(() => {});
+          }
+        }).catch(() => {});
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -223,18 +229,40 @@ export default function ReservationDetailPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="text-body text-[var(--text-secondary)]">Total pagado</p>
+              <p className="text-body text-[var(--text-secondary)]">Total</p>
               <p className="text-heading font-semibold text-[var(--text-primary)]">
-                {<Price amount={reservation.total_amount} />}
+                <Price amount={reservation.total_amount} />
               </p>
+            </div>
+
+            {/* Estado del pago */}
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--border-subtle)]">
+              <p className="text-body text-[var(--text-secondary)]">Estado del pago</p>
+              {paymentStatus === "approved" ? (
+                <span className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg text-body-sm font-medium">
+                  <CheckCircle2 size={14} /> Pagado
+                </span>
+              ) : paymentStatus === "pending" ? (
+                <span className="flex items-center gap-1.5 text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg text-body-sm font-medium">
+                  ⏳ Pendiente
+                </span>
+              ) : paymentStatus ? (
+                <span className="text-body-sm text-[var(--text-secondary)] bg-[var(--bg-subtle)] px-3 py-1 rounded-lg border border-[var(--border-subtle)]">
+                  {paymentStatus}
+                </span>
+              ) : (
+                <span className="text-body-sm text-[var(--text-tertiary)]">Sin pago registrado</span>
+              )}
             </div>
           </div>
         </div>
 
         {(reservation.status === "pending" || reservation.status === "confirmed") && (
           <div className="mt-4 space-y-2 px-4">
-            {/* Botón de pago — siempre visible si la reserva no está pagada */}
-            <PayButton reservationId={id} initialUrl={checkoutUrl} />
+            {/* Botón de pago — solo si aún no se ha pagado */}
+            {paymentStatus !== "approved" && (
+              <PayButton reservationId={id} initialUrl={checkoutUrl} />
+            )}
             <Link
               href={`/mensajes?conv=${reservation.id}`}
               className="btn btn-outline w-full justify-center"
