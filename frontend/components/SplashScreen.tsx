@@ -15,7 +15,7 @@ export default function SplashScreen({ onFinish }: Props) {
     if (!video) return;
 
     // 2x speed → 8 seg se convierten en 4 seg; sin audio
-    video.playbackRate = 2.0;
+    video.playbackRate = 1.0;
     video.muted = true;
     video.play().catch(() => {});
 
