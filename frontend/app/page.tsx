@@ -96,26 +96,36 @@ export default async function HomePage() {
       </section>
 
       {/* ── Señales de confianza ───────────────────────────────────────────── */}
-      <section className="bg-[var(--color-arena)] py-12 px-4 mt-6">
+      <section className="py-14 px-4 mt-4" style={{
+        background: "linear-gradient(180deg, #FFFFFF 0%, var(--color-arena) 100%)"
+      }}>
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-h1 text-center text-[var(--text-primary)] mb-8">
-            ¿Por qué Beel?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center mb-10">
+            <h2 className="text-h1 font-bold text-[var(--text-primary)] mb-2">
+              ¿Por qué Beel?
+            </h2>
+            <p className="text-body-sm text-[var(--text-tertiary)]">
+              Diseñado para México. Sin corporativo. Sin algoritmos.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <TrustItem
-              icon={<Shield size={28} className="text-[var(--color-primary)]" />}
+              icon={<Shield size={26} />}
+              accent="primary"
               title="Anfitriones verificados"
-              description="Cada anfitrión pasa por un proceso de verificación de identidad."
+              description="Cada anfitrión pasa por verificación de identidad antes de publicar."
             />
             <TrustItem
-              icon={<Star size={28} className="text-[var(--color-accent)]" />}
-              title="Reseñas reales"
-              description="Solo huéspedes que completaron su estancia pueden dejar reseña."
+              icon={<Star size={26} />}
+              accent="accent"
+              title="Reseñas 100% reales"
+              description="Solo huéspedes que completaron su estancia pueden opinar."
             />
             <TrustItem
-              icon={<MessageCircle size={28} className="text-[var(--color-primary)]" />}
+              icon={<MessageCircle size={26} />}
+              accent="primary"
               title="Soporte en español"
-              description="Atención por WhatsApp y chat en tiempo real, siempre en español."
+              description="Atención humana por chat y correo, siempre en tu idioma."
             />
           </div>
         </div>
@@ -129,19 +139,24 @@ export default async function HomePage() {
 // ── Subcomponentes ────────────────────────────────────────────────────────────
 
 function TrustItem({
-  icon,
-  title,
-  description,
+  icon, title, description, accent,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
+  accent: "primary" | "accent";
 }) {
+  const color = accent === "primary" ? "var(--color-primary)" : "var(--color-accent)";
+  const bg = accent === "primary" ? "var(--color-primary-light)" : "var(--color-accent-light)";
   return (
-    <div className="trust-item bg-white rounded-2xl p-6">
-      <div className="mb-3">{icon}</div>
-      <h3 className="text-h3 text-[var(--text-primary)] mb-1">{title}</h3>
-      <p className="text-body-sm text-[var(--text-secondary)]">{description}</p>
+    <div className="bg-white rounded-2xl p-6 border border-[var(--border-subtle)] hover:shadow-md transition-shadow duration-200"
+      style={{ borderTop: `3px solid ${color}` }}>
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+        style={{ background: bg, color }}>
+        {icon}
+      </div>
+      <h3 className="text-h3 font-semibold text-[var(--text-primary)] mb-1.5">{title}</h3>
+      <p className="text-body-sm text-[var(--text-secondary)] leading-relaxed">{description}</p>
     </div>
   );
 }
