@@ -11,6 +11,7 @@ import { formatRating } from "@/lib/utils";
 import Price from "@/components/Price";
 import type { Property } from "@/types";
 import Link from "next/link";
+import PropertyMap from "@/components/PropertyMap";
 
 interface PageProps {
   params: { id: string };
@@ -242,6 +243,23 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
                 }
               />
             </div>
+
+            {/* Mapa de ubicación aproximada */}
+            {property.latitude && property.longitude && (
+              <>
+                <div className="divider" />
+                <div>
+                  <h2 className="text-h2 text-[var(--text-primary)] mb-1">Dónde está</h2>
+                  <p className="text-body-sm text-[var(--text-secondary)] mb-4">
+                    {property.neighborhood ? `${property.neighborhood}, ` : ""}{property.city}{property.state ? `, ${property.state}` : ""}
+                  </p>
+                  <PropertyMap lat={property.latitude} lng={property.longitude} title={property.title} />
+                  <p className="text-caption text-[var(--text-tertiary)] mt-2">
+                    La dirección exacta se comparte con huéspedes confirmados.
+                  </p>
+                </div>
+              </>
+            )}
 
             {/* Reseñas */}
             <div className="divider" />
