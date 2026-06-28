@@ -38,9 +38,15 @@ export default function SplashScreen({ onFinish }: Props) {
     };
   }, [onFinish]);
 
+  function skip() {
+    setFadeOut(true);
+    setTimeout(onFinish, 600);
+  }
+
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#F1EFE8] transition-opacity duration-600"
+      onClick={skip}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#F1EFE8] cursor-pointer"
       style={{ opacity: fadeOut ? 0 : 1, transition: "opacity 0.6s ease" }}
     >
       <video
@@ -51,6 +57,15 @@ export default function SplashScreen({ onFinish }: Props) {
         preload="auto"
         className="w-full h-full object-cover"
       />
+
+      {/* Botón saltar */}
+      <button
+        onClick={(e) => { e.stopPropagation(); skip(); }}
+        className="absolute bottom-8 right-6 text-white/70 hover:text-white text-sm font-medium px-4 py-2 rounded-full border border-white/30 backdrop-blur-sm bg-black/20 transition-all active:scale-95"
+        style={{ fontSize: "14px" }}
+      >
+        Saltar →
+      </button>
     </div>
   );
 }
