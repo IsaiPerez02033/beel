@@ -8,7 +8,7 @@ import { useApi } from "@/hooks/useApi";
 import { Star, Info } from "lucide-react";
 import { formatRating, pluralNights } from "@/lib/utils";
 import Price from "@/components/Price";
-import DateRangePicker from "@/components/DateRangePicker";
+import InlineDatePicker from "@/components/InlineDatePicker";
 import type { Property } from "@/types";
 
 interface BookingWidgetProps {
@@ -133,16 +133,14 @@ export default function BookingWidget({
         )}
       </div>
 
-      {/* Fechas — calendario estilo Airbnb */}
-      <div className="border border-[var(--border-default)] rounded-xl mb-3 flex">
-        <DateRangePicker
-          checkIn={checkIn}
-          checkOut={checkOut}
-          onCheckIn={setCheckIn}
-          onCheckOut={setCheckOut}
-          disabledDates={disabledDates}
-        />
-      </div>
+      {/* Fechas — calendario inline */}
+      <InlineDatePicker
+        checkIn={checkIn}
+        checkOut={checkOut}
+        onCheckIn={setCheckIn}
+        onCheckOut={setCheckOut}
+        disabledDates={disabledDates}
+      />
 
       {/* Huéspedes */}
       <div className="border border-[var(--border-default)] rounded-xl mb-3">
