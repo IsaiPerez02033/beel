@@ -28,7 +28,7 @@ export default function ReportarPage() {
     const cuerpo = encodeURIComponent(
       `Tipo de problema: ${tipo}\nCorreo de contacto: ${email || "(no proporcionado)"}\n\nDescripción:\n${mensaje}`
     );
-    window.location.href = `mailto:soporte@beel.mx?subject=${asunto}&body=${cuerpo}`;
+    window.location.href = `mailto:hola@beel-mx.com?subject=${asunto}&body=${cuerpo}`;
     setEnviado(true);
   }
 
@@ -58,7 +58,7 @@ export default function ReportarPage() {
             </h2>
             <p className="text-body-sm text-[var(--text-secondary)]">
               Se abrió tu aplicación de correo con el reporte listo para enviar a{" "}
-              <span className="font-medium text-[var(--text-primary)]">soporte@beel.mx</span>.
+              <span className="font-medium text-[var(--text-primary)]">hola@beel-mx.com</span>.
               Si no se abrió, escríbenos directamente a esa dirección.
             </p>
             <button onClick={() => setEnviado(false)} className="btn btn-outline mt-6 px-6 py-2.5">
@@ -118,7 +118,7 @@ export default function ReportarPage() {
               Enviar reporte
             </button>
             <p className="text-caption text-[var(--text-tertiary)] text-center">
-              Al enviar se abrirá tu aplicación de correo con el reporte listo para soporte@beel.mx.
+              Al enviar se abrirá tu aplicación de correo con el reporte listo para hola@beel-mx.com.
             </p>
           </form>
         )}

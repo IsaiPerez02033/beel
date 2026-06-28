@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const REPORT_EMAIL = "mexicobeel@gmail.com";
+const REPORT_EMAIL = "hola@beel-mx.com";
 const SG_KEY = process.env.EMAIL_API_KEY ?? "";
 
 export async function POST(req: NextRequest) {
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: REPORT_EMAIL, name: "Beel Admin" }] }],
-        from: { email: "mexicobeel@gmail.com", name: "Beel Reportes" },
+        from: { email: "hola@beel-mx.com", name: "Beel Reportes" },
         reply_to: reporterEmail ? { email: reporterEmail, name: reporterName ?? "" } : undefined,
         subject,
         content: [{ type: "text/html", value: html }],
