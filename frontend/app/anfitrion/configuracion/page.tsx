@@ -222,15 +222,15 @@ export default function ConfiguracionAnfitrionPage() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Sidebar nav */}
+          {/* Sidebar nav — horizontal scroll on mobile, vertical on desktop */}
           <nav className="md:w-56 flex-shrink-0">
-            <ul className="space-y-1">
+            <ul className="flex flex-row md:flex-col gap-1 overflow-x-auto pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
               {SECTIONS.map((s) => (
-                <li key={s.key}>
+                <li key={s.key} className="flex-shrink-0 md:flex-shrink">
                   <button
                     onClick={() => setSection(s.key)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors",
+                      "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors whitespace-nowrap md:whitespace-normal",
                       section === s.key
                         ? "bg-[var(--color-primary-light)] text-[var(--color-primary)]"
                         : "text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]"

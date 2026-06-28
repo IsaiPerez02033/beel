@@ -50,7 +50,7 @@ export default function ConfianzaPage() {
         </div>
       </section>
 
-      <main className="max-w-4xl mx-auto px-4 py-14">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-14">
         {/* Pilares */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">
           {PILARES.map((p) => (

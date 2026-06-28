@@ -140,9 +140,9 @@ function ReservationCard({ reservation: r }: { reservation: Reservation }) {
   const checkOut = parseISO(r.check_out);
 
   return (
-    <Link href={`/reservaciones/${r.id}`} className="card flex gap-4 p-4 hover:shadow-md transition-shadow">
+    <Link href={`/reservaciones/${r.id}`} className="card flex flex-col sm:flex-row gap-4 p-4 hover:shadow-md transition-shadow">
       {/* Foto */}
-      <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[var(--color-primary-light)]">
+      <div className="relative w-full h-48 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[var(--color-primary-light)]">
         {photo?.url && (
           <Image src={photo.url} alt={r.reservation_property.title} fill className="object-cover" />
         )}
@@ -154,7 +154,7 @@ function ReservationCard({ reservation: r }: { reservation: Reservation }) {
           <p className="text-body font-medium text-[var(--text-primary)] line-clamp-1">
             {r.reservation_property.title}
           </p>
-          <span className={cn("badge flex-shrink-0", statusInfo.color)}>
+          <span className={cn("badge flex-shrink-0 text-xs", statusInfo.color)}>
             {statusInfo.label}
           </span>
         </div>
