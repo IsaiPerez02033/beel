@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Search, CreditCard, Home, Shield, Flag, AlertTriangle, Bug, MessageSquare, Star } from "lucide-react";
+import { Search, CreditCard, Home, Shield, LifeBuoy, Flag, AlertTriangle, Bug, MessageSquare, Star } from "lucide-react";
 import ReportButton from "@/components/ReportButton";
 
 
