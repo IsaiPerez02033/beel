@@ -78,6 +78,7 @@ export default function ConfiguracionAnfitrionPage() {
   const [savingBank, setSavingBank] = useState(false);
   const [bankSaved, setBankSaved] = useState(false);
   const [bankError, setBankError] = useState("");
+  const [bankConfirmStep, setBankConfirmStep] = useState(false);
 
   // Notification prefs (UI only — backend a futuro)
   const [notifReservations, setNotifReservations] = useState(true);
@@ -125,19 +126,25 @@ export default function ConfiguracionAnfitrionPage() {
     }
   }
 
-  async function handleSaveBankDetails(e: React.FormEvent) {
+  function handleBankSubmitStep1(e: React.FormEvent) {
     e.preventDefault();
+    setBankError("");
+    const cleanedClabe = bankClabe.trim();
+    if (!cleanedClabe) { setBankError("La CLABE es obligatoria"); return; }
+    if (!/^\d{18}$/.test(cleanedClabe)) {
+      setBankError("La cuenta CLABE debe contener exactamente 18 dígitos numéricos");
+      return;
+    }
+    if (!bankAccountHolder.trim()) { setBankError("El nombre del titular es obligatorio"); return; }
+    // Mostrar paso de confirmación
+    setBankConfirmStep(true);
+  }
+
+  async function handleSaveBankDetails() {
     setSavingBank(true);
     setBankError("");
     setBankSaved(false);
-
     const cleanedClabe = bankClabe.trim();
-    if (cleanedClabe && !/^\d{18}$/.test(cleanedClabe)) {
-      setBankError("La cuenta CLABE debe contener exactamente 18 dígitos numéricos");
-      setSavingBank(false);
-      return;
-    }
-
     try {
       const updated = await patch<UserProfile>("/users/me", {
         bank_name: bankName || null,
@@ -146,9 +153,11 @@ export default function ConfiguracionAnfitrionPage() {
       });
       setProfile(updated);
       setBankSaved(true);
-      setTimeout(() => setBankSaved(false), 2500);
+      setBankConfirmStep(false);
+      setTimeout(() => setBankSaved(false), 3000);
     } catch (err) {
       setBankError(err instanceof Error ? err.message : "Error al guardar los datos bancarios");
+      setBankConfirmStep(false);
     } finally {
       setSavingBank(false);
     }
@@ -461,7 +470,7 @@ export default function ConfiguracionAnfitrionPage() {
                   Registra tus datos bancarios para que el equipo administrativo de Beel pueda transferirte el dinero de tus reservaciones.
                 </p>
 
-                <form onSubmit={handleSaveBankDetails} className="space-y-4">
+                <form onSubmit={handleBankSubmitStep1} className="space-y-4">
                   {bankError && (
                     <div className="p-3 bg-[var(--color-error-subtle)] border border-[var(--color-error)] text-[var(--color-error)] text-body-sm rounded-lg">
                       {bankError}
@@ -469,7 +478,7 @@ export default function ConfiguracionAnfitrionPage() {
                   )}
                   {bankSaved && (
                     <div className="p-3 bg-[var(--color-success-subtle)] border border-[var(--color-success)] text-[var(--color-success)] text-body-sm rounded-lg flex items-center gap-1.5">
-                      <Check size={14} /> Datos bancarios actualizados con éxito
+                      <Check size={14} /> Datos bancarios guardados. Te enviamos un correo de confirmación.
                     </div>
                   )}
 
@@ -515,14 +524,59 @@ export default function ConfiguracionAnfitrionPage() {
                     </div>
                   </div>
 
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <p className="text-caption text-amber-800">
+                      ⚠️ <strong>Eres responsable de ingresar correctamente tu CLABE.</strong> Beel no se hace responsable de transferencias a cuentas incorrectas. Al guardar, aceptas que los datos son correctos y recibirás un correo de confirmación.
+                    </p>
+                  </div>
+
                   <button
                     type="submit"
                     disabled={savingBank}
                     className="btn btn-primary"
                   >
-                    {savingBank ? "Guardando..." : "Guardar datos bancarios"}
+                    {savingBank ? "Guardando..." : "Revisar y guardar CLABE"}
                   </button>
                 </form>
+
+                {/* Modal de confirmación — Punto 1 */}
+                {bankConfirmStep && (
+                  <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+                    <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md shadow-xl">
+                      <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">Confirma tus datos bancarios</h3>
+                      <p className="text-body-sm text-[var(--text-secondary)] mb-4">
+                        Verifica que la información sea correcta antes de guardar. <strong>No nos hacemos responsables de errores en la CLABE.</strong>
+                      </p>
+                      <div className="bg-[var(--bg-subtle)] rounded-xl p-4 space-y-2 mb-5">
+                        <div className="flex justify-between text-body-sm">
+                          <span className="text-[var(--text-tertiary)]">Titular</span>
+                          <span className="font-medium text-[var(--text-primary)]">{bankAccountHolder}</span>
+                        </div>
+                        <div className="flex justify-between text-body-sm">
+                          <span className="text-[var(--text-tertiary)]">Banco</span>
+                          <span className="font-medium text-[var(--text-primary)]">{bankName || "No especificado"}</span>
+                        </div>
+                        <div className="flex justify-between text-body-sm">
+                          <span className="text-[var(--text-tertiary)]">CLABE</span>
+                          <span className="font-mono font-bold text-[var(--color-primary)] text-base tracking-wider">
+                            •••• •••• •••• •••• {bankClabe.trim().slice(-4)}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-caption text-[var(--text-tertiary)] mb-4">
+                        ¿Tu CLABE termina en <strong>{bankClabe.trim().slice(-4)}</strong>? Si es correcto, confirma. Si no, cancela y corrígela.
+                      </p>
+                      <div className="flex gap-3">
+                        <button onClick={() => setBankConfirmStep(false)} className="btn btn-outline flex-1">
+                          Cancelar y corregir
+                        </button>
+                        <button onClick={handleSaveBankDetails} disabled={savingBank} className="btn btn-primary flex-1">
+                          {savingBank ? "Guardando..." : "Sí, es correcto. Guardar"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
