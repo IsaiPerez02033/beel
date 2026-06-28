@@ -40,6 +40,44 @@ export default async function HomePage() {
           background: "linear-gradient(135deg, #F1EFE8 0%, #EDE8DE 40%, rgba(20,122,92,0.06) 100%)",
         }}
       >
+        {/* Patrón Maya SVG — marca de agua sutil */}
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.045 }}>
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="maya-pattern" x="0" y="0" width="160" height="160" patternUnits="userSpaceOnUse">
+
+                {/* Pirámide Maya */}
+                <g transform="translate(10, 10)">
+                  <polygon points="60,5 5,80 115,80" fill="none" stroke="#147A5C" strokeWidth="2.5"/>
+                  <line x1="60" y1="5" x2="60" y2="80" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="5" y1="55" x2="115" y2="55" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="15" y1="68" x2="105" y2="68" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="27" y1="80" x2="93" y2="80" stroke="#147A5C" strokeWidth="2"/>
+                  {/* Templo en cima */}
+                  <rect x="48" y="0" width="24" height="10" fill="none" stroke="#147A5C" strokeWidth="1.5"/>
+                </g>
+
+                {/* Sol Maya — esquina opuesta */}
+                <g transform="translate(98, 98)">
+                  <circle cx="22" cy="22" r="12" fill="none" stroke="#147A5C" strokeWidth="2"/>
+                  <circle cx="22" cy="22" r="5" fill="#147A5C"/>
+                  {/* Rayos 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315° */}
+                  <line x1="36" y1="22" x2="42" y2="22" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="8" y1="22" x2="2" y2="22" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="22" y1="8" x2="22" y2="2" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="22" y1="36" x2="22" y2="42" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="32" y1="12" x2="36" y2="8" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="12" y1="32" x2="8" y2="36" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="32" y1="32" x2="36" y2="36" stroke="#147A5C" strokeWidth="1.5"/>
+                  <line x1="12" y1="12" x2="8" y2="8" stroke="#147A5C" strokeWidth="1.5"/>
+                </g>
+
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#maya-pattern)"/>
+          </svg>
+        </div>
+
         {/* Orbes decorativos de fondo */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-20 -right-20 w-96 h-96 rounded-full opacity-20"
