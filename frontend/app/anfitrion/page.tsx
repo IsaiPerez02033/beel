@@ -189,25 +189,25 @@ export default function AnfitrionPage() {
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-display font-display font-medium text-[var(--text-primary)]">
-              Panel del anfitrión
-            </h1>
-            <p className="text-body text-[var(--text-secondary)] mt-1">
-              Gestiona tus propiedades y reservas
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Link href="/anfitrion/configuracion" className="btn btn-outline flex items-center gap-2">
-              <Settings size={16} />
-              Configuración
-            </Link>
-            <Link href="/p/nueva" className="btn btn-primary flex items-center gap-2">
-              <Plus size={16} />
-              Nueva propiedad
+        <div className="mb-6">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <h1 className="text-h1 sm:text-display font-display font-medium text-[var(--text-primary)] leading-tight">
+                Panel del anfitrión
+              </h1>
+              <p className="text-body-sm sm:text-body text-[var(--text-secondary)] mt-0.5">
+                Gestiona tus propiedades y reservas
+              </p>
+            </div>
+            <Link href="/anfitrion/configuracion" className="btn btn-outline flex items-center gap-1.5 flex-shrink-0 px-3 py-2 text-body-sm">
+              <Settings size={15} />
+              <span className="hidden sm:inline">Configuración</span>
             </Link>
           </div>
+          <Link href="/p/nueva" className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
+            <Plus size={16} />
+            Nueva propiedad
+          </Link>
         </div>
 
         {/* Stats */}
@@ -431,14 +431,16 @@ function ReservationRow({
             Huésped: <span className="font-medium text-[var(--text-primary)]">{r.guest.full_name}</span>
           </p>
 
-          <div className="flex items-center gap-3 mt-1 text-body-sm text-[var(--text-secondary)]">
-            <span className="flex items-center gap-1">
-              <Calendar size={12} />
+          <div className="mt-1 text-body-sm text-[var(--text-secondary)]">
+            <span className="flex items-center gap-1 flex-wrap">
+              <Calendar size={12} className="flex-shrink-0" />
               {format(parseISO(r.check_in), "d MMM", { locale: es })} →{" "}
               {format(parseISO(r.check_out), "d MMM yyyy", { locale: es })}
+              <span className="text-[var(--border-default)]">·</span>
+              {r.nights} {r.nights === 1 ? "noche" : "noches"}
+              <span className="text-[var(--border-default)]">·</span>
+              {r.guests_count} {r.guests_count === 1 ? "huésped" : "huéspedes"}
             </span>
-            <span>· {r.nights} {r.nights === 1 ? "noche" : "noches"}</span>
-            <span>· {r.guests_count} {r.guests_count === 1 ? "huésped" : "huéspedes"}</span>
           </div>
 
           <p className="text-body-sm font-semibold text-[var(--text-primary)] mt-1">
@@ -512,8 +514,8 @@ function PropertiesTab({ properties, onDelete }: { properties: Property[]; onDel
   return (
     <>
     {confirmDel && (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => !deleting && setConfirmDel(null)}>
-        <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+      <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => !deleting && setConfirmDel(null)}>
+        <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">¿Eliminar propiedad?</h3>
           <p className="text-body-sm text-[var(--text-secondary)] mb-1 truncate">{confirmDel.title}</p>
           <p className="text-body-sm text-[var(--text-secondary)] mb-5">
@@ -567,20 +569,19 @@ function PropertiesTab({ properties, onDelete }: { properties: Property[]; onDel
                 </div>
               )}
 
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-body-sm font-semibold text-[var(--text-primary)]">
-                  {<Price amount={p.price_per_night} />}/noche
-                </span>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-body-sm font-semibold text-[var(--text-primary)]">
+                    <Price amount={p.price_per_night} />/noche
+                  </span>
                   {p.avg_rating ? (
                     <span className="text-caption text-[var(--text-secondary)]">
                       ★ {formatRating(p.avg_rating)} ({p.total_reviews})
                     </span>
                   ) : null}
-                  <Link
-                    href={`/p/${p.id}/editar`}
-                    className="btn btn-ghost text-caption px-3 py-1"
-                  >
+                </div>
+                <div className="flex items-center gap-1">
+                  <Link href={`/p/${p.id}/editar`} className="btn btn-ghost text-caption px-3 py-1">
                     Editar
                   </Link>
                   <button
