@@ -137,20 +137,28 @@ async def search_properties(
         ).bindparams(lat=lat, lng=lng, radius=radio_km * 1000)
         query = query.where(distance_filter)
 
-    # ── Scoring de relevancia ─────────────────────────────────────────────────
-    # Las propiedades que cumplen huéspedes y disponibilidad aparecen primero,
-    # pero no se excluyen las que no cumplen — se muestran más abajo.
+    # ── Huéspedes y fechas: duros sin destino, soft con destino ──────────────
+    #
+    # CON destino:  se muestran todas las propiedades de esa ciudad, ordenadas
+    #               por cuántas cosas cumplen (primero las que tienen capacidad
+    #               Y están disponibles, luego las demás).
+    #
+    # SIN destino:  el usuario busca algo específico (ej. "5 personas" o
+    #               "del 15 al 20 de julio") → filtro duro para mostrar
+    #               solo lo que realmente cumple.
 
-    # Columna de relevancia para ordenar
     relevance_cases = []
 
-    # +3 si tiene capacidad suficiente
     if huespedes:
-        relevance_cases.append(
-            case((Property.max_guests >= huespedes, 3), else_=0)
-        )
+        if destino:
+            # Con destino: es ranking (+3 si cumple)
+            relevance_cases.append(
+                case((Property.max_guests >= huespedes, 3), else_=0)
+            )
+        else:
+            # Sin destino: filtro duro
+            query = query.where(Property.max_guests >= huespedes)
 
-    # +2 si está disponible en las fechas (subquery de disponibilidad)
     if check_in and check_out:
         from sqlalchemy import not_, exists
         overlap_sq = (
@@ -170,13 +178,17 @@ async def search_properties(
                 check_in=check_in,
             )
         )
-        relevance_cases.append(
-            case((not_(exists(overlap_sq)), 2), else_=0)
-        )
+        if destino:
+            # Con destino: es ranking (+2 si está disponible)
+            relevance_cases.append(
+                case((not_(exists(overlap_sq)), 2), else_=0)
+            )
+        else:
+            # Sin destino: filtro duro
+            query = query.where(not_(exists(overlap_sq)))
 
-    # Orden final: relevancia calculada DESC, luego ranking_score, luego fecha
+    # Orden: relevancia DESC → ranking_score → fecha
     if relevance_cases:
-        from sqlalchemy import literal_column
         relevance_expr = sum(relevance_cases[1:], relevance_cases[0])
         query = query.order_by(
             relevance_expr.desc(),
