@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ export default function SearchBar({
   initialValues = {},
 }: SearchBarProps) {
   const router = useRouter();
+  const destinoInputRef = useRef<HTMLInputElement>(null);
   const [destino, setDestino] = useState(initialValues.destino ?? "");
   const [checkIn, setCheckIn] = useState(initialValues.checkIn ?? "");
   const [checkOut, setCheckOut] = useState(initialValues.checkOut ?? "");
@@ -102,10 +103,11 @@ export default function SearchBar({
             "search-bar-field flex-[2] flex flex-col justify-center cursor-pointer rounded-l-2xl",
             activeField === "destino" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
           )}
-          onClick={() => setActiveField("destino")}
+          onClick={() => { setActiveField("destino"); destinoInputRef.current?.focus(); }}
         >
           <span className="search-bar-label">¿A dónde?</span>
           <input
+            ref={destinoInputRef}
             type="text"
             value={destino}
             onChange={(e) => setDestino(e.target.value)}
