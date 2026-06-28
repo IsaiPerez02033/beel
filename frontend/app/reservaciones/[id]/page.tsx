@@ -232,7 +232,7 @@ export default function ReservationDetailPage() {
         </div>
 
         {(reservation.status === "pending" || reservation.status === "confirmed") && (
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-2 px-4">
             {/* Botón de pago — siempre visible si la reserva no está pagada */}
             <PayButton reservationId={id} initialUrl={checkoutUrl} />
             <Link
