@@ -171,9 +171,11 @@ async def health_check():
 # ── Global exception handler ──────────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logger.exception("Unhandled exception: %s", exc)
-    # DEBUG TEMPORAL: superficiar el error real para diagnosticar.
+    try:
+        logger.exception("Unhandled exception: %s", type(exc).__name__)
+    except Exception:
+        pass
     return JSONResponse(
         status_code=500,
-        content={"detail": f"{type(exc).__name__}: {exc}"},
+        content={"detail": "Ocurrió un error interno. Intenta de nuevo."},
     )

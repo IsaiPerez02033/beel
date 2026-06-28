@@ -99,4 +99,7 @@ class User(Base, TimestampMixin):
         return self.role == "admin"
 
     def __repr__(self) -> str:
-        return f"<User id={self.id} email={self.email!r} role={self.role}>"
+        # Leer de __dict__ para no disparar lazy-load si la sesión ya cerró
+        # (evita DetachedInstanceError al formatear logs/errores).
+        d = self.__dict__
+        return f"<User id={d.get('id')} email={d.get('email')!r} role={d.get('role')}>"
