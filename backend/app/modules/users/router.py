@@ -16,6 +16,8 @@ from app.modules.users.schemas import (
     PhoneVerifyIn,
     UserGoogleIn,
     UserLoginIn,
+    HostProfileOut,
+    HostReviewOut,
     UserMeOut,
     UserPublicOut,
     UserRegisterIn,
@@ -418,3 +420,92 @@ async def get_user_profile(
     if not user or not user.is_active:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
+
+
+@router.get("/{user_id}/host-profile", response_model=HostProfileOut)
+async def get_host_profile(
+    user_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """Perfil público de anfitrión: métricas, propiedades activas y reseñas."""
+    from sqlalchemy import select, func
+    from sqlalchemy.orm import selectinload
+    from app.modules.properties.models import Property, PropertyAmenity
+    from app.modules.properties.schemas import PropertyCardOut
+    from app.modules.reviews.models import Review
+
+    user = await service.get_user_by_id(db, user_id)
+    if not user or not user.is_active:
+        raise HTTPException(status_code=404, detail="Anfitrión no encontrado")
+
+    # Propiedades activas del anfitrión
+    props_q = (
+        select(Property)
+        .options(
+            selectinload(Property.host),
+            selectinload(Property.photos),
+            selectinload(Property.amenities).selectinload(PropertyAmenity.amenity),
+        )
+        .where(
+            Property.host_id == user_id,
+            Property.status == "active",
+            Property.deleted_at.is_(None),
+        )
+        .order_by(Property.created_at.desc())
+    )
+    properties = list((await db.execute(props_q)).scalars().all())
+
+    # Reseñas de huéspedes sobre las propiedades del anfitrión
+    rev_q = (
+        select(Review)
+        .options(selectinload(Review.reviewer))
+        .join(Property, Review.property_id == Property.id)
+        .where(
+            Property.host_id == user_id,
+            Review.review_type == "guest_to_host",
+            Review.is_published.is_(True),
+        )
+        .order_by(Review.created_at.desc())
+        .limit(12)
+    )
+    reviews = list((await db.execute(rev_q)).scalars().all())
+
+    agg_q = (
+        select(func.avg(Review.overall_rating), func.count(Review.id))
+        .join(Property, Review.property_id == Property.id)
+        .where(
+            Property.host_id == user_id,
+            Review.review_type == "guest_to_host",
+            Review.is_published.is_(True),
+        )
+    )
+    avg_rating, total_reviews = (await db.execute(agg_q)).one()
+
+    prop_titles = {p.id: p.title for p in properties}
+    review_out = [
+        HostReviewOut(
+            id=r.id,
+            reviewer_name=r.reviewer.full_name if r.reviewer else "Huésped",
+            reviewer_avatar=r.reviewer.avatar_url if r.reviewer else None,
+            overall_rating=r.overall_rating,
+            comment=r.comment,
+            property_title=prop_titles.get(r.property_id),
+            created_at=r.created_at,
+        )
+        for r in reviews
+    ]
+
+    return HostProfileOut(
+        id=user.id,
+        full_name=user.full_name,
+        avatar_url=user.avatar_url,
+        is_identity_verified=user.is_identity_verified,
+        role=user.role,
+        host_since=user.host_since,
+        created_at=user.created_at,
+        total_listings=len(properties),
+        avg_rating=float(avg_rating) if avg_rating is not None else None,
+        total_reviews=total_reviews or 0,
+        properties=[PropertyCardOut.model_validate(p) for p in properties],
+        reviews=review_out,
+    )
