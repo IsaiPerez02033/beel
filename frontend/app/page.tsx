@@ -37,7 +37,7 @@ export default async function HomePage() {
       <section
         className="relative pt-14 pb-12 px-4 overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #F1EFE8 0%, #EDE8DE 40%, rgba(20,122,92,0.06) 100%)",
+          background: "var(--hero-gradient)",
         }}
       >
         {/* Patrón Maya SVG — marca de agua sutil */}
