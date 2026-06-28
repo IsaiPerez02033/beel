@@ -55,45 +55,18 @@ export default function DateRangePicker({
 
   const range: DateRange = { from: toDate(checkIn), to: toDate(checkOut) };
 
-  // Posicionar el popover bajo el trigger usando coordenadas fijas
+  // Posicionar el popover bajo el trigger
   const openWithPos = useCallback((which: "from" | "to") => {
     setSelecting(which);
     if (triggerRef.current) {
-      const r = triggerRef.current.getBoundingClientRect();
-      setPopoverPos(computePos(r));
-      // Si el popover no cabe abajo, hacer scroll suave para que sea visible
-      const calH = 380;
-      if (window.innerHeight - r.bottom < calH + 16) {
-        setTimeout(() => {
-          window.scrollBy({ top: calH - (window.innerHeight - r.bottom) + 24, behavior: "smooth" });
-        }, 50);
-      }
+      setPopoverPos(computePos(triggerRef.current.getBoundingClientRect()));
     }
     setOpen(true);
   }, []);
 
-  // Cerrar al click fuera — usar "click" en vez de "mousedown"
-  // para evitar que el listener cierre el popover antes de que el onClick del trigger lo abra
-  useEffect(() => {
-    if (!open) return;
-    function handle(e: MouseEvent) {
-      if (
-        triggerRef.current?.contains(e.target as Node) ||
-        popoverRef.current?.contains(e.target as Node)
-      ) return;
-      setOpen(false);
-    }
-    // Pequeño delay para que el onClick del trigger se ejecute primero
-    const timer = setTimeout(() => {
-      document.addEventListener("click", handle);
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("click", handle);
-    };
-  }, [open]);
+  // Sin listener de documento — el cierre lo maneja el backdrop invisible
 
-  // Reposicionar al scroll/resize
+  // Reposicionar solo al resize (no al scroll para evitar parpadeos)
   useEffect(() => {
     if (!open) return;
     function reposition() {
@@ -101,12 +74,8 @@ export default function DateRangePicker({
         setPopoverPos(computePos(triggerRef.current.getBoundingClientRect()));
       }
     }
-    window.addEventListener("scroll", reposition, true);
     window.addEventListener("resize", reposition);
-    return () => {
-      window.removeEventListener("scroll", reposition, true);
-      window.removeEventListener("resize", reposition);
-    };
+    return () => window.removeEventListener("resize", reposition);
   }, [open]);
 
   function handleSelect(r?: DateRange) {
@@ -224,7 +193,15 @@ export default function DateRangePicker({
         )}
       </div>
 
-      {/* Popover — position:fixed para escapar cualquier overflow */}
+      {/* Backdrop invisible — cierra al hacer click fuera sin interferir con eventos */}
+      {open && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 9998 }}
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Popover — position:fixed, por encima del backdrop */}
       {open && (
         <div
           ref={popoverRef}
