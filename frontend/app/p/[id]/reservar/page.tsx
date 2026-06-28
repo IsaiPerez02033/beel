@@ -380,7 +380,10 @@ export default function ReservarPage() {
                 )}
                 {breakdown.platform_fee > 0 && (
                   <div className="flex justify-between text-[var(--text-secondary)]">
-                    <span>Cargo por servicio</span>
+                    <span className="flex items-center gap-1">
+                      Tarifa de procesamiento
+                      <span className="text-[11px] text-[var(--text-tertiary)]">(MercadoPago)</span>
+                    </span>
                     <span><Price amount={breakdown.platform_fee} /></span>
                   </div>
                 )}
@@ -393,7 +396,7 @@ export default function ReservarPage() {
                   <span>Total MXN</span>
                   <span><Price amount={totalWithIva} /></span>
                 </div>
-                <p className="text-[11px] text-[var(--text-tertiary)] mt-1">IVA incluido en el precio</p>
+                <p className="text-[11px] text-[var(--text-tertiary)] mt-1">IVA y tarifa de pago incluidos en el precio</p>
               </div>
             </div>
           </div>

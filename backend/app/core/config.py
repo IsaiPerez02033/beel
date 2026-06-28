@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     MERCADOPAGO_ACCESS_TOKEN: Optional[str] = None
     MERCADOPAGO_PUBLIC_KEY: Optional[str] = None
     MERCADOPAGO_WEBHOOK_SECRET: Optional[str] = None
-    PLATFORM_FEE_PERCENTAGE: float = 0.0
+    PLATFORM_FEE_PERCENTAGE: float = 4.0  # Cubre comision de MercadoPago (~3.6% + $3.50 fija)
 
     # ── Stripe ───────────────────────────────────────────────────────────────
     STRIPE_SECRET_KEY: Optional[str] = None
