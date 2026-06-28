@@ -439,14 +439,35 @@ input, textarea, select {
   overflow: visible;
   box-shadow: var(--shadow-search);
 }
+/* En móvil: apilar verticalmente */
+@media (max-width: 639px) {
+  .search-bar {
+    flex-direction: column;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+}
 .search-bar-field {
   flex: 1;
   padding: var(--space-3) var(--space-4);
   border-right: 0.5px solid var(--border-default);
   cursor: pointer;
 }
+/* En móvil: borde inferior en vez de derecho */
+@media (max-width: 639px) {
+  .search-bar-field {
+    border-right: none;
+    border-bottom: 0.5px solid var(--border-default);
+    padding: 14px 16px;
+  }
+}
 .search-bar-field:last-of-type {
   border-right: none;
+}
+@media (max-width: 639px) {
+  .search-bar-field:last-of-type {
+    border-bottom: none;
+  }
 }
 .search-bar-field:hover {
   background: var(--bg-subtle);
