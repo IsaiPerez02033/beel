@@ -93,7 +93,7 @@ class Settings(BaseSettings):
     # ── Email ─────────────────────────────────────────────────────────────────
     EMAIL_PROVIDER: str = "sendgrid"
     EMAIL_API_KEY: Optional[str] = None        # SendGrid API key (SG.xxx...)
-    EMAIL_FROM_ADDRESS: str = "mexicobeel@gmail.com"
+    EMAIL_FROM_ADDRESS: str = "hola@beel-mx.com"
     EMAIL_FROM_NAME: str = "Beel"
 
     # ── Sentry ────────────────────────────────────────────────────────────────
