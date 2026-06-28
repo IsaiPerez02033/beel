@@ -96,7 +96,7 @@ export default function TerminosPage() {
             ]} />
             <p className="mt-3">
               Si el anfitrión sospecha que alguien modificó su CLABE sin su consentimiento, debe
-              notificarlo de inmediato a <strong>mexicobeel@gmail.com</strong>.
+              notificarlo de inmediato a <strong>hola@beel-mx.com</strong>.
             </p>
           </Section>
 
@@ -152,7 +152,7 @@ export default function TerminosPage() {
           <Section title="13. Contacto">
             <p>
               Para cualquier duda sobre estos Términos, escríbenos a{" "}
-              <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel.mx">hola@beel.mx</a>.
+              <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel-mx.com">hola@beel-mx.com</a>.
             </p>
           </Section>
 

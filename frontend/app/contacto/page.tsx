@@ -27,7 +27,7 @@ export default function ContactoPage() {
             icon={<Mail size={20} className="text-[var(--color-primary)]" />}
             titulo="Correo"
             desc="Escríbenos y te respondemos lo antes posible."
-            action={<a href="mailto:hola@beel.mx" className="text-body-sm font-medium text-[var(--color-primary)] hover:underline">hola@beel.mx</a>}
+            action={<a href="mailto:hola@beel-mx.com" className="text-body-sm font-medium text-[var(--color-primary)] hover:underline">hola@beel-mx.com</a>}
           />
           <ContactCard
             icon={<MapPin size={20} className="text-[var(--color-primary)]" />}
@@ -45,7 +45,7 @@ export default function ContactoPage() {
             icon={<HelpCircle size={20} className="text-[var(--color-primary)]" />}
             titulo="Soporte de reservas"
             desc="¿Problema con una reserva activa?"
-            action={<a href="mailto:soporte@beel.mx" className="text-body-sm font-medium text-[var(--color-primary)] hover:underline">soporte@beel.mx</a>}
+            action={<a href="mailto:hola@beel-mx.com" className="text-body-sm font-medium text-[var(--color-primary)] hover:underline">hola@beel-mx.com</a>}
           />
         </div>
 

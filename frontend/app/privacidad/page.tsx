@@ -25,7 +25,7 @@ export default function PrivacidadPage() {
               Beel ("nosotros", "la plataforma") es responsable del tratamiento de tus
               datos personales conforme a la Ley Federal de Protección de Datos Personales
               en Posesión de los Particulares (LFPDPPP) de México. Domicilio: México.
-              Contacto: <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel.mx">hola@beel.mx</a>.
+              Contacto: <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel-mx.com">hola@beel-mx.com</a>.
             </p>
           </Section>
 
@@ -82,7 +82,7 @@ export default function PrivacidadPage() {
               Tienes derecho a Acceder, Rectificar, Cancelar tus datos personales u
               Oponerte a su tratamiento, así como a revocar tu consentimiento. Para
               ejercer estos derechos, escríbenos a{" "}
-              <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel.mx">hola@beel.mx</a>{" "}
+              <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel-mx.com">hola@beel-mx.com</a>{" "}
               indicando tu solicitud y los datos involucrados.
             </p>
           </Section>
@@ -114,7 +114,7 @@ export default function PrivacidadPage() {
             <p>
               Para cualquier duda sobre este aviso o el tratamiento de tus datos,
               contáctanos en{" "}
-              <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel.mx">hola@beel.mx</a>.
+              <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel-mx.com">hola@beel-mx.com</a>.
             </p>
           </Section>
 

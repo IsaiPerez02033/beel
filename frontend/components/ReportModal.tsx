@@ -199,7 +199,7 @@ export default function ReportModal({
                     required
                   />
                   <p className="text-caption text-[var(--text-tertiary)] mt-1">
-                    Tu reporte llegará a mexicobeel@gmail.com
+                    Tu reporte llegará a hola@beel-mx.com
                     {reporterEmail ? ` y te responderemos a ${reporterEmail}` : ". Si quieres respuesta, inicia sesión antes de reportar"}.
                   </p>
                 </div>

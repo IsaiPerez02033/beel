@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
 import {
-  X, Phone, ShieldCheck, BadgeCheck, Loader2, MessageCircle, ArrowRight,
+  X, Phone, ShieldCheck, BadgeCheck, Loader2, ArrowRight,
 } from "lucide-react";
 
 interface Props {
@@ -29,7 +29,7 @@ export default function BecomeHostModal({ open, onClose }: Props) {
 
   // Teléfono
   const [phone, setPhone] = useState("+52 ");
-  const [channel, setChannel] = useState<"sms" | "whatsapp">("sms");
+  const channel: "sms" | "whatsapp" = "sms"; // WhatsApp deshabilitado por ahora (requiere sender propio en Meta)
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState("");
   const [phoneBusy, setPhoneBusy] = useState(false);
@@ -155,7 +155,7 @@ export default function BecomeHostModal({ open, onClose }: Props) {
                 <div className="flex-1">
                   <p className="text-body-sm font-medium text-[var(--text-primary)]">1. Verifica tu teléfono</p>
                   <p className="text-caption text-[var(--text-secondary)]">
-                    {phoneVerified ? "Teléfono verificado ✓" : "Código por SMS o WhatsApp"}
+                    {phoneVerified ? "Teléfono verificado ✓" : "Código por SMS"}
                   </p>
                 </div>
               </div>
@@ -171,23 +171,8 @@ export default function BecomeHostModal({ open, onClose }: Props) {
                         placeholder="+52 999 000 0000"
                         type="tel"
                       />
-                      <div className="flex gap-2">
-                        {(["sms", "whatsapp"] as const).map((ch) => (
-                          <button
-                            key={ch}
-                            type="button"
-                            onClick={() => setChannel(ch)}
-                            className={cn(
-                              "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-caption font-medium transition-all",
-                              channel === ch
-                                ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)]"
-                                : "border-[var(--border-subtle)] text-[var(--text-secondary)]"
-                            )}
-                          >
-                            <MessageCircle size={13} /> {ch === "sms" ? "SMS" : "WhatsApp"}
-                          </button>
-                        ))}
-                      </div>
+                      {/* Canal WhatsApp oculto temporalmente: requiere un WhatsApp Sender propio
+                          registrado con Meta. Por ahora solo SMS (channel default = "sms"). */}
                       {phoneError && <p className="text-caption text-red-600">{phoneError}</p>}
                       <button
                         type="button"
