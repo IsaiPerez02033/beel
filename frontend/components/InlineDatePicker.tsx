@@ -110,7 +110,7 @@ export default function InlineDatePicker({ checkIn, checkOut, onCheckIn, onCheck
 
       {/* Calendario inline — se expande debajo sin popups */}
       {open && (
-        <div className="mt-2 border border-[var(--color-primary-border)] border-t-2 border-t-[var(--color-primary)] rounded-xl bg-white shadow-md p-4 select-none">
+        <div className="mt-2 border border-[var(--color-primary-border)] border-t-2 border-t-[var(--color-primary)] rounded-xl bg-[var(--bg-elevated)] shadow-md p-4 select-none">
           <p className="text-caption font-semibold text-center text-[var(--color-primary)] mb-3">
             {step === "from" ? "¿Cuándo llegas?" : "¿Cuándo sales?"}
           </p>

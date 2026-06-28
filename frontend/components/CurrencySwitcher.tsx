@@ -33,7 +33,7 @@ export default function CurrencySwitcher() {
         <ChevronDown size={12} className={cn("transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 bg-white rounded-xl shadow-lg border border-[var(--border-subtle)] py-1 min-w-[220px] z-50">
+        <div className="absolute bottom-full right-0 mb-2 bg-[var(--bg-elevated)] rounded-xl shadow-lg border border-[var(--border-subtle)] py-1 min-w-[220px] z-50">
           {OPTIONS.map((o) => (
             <button
               key={o.code}

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useSafeAuth";
 import dynamic from "next/dynamic";
 
@@ -99,6 +100,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
 
         {/* Auth — solo cliente, sin SSR (zona derecha, mismo peso que izquierda) */}
         <div className="flex-1 flex items-center justify-end gap-2">
+          <ThemeToggle />
           <div className="hidden sm:block">
             <NavbarAuth />
           </div>

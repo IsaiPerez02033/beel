@@ -347,7 +347,7 @@ export default function MensajesPage() {
         lastDateStr = dateStr;
         dateSeparator = (
           <div key={`date-${msg.id}`} className="flex justify-center my-6">
-            <span className="text-[11px] font-semibold text-neutral-400 bg-neutral-50 border border-neutral-100 px-3 py-1 rounded-full uppercase tracking-wider">
+            <span className="text-[11px] font-semibold text-[var(--text-tertiary)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)] px-3 py-1 rounded-full uppercase tracking-wider">
               {dateStr}
             </span>
           </div>
@@ -361,7 +361,7 @@ export default function MensajesPage() {
           {dateSeparator}
           {msg.message_type === "system" ? (
             <div className="flex justify-center my-5">
-              <span className="text-xs text-neutral-500 bg-neutral-50 border border-neutral-200/50 px-4 py-2 rounded-xl max-w-md text-center shadow-sm font-medium">
+              <span className="text-xs text-[var(--text-tertiary)] bg-[var(--bg-subtle)] border border-[var(--border-subtle)]/50 px-4 py-2 rounded-xl max-w-md text-center shadow-sm font-medium">
                 {msg.content ?? msg.body}
               </span>
             </div>
@@ -384,33 +384,33 @@ export default function MensajesPage() {
   };
 
   return (
-    <div className="h-dvh bg-white flex flex-col overflow-hidden" style={{ touchAction: "pan-y" }}>
+    <div className="h-dvh bg-[var(--bg-elevated)] flex flex-col overflow-hidden" style={{ touchAction: "pan-y" }}>
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* ── COLUMNA 1: Lista de conversaciones (Airbnb-style) ── */}
         <aside
           className={cn(
-            "w-full md:w-[350px] lg:w-[380px] border-r border-neutral-200 flex flex-col bg-white flex-shrink-0 z-30 transition-transform duration-300",
+            "w-full md:w-[350px] lg:w-[380px] border-r border-[var(--border-subtle)] flex flex-col bg-[var(--bg-elevated)] flex-shrink-0 z-30 transition-transform duration-300",
             activeConvId ? "hidden md:flex" : "flex"
           )}
         >
           {/* Header lateral con buscador y filtros */}
-          <div className="p-5 border-b border-neutral-100 flex flex-col gap-4">
+          <div className="p-5 border-b border-[var(--border-subtle)] flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold font-display text-neutral-900">Mensajes</h1>
+              <h1 className="text-xl font-bold font-display text-[var(--text-primary)]">Mensajes</h1>
             </div>
             
             {/* Buscador */}
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">
                 <Search size={16} />
               </span>
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por nombre o contenido..."
-                className="w-full pl-10 pr-4 py-2 rounded-full border border-neutral-200 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 placeholder-neutral-400 bg-neutral-50"
+                className="w-full pl-10 pr-4 py-2 rounded-full border border-[var(--border-subtle)] text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 placeholder-neutral-400 bg-[var(--bg-subtle)]"
               />
             </div>
 
@@ -422,7 +422,7 @@ export default function MensajesPage() {
                   "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
                   !filterUnread
                     ? "bg-neutral-900 text-white border-neutral-900"
-                    : "bg-white text-neutral-600 border-neutral-200 hover:border-neutral-300"
+                    : "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
                 )}
               >
                 Todos
@@ -433,7 +433,7 @@ export default function MensajesPage() {
                   "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
                   filterUnread
                     ? "bg-neutral-900 text-white border-neutral-900"
-                    : "bg-white text-neutral-600 border-neutral-200 hover:border-neutral-300"
+                    : "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
                 )}
               >
                 Sin leer
@@ -447,21 +447,21 @@ export default function MensajesPage() {
               <div className="p-5 space-y-4">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="flex gap-3 animate-pulse">
-                    <div className="w-12 h-12 bg-neutral-200 rounded-full flex-shrink-0" />
+                    <div className="w-12 h-12 bg-[var(--bg-arena)] rounded-full flex-shrink-0" />
                     <div className="flex-1 space-y-2 mt-1">
-                      <div className="h-3 bg-neutral-200 w-1/3 rounded" />
-                      <div className="h-2.5 bg-neutral-200 w-full rounded" />
+                      <div className="h-3 bg-[var(--bg-arena)] w-1/3 rounded" />
+                      <div className="h-2.5 bg-[var(--bg-arena)] w-full rounded" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="py-16 px-4 text-center">
-                <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-4 text-neutral-400">
+                <div className="w-16 h-16 bg-[var(--bg-subtle)] rounded-full flex items-center justify-center mx-auto mb-4 text-[var(--text-tertiary)]">
                   <MessageSquare size={24} />
                 </div>
-                <p className="text-sm font-semibold text-neutral-900">Aún no tienes mensajes</p>
-                <p className="text-xs text-neutral-400 mt-1 max-w-[200px] mx-auto">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">Aún no tienes mensajes</p>
+                <p className="text-xs text-[var(--text-tertiary)] mt-1 max-w-[200px] mx-auto">
                   Cuando hagas o recibas una reserva, las conversaciones aparecerán aquí.
                 </p>
               </div>
@@ -480,11 +480,11 @@ export default function MensajesPage() {
         </aside>
 
         {/* ── COLUMNA 2: Chat Activo ── */}
-        <main className={cn("flex-1 flex flex-col bg-white overflow-hidden relative", !activeConvId ? "hidden md:flex" : "flex")}>
+        <main className={cn("flex-1 flex flex-col bg-[var(--bg-elevated)] overflow-hidden relative", !activeConvId ? "hidden md:flex" : "flex")}>
           {activeConvId && activeConv ? (
             <>
               {/* Header del Chat */}
-              <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-neutral-100 flex items-center justify-between bg-white z-10 flex-shrink-0">
+              <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-elevated)] z-10 flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => {
@@ -494,7 +494,7 @@ export default function MensajesPage() {
                         setActiveConvId(null);
                       }
                     }}
-                    className="md:hidden p-1.5 rounded-full hover:bg-neutral-100 text-neutral-600 transition-colors"
+                    className="md:hidden p-1.5 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors"
                   >
                     <ArrowLeft size={18} />
                   </button>
@@ -504,7 +504,7 @@ export default function MensajesPage() {
                       <img
                         src={otherParticipant.avatar_url}
                         alt={otherParticipant.full_name}
-                        className="w-10 h-10 rounded-full object-cover border border-neutral-100 shadow-sm"
+                        className="w-10 h-10 rounded-full object-cover border border-[var(--border-subtle)] shadow-sm"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-neutral-900 text-white font-semibold text-sm flex items-center justify-center shadow-sm">
@@ -515,11 +515,11 @@ export default function MensajesPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[15px] font-semibold text-neutral-900 leading-tight">
+                      <span className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
                         {otherParticipant?.full_name}
                       </span>
                     </div>
-                    <span className="text-[11px] text-neutral-400 font-medium">
+                    <span className="text-[11px] text-[var(--text-tertiary)] font-medium">
                       {isLocalUserGuest ? "Anfitrión de Beel" : "Huésped"}
                     </span>
                   </div>
@@ -529,8 +529,8 @@ export default function MensajesPage() {
                 <button
                   onClick={() => setShowInfoSidebar(!showInfoSidebar)}
                   className={cn(
-                    "p-2 rounded-full border transition-all text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950",
-                    showInfoSidebar ? "border-neutral-900 bg-neutral-50" : "border-neutral-200"
+                    "p-2 rounded-full border transition-all text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]",
+                    showInfoSidebar ? "border-neutral-900 bg-[var(--bg-subtle)]" : "border-[var(--border-subtle)]"
                   )}
                   title="Detalles de la reserva"
                 >
@@ -539,29 +539,29 @@ export default function MensajesPage() {
               </div>
 
               {/* Contenedor de Mensajes */}
-              <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 bg-white">
+              <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 bg-[var(--bg-elevated)]">
                 {renderMessages()}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Barra de reply */}
               {replyingTo && (
-                <div className="px-3 sm:px-5 pt-2 pb-0 flex-shrink-0 flex items-center gap-2 bg-white border-t border-neutral-100">
-                  <div className="flex-1 border-l-4 border-[var(--color-primary)] pl-3 py-1.5 bg-neutral-50 rounded-r-lg min-w-0">
+                <div className="px-3 sm:px-5 pt-2 pb-0 flex-shrink-0 flex items-center gap-2 bg-[var(--bg-elevated)] border-t border-[var(--border-subtle)]">
+                  <div className="flex-1 border-l-4 border-[var(--color-primary)] pl-3 py-1.5 bg-[var(--bg-subtle)] rounded-r-lg min-w-0">
                     <p className="text-[11px] font-semibold text-[var(--color-primary)] truncate">
                       {replyingTo.sender_id === localUserId ? "Tú" : (replyingTo.sender?.full_name ?? "Usuario")}
                     </p>
-                    <p className="text-xs text-neutral-500 truncate">{replyingTo.content ?? replyingTo.body}</p>
+                    <p className="text-xs text-[var(--text-tertiary)] truncate">{replyingTo.content ?? replyingTo.body}</p>
                   </div>
-                  <button onClick={() => setReplyingTo(null)} className="flex-shrink-0 p-2 text-neutral-400 hover:text-neutral-700 active:scale-95">
+                  <button onClick={() => setReplyingTo(null)} className="flex-shrink-0 p-2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] active:scale-95">
                     <X size={16} />
                   </button>
                 </div>
               )}
 
               {/* Caja de Input */}
-              <div className="px-3 sm:px-5 py-3 border-t border-neutral-100 bg-white flex-shrink-0 safe-area-bottom">
-                <div className="relative border border-neutral-200 focus-within:border-neutral-900 focus-within:ring-1 focus-within:ring-neutral-900 rounded-2xl sm:rounded-3xl py-2.5 pl-4 pr-12 transition-all bg-white max-w-3xl mx-auto flex items-end gap-2 shadow-sm">
+              <div className="px-3 sm:px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex-shrink-0 safe-area-bottom">
+                <div className="relative border border-[var(--border-subtle)] focus-within:border-neutral-900 focus-within:ring-1 focus-within:ring-neutral-900 rounded-2xl sm:rounded-3xl py-2.5 pl-4 pr-12 transition-all bg-[var(--bg-elevated)] max-w-3xl mx-auto flex items-end gap-2 shadow-sm">
                   <textarea
                     value={input}
                     onChange={(e) => {
@@ -579,7 +579,7 @@ export default function MensajesPage() {
                     placeholder="Escribe un mensaje..."
                     rows={1}
                     style={{ fontSize: "16px" }} // Evita zoom en iOS (mínimo 16px)
-                    className="w-full resize-none outline-none border-none placeholder-neutral-400 bg-transparent text-neutral-800 py-0.5 max-h-[120px] focus:ring-0 leading-relaxed"
+                    className="w-full resize-none outline-none border-none placeholder-neutral-400 bg-transparent text-[var(--text-primary)] py-0.5 max-h-[120px] focus:ring-0 leading-relaxed"
                     disabled={sending}
                   />
                   <button
@@ -591,18 +591,18 @@ export default function MensajesPage() {
                   </button>
                 </div>
                 {/* Hint solo en desktop */}
-                <p className="hidden sm:block text-[10px] text-neutral-400 text-center mt-2">
+                <p className="hidden sm:block text-[10px] text-[var(--text-tertiary)] text-center mt-2">
                   Presiona Enter para enviar. Shift + Enter para salto de línea.
                 </p>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-neutral-50/50">
-              <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-md border border-neutral-100 text-neutral-400 mb-4 animate-bounce">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-[var(--bg-subtle)]/50">
+              <div className="w-20 h-20 bg-[var(--bg-elevated)] rounded-3xl flex items-center justify-center shadow-md border border-[var(--border-subtle)] text-[var(--text-tertiary)] mb-4 animate-bounce">
                 <MessageSquare size={32} />
               </div>
-              <p className="text-base font-semibold text-neutral-900">Selecciona una conversación</p>
-              <p className="text-xs text-neutral-400 mt-1 max-w-[240px] text-center">
+              <p className="text-base font-semibold text-[var(--text-primary)]">Selecciona una conversación</p>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1 max-w-[240px] text-center">
                 Elige uno de tus chats de la izquierda para comenzar a hablar con el huésped o anfitrión.
               </p>
             </div>
@@ -620,17 +620,17 @@ export default function MensajesPage() {
             />
           <aside
             className={cn(
-              "fixed bottom-0 left-0 right-0 z-40 bg-white rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto",
-              "lg:static lg:rounded-none lg:shadow-none lg:max-h-none lg:w-[320px] xl:w-[360px] lg:flex-shrink-0 lg:border-l lg:border-neutral-200 lg:flex lg:flex-col lg:overflow-y-auto",
+              "fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg-elevated)] rounded-t-2xl shadow-2xl max-h-[85vh] overflow-y-auto",
+              "lg:static lg:rounded-none lg:shadow-none lg:max-h-none lg:w-[320px] xl:w-[360px] lg:flex-shrink-0 lg:border-l lg:border-[var(--border-subtle)] lg:flex lg:flex-col lg:overflow-y-auto",
               "transition-transform duration-300"
             )}
           >
             {/* Header del sidebar */}
-            <div className="p-5 border-b border-neutral-100 flex items-center justify-between flex-shrink-0 bg-white sticky top-0 z-10">
-              <h2 className="text-md font-bold text-neutral-900">Detalles de reservación</h2>
+            <div className="p-5 border-b border-[var(--border-subtle)] flex items-center justify-between flex-shrink-0 bg-[var(--bg-elevated)] sticky top-0 z-10">
+              <h2 className="text-md font-bold text-[var(--text-primary)]">Detalles de reservación</h2>
               <button
                 onClick={() => setShowInfoSidebar(false)}
-                className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-500 hover:text-neutral-900 transition-colors"
+                className="p-1.5 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 <X size={18} />
               </button>
@@ -638,19 +638,19 @@ export default function MensajesPage() {
 
             {loadingReservation ? (
               <div className="p-5 space-y-5 animate-pulse">
-                <div className="w-full aspect-[16/10] bg-neutral-200 rounded-2xl" />
-                <div className="h-4 bg-neutral-200 w-2/3 rounded" />
-                <div className="h-3 bg-neutral-200 w-1/2 rounded" />
+                <div className="w-full aspect-[16/10] bg-[var(--bg-arena)] rounded-2xl" />
+                <div className="h-4 bg-[var(--bg-arena)] w-2/3 rounded" />
+                <div className="h-3 bg-[var(--bg-arena)] w-1/2 rounded" />
                 <div className="space-y-2 pt-4">
-                  <div className="h-3 bg-neutral-200 w-full rounded" />
-                  <div className="h-3 bg-neutral-200 w-full rounded" />
+                  <div className="h-3 bg-[var(--bg-arena)] w-full rounded" />
+                  <div className="h-3 bg-[var(--bg-arena)] w-full rounded" />
                 </div>
               </div>
             ) : reservationDetails ? (
               <div className="p-5 space-y-6 flex-1 pb-16">
                 {/* Mini Tarjeta Propiedad */}
                 <div className="space-y-3">
-                  <div className="relative w-full aspect-[16/10] bg-neutral-100 rounded-2xl overflow-hidden shadow-sm border border-neutral-100">
+                  <div className="relative w-full aspect-[16/10] bg-[var(--bg-subtle)] rounded-2xl overflow-hidden shadow-sm border border-[var(--border-subtle)]">
                     {reservationDetails.reservation_property?.photos?.find(p => p.is_primary)?.url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -659,37 +659,37 @@ export default function MensajesPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-neutral-50 text-neutral-300">
+                      <div className="w-full h-full flex items-center justify-center bg-[var(--bg-subtle)] text-[var(--text-disabled)]">
                         No hay foto
                       </div>
                     )}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-neutral-900 leading-tight">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] leading-tight">
                       {reservationDetails.reservation_property?.title}
                     </h3>
-                    <p className="text-xs text-neutral-400 mt-0.5">
+                    <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
                       {reservationDetails.reservation_property?.city}
                     </p>
                   </div>
                   <Link
                     href={`/reservaciones/${reservationDetails.id}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-900 hover:underline pt-1"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-primary)] hover:underline pt-1"
                   >
                     Detalles de reserva <ExternalLink size={12} />
                   </Link>
                 </div>
 
-                <hr className="border-neutral-100" />
+                <hr className="border-[var(--border-subtle)]" />
 
                 {/* Perfil del otro participante */}
-                <div className="flex items-center gap-3 bg-neutral-50 p-4 rounded-2xl border border-neutral-100 shadow-sm">
+                <div className="flex items-center gap-3 bg-[var(--bg-subtle)] p-4 rounded-2xl border border-[var(--border-subtle)] shadow-sm">
                   {otherParticipant?.avatar_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={otherParticipant.avatar_url}
                       alt={otherParticipant.full_name}
-                      className="w-12 h-12 rounded-full object-cover border border-neutral-100"
+                      className="w-12 h-12 rounded-full object-cover border border-[var(--border-subtle)]"
                     />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-neutral-900 text-white font-semibold text-sm flex items-center justify-center">
@@ -697,10 +697,10 @@ export default function MensajesPage() {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <p className="text-xs text-neutral-400 font-medium uppercase tracking-wider">
+                    <p className="text-xs text-[var(--text-tertiary)] font-medium uppercase tracking-wider">
                       {isLocalUserGuest ? "Tu Anfitrión" : "Tu Huésped"}
                     </p>
-                    <p className="text-sm font-semibold text-neutral-900 truncate">
+                    <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
                       {otherParticipant?.full_name}
                     </p>
                     <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium mt-0.5">
@@ -710,39 +710,39 @@ export default function MensajesPage() {
                   </div>
                 </div>
 
-                <hr className="border-neutral-100" />
+                <hr className="border-[var(--border-subtle)]" />
 
                 {/* Fechas e Información del Viaje */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-widest text-neutral-400">Información del viaje</h4>
+                  <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-widest text-[var(--text-tertiary)]">Información del viaje</h4>
                   
                   <div className="flex items-start gap-3">
-                    <Calendar size={16} className="text-neutral-500 mt-0.5" />
+                    <Calendar size={16} className="text-[var(--text-tertiary)] mt-0.5" />
                     <div>
-                      <p className="text-xs font-semibold text-neutral-700">Fechas</p>
-                      <p className="text-xs text-neutral-500 mt-0.5">
+                      <p className="text-xs font-semibold text-[var(--text-secondary)]">Fechas</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
                         {formatDateRange(reservationDetails.check_in, reservationDetails.check_out)}
                       </p>
-                      <p className="text-[10px] text-neutral-400 mt-0.5">
+                      <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
                         ({reservationDetails.nights} {reservationDetails.nights === 1 ? "noche" : "noches"})
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <Users size={16} className="text-neutral-500 mt-0.5" />
+                    <Users size={16} className="text-[var(--text-tertiary)] mt-0.5" />
                     <div>
-                      <p className="text-xs font-semibold text-neutral-700">Huéspedes</p>
-                      <p className="text-xs text-neutral-500 mt-0.5">
+                      <p className="text-xs font-semibold text-[var(--text-secondary)]">Huéspedes</p>
+                      <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
                         {reservationDetails.guests_count} {reservationDetails.guests_count === 1 ? "huésped" : "huéspedes"}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <CreditCard size={16} className="text-neutral-500 mt-0.5" />
+                    <CreditCard size={16} className="text-[var(--text-tertiary)] mt-0.5" />
                     <div>
-                      <p className="text-xs font-semibold text-neutral-700">Estado de reserva</p>
+                      <p className="text-xs font-semibold text-[var(--text-secondary)]">Estado de reserva</p>
                       <span className={cn(
                         "inline-block text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider mt-1",
                         reservationDetails.status === "confirmed" && "bg-emerald-100 text-emerald-800 border border-emerald-200",
@@ -758,11 +758,11 @@ export default function MensajesPage() {
                 {/* Desglose de Pago (solo visible si el usuario logueado es el HUESPED para privacidad de datos) */}
                 {isLocalUserGuest && (
                   <>
-                    <hr className="border-neutral-100" />
+                    <hr className="border-[var(--border-subtle)]" />
                     <div className="space-y-4">
-                      <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-widest text-neutral-400">Información de pago</h4>
+                      <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-widest text-[var(--text-tertiary)]">Información de pago</h4>
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs text-neutral-500">
+                        <div className="flex items-center justify-between text-xs text-[var(--text-tertiary)]">
                           <span>
                             {formatCurrency(reservationDetails.price_per_night_snapshot, reservationDetails.currency)} x {reservationDetails.nights} noches
                           </span>
@@ -771,19 +771,19 @@ export default function MensajesPage() {
                           </span>
                         </div>
                         {parseFloat(reservationDetails.cleaning_fee_snapshot.toString()) > 0 && (
-                          <div className="flex items-center justify-between text-xs text-neutral-500">
+                          <div className="flex items-center justify-between text-xs text-[var(--text-tertiary)]">
                             <span>Tarifa de limpieza</span>
                             <span>{formatCurrency(reservationDetails.cleaning_fee_snapshot, reservationDetails.currency)}</span>
                           </div>
                         )}
                         {parseFloat(reservationDetails.platform_fee_snapshot.toString()) > 0 && (
-                          <div className="flex items-center justify-between text-xs text-neutral-500">
+                          <div className="flex items-center justify-between text-xs text-[var(--text-tertiary)]">
                             <span>Tarifa de plataforma</span>
                             <span>{formatCurrency(reservationDetails.platform_fee_snapshot, reservationDetails.currency)}</span>
                           </div>
                         )}
                         
-                        <div className="border-t border-neutral-100 pt-2 flex items-center justify-between text-sm font-bold text-neutral-900">
+                        <div className="border-t border-[var(--border-subtle)] pt-2 flex items-center justify-between text-sm font-bold text-[var(--text-primary)]">
                           <span>Total ({reservationDetails.currency})</span>
                           <span>{formatCurrency(reservationDetails.total_amount, reservationDetails.currency)}</span>
                         </div>
@@ -793,13 +793,13 @@ export default function MensajesPage() {
                 )}
               </div>
             ) : (
-              <div className="p-5 text-center text-xs text-neutral-400">
+              <div className="p-5 text-center text-xs text-[var(--text-tertiary)]">
                 No hay información de reserva vinculada a esta conversación.
               </div>
             )}
 
             {/* Reportar usuario */}
-            <div className="p-5 border-t border-neutral-100 flex justify-center">
+            <div className="p-5 border-t border-[var(--border-subtle)] flex justify-center">
               <ReportButton
                 targetType="user"
                 targetTitle={otherParticipant?.full_name}
@@ -896,7 +896,7 @@ function SwipeableMessage({
         style={swiping ? { transform: `translateX(${swipeX}px)`, transition: "none" } : { transition: "transform 0.2s ease" }}
       >
         {!isMine && (
-          <span className="text-[11px] text-neutral-400 font-medium mb-1 ml-2">
+          <span className="text-[11px] text-[var(--text-tertiary)] font-medium mb-1 ml-2">
             {msg.sender?.full_name || otherParticipant?.full_name}
           </span>
         )}
@@ -907,7 +907,7 @@ function SwipeableMessage({
           <button
             onClick={onReply}
             className={cn(
-              "hidden sm:flex absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white border border-neutral-200 shadow-sm text-neutral-500 hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity z-10",
+              "hidden sm:flex absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] shadow-sm text-[var(--text-tertiary)] hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity z-10",
               isMine ? "-left-9" : "-right-9"
             )}
             title="Responder"
@@ -920,7 +920,7 @@ function SwipeableMessage({
               "px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm",
               isMine
                 ? "bg-[#222222] text-white rounded-tr-none"
-                : "bg-[#F7F7F7] text-neutral-800 rounded-tl-none border border-neutral-200/50"
+                : "bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-tl-none border border-[var(--border-subtle)]/50"
             )}
           >
             {/* Cita del mensaje respondido */}
@@ -931,7 +931,7 @@ function SwipeableMessage({
                   "w-full text-left mb-2 rounded-lg px-3 py-1.5 border-l-4 text-xs",
                   isMine
                     ? "bg-white/10 border-white/60 text-white/80"
-                    : "bg-neutral-200/60 border-neutral-400 text-neutral-600"
+                    : "bg-[var(--bg-arena)]/60 border-[var(--border-strong)] text-[var(--text-secondary)]"
                 )}
               >
                 <p className="font-semibold truncate">{msg.reply_to.sender_name ?? "Usuario"}</p>
@@ -1024,10 +1024,10 @@ function ConversationItem({
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-start gap-3.5 px-5 py-4 text-left transition-all border-b border-neutral-100",
+        "w-full flex items-start gap-3.5 px-5 py-4 text-left transition-all border-b border-[var(--border-subtle)]",
         active
-          ? "bg-neutral-50 border-l-4 border-l-neutral-900"
-          : "hover:bg-neutral-50/60 border-l-4 border-l-transparent"
+          ? "bg-[var(--bg-subtle)] border-l-4 border-l-neutral-900"
+          : "hover:bg-[var(--bg-subtle)]/60 border-l-4 border-l-transparent"
       )}
     >
       <div className="relative flex-shrink-0">
@@ -1036,7 +1036,7 @@ function ConversationItem({
           <img
             src={other.avatar_url}
             alt={other.full_name}
-            className="w-12 h-12 rounded-full object-cover border border-neutral-200 shadow-sm"
+            className="w-12 h-12 rounded-full object-cover border border-[var(--border-subtle)] shadow-sm"
           />
         ) : (
           <div className="w-12 h-12 rounded-full bg-neutral-900 text-white font-semibold text-sm flex items-center justify-center shadow-sm">
@@ -1052,24 +1052,24 @@ function ConversationItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-0.5">
           <span className={cn(
-            "text-sm text-neutral-900 truncate leading-tight",
+            "text-sm text-[var(--text-primary)] truncate leading-tight",
             unreadCount > 0 ? "font-bold" : "font-semibold"
           )}>
             {other?.full_name}
           </span>
-          <span className="text-[10px] text-neutral-400 ml-2 flex-shrink-0 font-medium">{ts}</span>
+          <span className="text-[10px] text-[var(--text-tertiary)] ml-2 flex-shrink-0 font-medium">{ts}</span>
         </div>
         
         {/* Vista previa de mensaje */}
         <p className={cn(
           "text-xs truncate leading-snug",
-          unreadCount > 0 ? "text-neutral-950 font-semibold" : "text-neutral-500"
+          unreadCount > 0 ? "text-[var(--text-primary)] font-semibold" : "text-[var(--text-tertiary)]"
         )}>
           {preview}
         </p>
 
         {/* Rol descriptivo del chat */}
-        <span className="inline-block text-[9px] text-neutral-400 font-semibold mt-1 bg-neutral-100 px-2 py-0.5 rounded-md">
+        <span className="inline-block text-[9px] text-[var(--text-tertiary)] font-semibold mt-1 bg-[var(--bg-subtle)] px-2 py-0.5 rounded-md">
           {isGuest ? "Hospedaje" : "Tu propiedad"}
         </span>
       </div>

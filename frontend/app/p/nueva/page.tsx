@@ -707,7 +707,7 @@ function Step4({ form, set, amenities }: StepProps & { amenities: Amenity[] }) {
                 )}
               >
                 <span className={cn(
-                  "inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform duration-200 mt-0.5",
+                  "inline-block h-5 w-5 rounded-full bg-[var(--bg-elevated)] shadow transform transition-transform duration-200 mt-0.5",
                   form[key] ? "translate-x-5" : "translate-x-0.5"
                 )} />
               </button>

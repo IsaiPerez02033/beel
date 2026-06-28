@@ -538,7 +538,7 @@ function PropertiesTab({ properties, onDelete }: { properties: Property[]; onDel
     <>
     {confirmDel && (
       <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => !deleting && setConfirmDel(null)}>
-        <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-[var(--bg-elevated)] rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md" onClick={(e) => e.stopPropagation()}>
           <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">¿Eliminar propiedad?</h3>
           <p className="text-body-sm text-[var(--text-secondary)] mb-1 truncate">{confirmDel.title}</p>
           <p className="text-body-sm text-[var(--text-secondary)] mb-5">

@@ -163,7 +163,7 @@ export default function DateRangePicker({
               onClick={(e) => { e.stopPropagation(); openWithPos("from"); }}
               className={cn(
                 "search-bar-field flex flex-col justify-center cursor-pointer",
-                open && selecting === "from" && "bg-white !border-r !border-r-[var(--color-primary)] ring-1 ring-[var(--color-primary)] ring-inset"
+                open && selecting === "from" && "bg-[var(--bg-elevated)] !border-r !border-r-[var(--color-primary)] ring-1 ring-[var(--color-primary)] ring-inset"
               )}
             >
               <span className="search-bar-label">Llegada</span>
@@ -176,7 +176,7 @@ export default function DateRangePicker({
               onClick={(e) => { e.stopPropagation(); openWithPos("to"); }}
               className={cn(
                 "search-bar-field flex flex-col justify-center cursor-pointer",
-                open && selecting === "to" && "bg-white ring-1 ring-[var(--color-primary)] ring-inset"
+                open && selecting === "to" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
               )}
             >
               <span className="search-bar-label">Salida</span>
@@ -215,7 +215,7 @@ export default function DateRangePicker({
             zIndex: 9999,
             borderTop: "3px solid var(--color-primary)",
           }}
-          className="bg-white rounded-2xl shadow-2xl border border-[var(--border-subtle)] p-4 select-none w-[320px]"
+          className="bg-[var(--bg-elevated)] rounded-2xl shadow-2xl border border-[var(--border-subtle)] p-4 select-none w-[320px]"
         >
           <p className="text-caption text-[var(--text-secondary)] text-center mb-3 font-medium">
             {selecting === "from" ? "¿Cuándo llegas?" : "¿Cuándo sales?"}

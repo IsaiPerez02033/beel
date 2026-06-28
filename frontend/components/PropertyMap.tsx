@@ -90,7 +90,7 @@ export default function PropertyMap({ lat, lng, title, exact = false }: Props) {
   return (
     <div
       ref={mapRef}
-      className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden border border-neutral-200 shadow-sm bg-neutral-100"
+      className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm bg-[var(--bg-subtle)]"
     />
   );
 }
