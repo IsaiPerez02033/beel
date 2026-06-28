@@ -9,7 +9,7 @@ import { pluralNights } from "@/lib/utils";
 import Price from "@/components/Price";
 import { format, parseISO, differenceInCalendarDays, addDays } from "date-fns";
 import { es } from "date-fns/locale";
-import { Shield, ChevronLeft, Loader2, Pencil, X, Plus, Minus, CalendarDays, Users } from "lucide-react";
+import { Shield, ChevronLeft, Loader2, Pencil, X, Plus, Minus, CalendarDays, Users, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { DayPicker } from "react-day-picker";
@@ -178,6 +178,16 @@ export default function ReservarPage() {
                 <h1 className="text-h1 font-display font-medium text-[var(--text-primary)] mb-6">
                   Confirmar y pagar
                 </h1>
+
+                {/* Aviso de fase de demostración */}
+                <div className="mb-6 flex items-start gap-3 rounded-2xl border border-[#F5A623]/40 bg-[#F5A623]/10 p-4">
+                  <AlertTriangle size={18} className="text-[#B5790F] flex-shrink-0 mt-0.5" />
+                  <p className="text-body-sm text-[var(--text-primary)] leading-snug">
+                    <strong>Beel está en fase de demostración.</strong> Esta propiedad es
+                    un ejemplo ficticio. Por favor <strong>no realices ningún pago</strong>;
+                    no se trata de una reservación real.
+                  </p>
+                </div>
 
                 {/* ── 1. Tu viaje ── */}
                 <section className="mb-6">
