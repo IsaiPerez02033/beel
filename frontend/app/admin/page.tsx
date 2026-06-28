@@ -177,10 +177,10 @@ export default function AdminPage() {
         )}
 
         {/* Búsqueda */}
-        <div className="relative mb-4">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+        <div className="input w-full flex items-center gap-2 p-0 overflow-hidden focus-within:ring-1 focus-within:ring-neutral-900 focus-within:border-neutral-900 mb-4">
+          <span className="pl-3 flex-shrink-0 text-[var(--text-tertiary)]"><Search size={15} /></span>
           <input
-            className="input w-full pl-9 text-sm"
+            className="flex-1 py-2.5 pr-3 outline-none border-none bg-transparent text-sm placeholder-[var(--text-tertiary)]"
             placeholder="Buscar por propiedad, huésped o anfitrión…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
