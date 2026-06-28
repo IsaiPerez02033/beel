@@ -52,11 +52,14 @@ export default function DateRangePicker({
 
   const triggerRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const justOpenedRef = useRef(false);
 
   const range: DateRange = { from: toDate(checkIn), to: toDate(checkOut) };
 
   // Posicionar el popover bajo el trigger
   const openWithPos = useCallback((which: "from" | "to") => {
+    justOpenedRef.current = true;
+    setTimeout(() => { justOpenedRef.current = false; }, 100);
     setSelecting(which);
     if (triggerRef.current) {
       setPopoverPos(computePos(triggerRef.current.getBoundingClientRect()));
@@ -193,11 +196,11 @@ export default function DateRangePicker({
         )}
       </div>
 
-      {/* Backdrop invisible — cierra al hacer click fuera sin interferir con eventos */}
+      {/* Backdrop invisible — cierra al hacer click fuera */}
       {open && (
         <div
           style={{ position: "fixed", inset: 0, zIndex: 9998 }}
-          onClick={() => setOpen(false)}
+          onClick={() => { if (!justOpenedRef.current) setOpen(false); }}
         />
       )}
 
