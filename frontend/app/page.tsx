@@ -34,14 +34,34 @@ export default async function HomePage() {
       <Navbar />
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative bg-[var(--color-arena)] pt-12 pb-10 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-display font-display font-medium text-[var(--text-primary)] mb-2">
+      <section
+        className="relative pt-14 pb-12 px-4 overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #F1EFE8 0%, #EDE8DE 40%, rgba(20,122,92,0.06) 100%)",
+        }}
+      >
+        {/* Orbes decorativos de fondo */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-96 h-96 rounded-full opacity-20"
+            style={{ background: "radial-gradient(circle, rgba(245,166,35,0.3) 0%, transparent 70%)" }} />
+          <div className="absolute -bottom-10 -left-10 w-72 h-72 rounded-full opacity-15"
+            style={{ background: "radial-gradient(circle, rgba(20,122,92,0.4) 0%, transparent 70%)" }} />
+        </div>
+
+        <div className="max-w-4xl mx-auto text-center relative">
+          <h1 className="text-display font-display font-bold text-[var(--text-primary)] mb-3 leading-tight">
             Tu próxima escapada en{" "}
-            <span className="text-[var(--color-primary)]">México</span>
+            <span className="relative inline-block">
+              <span className="relative z-10 text-[var(--color-primary)]">México</span>
+              <span className="absolute -bottom-1 left-0 right-0 h-2 rounded-full opacity-30"
+                style={{ background: "var(--color-accent)" }} />
+            </span>
           </h1>
-          <p className="text-body-lg text-[var(--text-secondary)] mb-8">
-            Casas, villas y departamentos con anfitriones locales
+          <p className="text-body-lg text-[var(--text-secondary)] mb-2 max-w-xl mx-auto">
+            Hospedajes auténticos con anfitriones locales.
+          </p>
+          <p className="text-body-sm text-[var(--text-tertiary)] mb-8">
+            Casas, villas y departamentos en todo México.
           </p>
 
           <SearchBar />

@@ -72,8 +72,8 @@
   --shadow-sm:               0 1px 4px rgba(0,0,0,0.06);
   --shadow-md:               0 2px 8px rgba(0,0,0,0.08);
   --shadow-lg:               0 8px 24px rgba(0,0,0,0.12);
-  --shadow-card:             0 4px 16px rgba(29,158,117,0.12);
-  --shadow-search:           0 2px 12px rgba(15,110,86,0.10);
+  --shadow-card:             0 4px 20px rgba(20,122,92,0.12), 0 1px 4px rgba(245,166,35,0.06);
+  --shadow-search:           0 4px 20px rgba(20,122,92,0.14), 0 1px 6px rgba(0,0,0,0.06);
 
   /* ── Tipografía ── */
   --font-display:            "Plus Jakarta Sans", system-ui, sans-serif;
@@ -256,18 +256,20 @@ input, textarea, select {
 .text-display {
   font-family: var(--font-display);
   font-size: var(--text-display);
-  font-weight: 500;
-  line-height: 1.2;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 .text-h1 {
   font-family: var(--font-display);
   font-size: var(--text-h1);
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 .text-h2 {
   font-family: var(--font-display);
   font-size: var(--text-h2);
-  font-weight: 500;
+  font-weight: 600;
 }
 .text-body { font-size: var(--text-body); line-height: 1.6; }
 .text-caption { font-size: var(--text-caption); }
@@ -306,14 +308,22 @@ input, textarea, select {
 }
 
 .btn-primary {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
+  background: var(--color-accent);
+  color: var(--color-tierra);
+  border-color: var(--color-accent);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 .btn-primary:hover {
-  background: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-  color: #fff;
+  background: #E08A0A;
+  border-color: #E08A0A;
+  color: var(--color-tierra);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245,166,35,0.35);
+}
+.btn-primary:active {
+  transform: translateY(0px);
+  box-shadow: none;
 }
 
 .btn-accent {
@@ -359,8 +369,18 @@ input, textarea, select {
   white-space: nowrap;
 }
 .badge-verified  { background: var(--color-primary-light); color: var(--color-primary-dark); }
-.badge-fast      { background: var(--color-primary-light); color: var(--color-primary-dark); }
+.badge-fast      {
+  background: var(--color-accent);
+  color: var(--color-tierra);
+  font-weight: 600;
+  animation: badge-pulse 2.5s ease-in-out infinite;
+}
 .badge-accent    { background: var(--color-accent-light);  color: var(--color-accent-dark); }
+
+@keyframes badge-pulse {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 10px rgba(245,166,35,0.5); }
+}
 .badge-brand     { background: var(--color-primary);       color: #fff; }
 .badge-neutral   { background: var(--bg-arena);            color: var(--text-secondary); }
 
@@ -370,10 +390,15 @@ input, textarea, select {
   border: 0.5px solid var(--border-subtle);
   border-radius: var(--radius-card);
   overflow: hidden;
-  transition: box-shadow var(--transition-normal);
+  transition:
+    box-shadow 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 150ms ease;
 }
 .card:hover {
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 12px 40px rgba(20,122,92,0.15), 0 2px 8px rgba(245,166,35,0.08);
+  transform: translateY(-3px);
+  border-color: var(--color-primary-border);
 }
 
 /* Property card foto — aspect ratio 4:3 */
@@ -383,14 +408,25 @@ input, textarea, select {
   position: relative;
   background: var(--color-primary-light);
 }
+.card-photo::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: linear-gradient(to top, rgba(20,122,92,0.35), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
 .card-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-slow);
+  transition: transform 350ms ease;
 }
 .card:hover .card-photo img {
-  transform: scale(1.03);
+  transform: scale(1.05);
 }
 
 /* Chip de anfitrión en la foto — diferenciador de Beel */
