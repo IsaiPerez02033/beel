@@ -100,39 +100,36 @@ async def search_properties(
 
     query = _base_query().where(Property.status == status)
 
-    # Filtro por tipo de propiedad
-    if tipo:
-        query = query.where(Property.property_type == tipo)
+    # ── Filtros DUROS (excluyen resultados) ───────────────────────────────────
 
-    # Filtro por huéspedes
-    if huespedes:
-        query = query.where(Property.max_guests >= huespedes)
-
-    # Filtro por precio
-    if precio_min is not None:
-        query = query.where(Property.price_per_night >= precio_min)
-    if precio_max is not None:
-        query = query.where(Property.price_per_night <= precio_max)
-
-    # Filtros booleanos
-    if mascotas:
-        query = query.where(Property.allows_pets.is_(True))
-    if instant_booking:
-        query = query.where(Property.instant_booking.is_(True))
-
-    # Búsqueda por texto (ciudad, colonia, título)
+    # Destino: SOLO ciudad o estado — nunca título ni dirección.
+    # Si el usuario busca "Mérida", solo aparecen propiedades de Mérida.
     if destino:
         search_term = f"%{destino}%"
         query = query.where(
             or_(
                 Property.city.ilike(search_term),
-                Property.neighborhood.ilike(search_term),
-                Property.title.ilike(search_term),
-                Property.address.ilike(search_term),
+                Property.state.ilike(search_term),
             )
         )
 
-    # Búsqueda por proximidad geográfica (earthdistance de PostgreSQL)
+    # Tipo de propiedad (filtro exacto)
+    if tipo:
+        query = query.where(Property.property_type == tipo)
+
+    # Precio (filtro exacto)
+    if precio_min is not None:
+        query = query.where(Property.price_per_night >= precio_min)
+    if precio_max is not None:
+        query = query.where(Property.price_per_night <= precio_max)
+
+    # Mascotas e instant booking (si el usuario los activa explícitamente)
+    if mascotas:
+        query = query.where(Property.allows_pets.is_(True))
+    if instant_booking:
+        query = query.where(Property.instant_booking.is_(True))
+
+    # Proximidad geográfica
     if lat is not None and lng is not None:
         distance_filter = text(
             "earth_distance(ll_to_earth(latitude, longitude), "
@@ -140,7 +137,20 @@ async def search_properties(
         ).bindparams(lat=lat, lng=lng, radius=radio_km * 1000)
         query = query.where(distance_filter)
 
-    # Filtrar disponibilidad (si hay fechas)
+    # ── Scoring de relevancia ─────────────────────────────────────────────────
+    # Las propiedades que cumplen huéspedes y disponibilidad aparecen primero,
+    # pero no se excluyen las que no cumplen — se muestran más abajo.
+
+    # Columna de relevancia para ordenar
+    relevance_cases = []
+
+    # +3 si tiene capacidad suficiente
+    if huespedes:
+        relevance_cases.append(
+            case((Property.max_guests >= huespedes, 3), else_=0)
+        )
+
+    # +2 si está disponible en las fechas (subquery de disponibilidad)
     if check_in and check_out:
         from sqlalchemy import not_, exists
         overlap_sq = (
@@ -160,10 +170,21 @@ async def search_properties(
                 check_in=check_in,
             )
         )
-        query = query.where(not_(exists(overlap_sq)))
+        relevance_cases.append(
+            case((not_(exists(overlap_sq)), 2), else_=0)
+        )
 
-    # Ordenar por ranking_score descendente
-    query = query.order_by(Property.ranking_score.desc(), Property.created_at.desc())
+    # Orden final: relevancia calculada DESC, luego ranking_score, luego fecha
+    if relevance_cases:
+        from sqlalchemy import literal_column
+        relevance_expr = sum(relevance_cases[1:], relevance_cases[0])
+        query = query.order_by(
+            relevance_expr.desc(),
+            Property.ranking_score.desc(),
+            Property.created_at.desc(),
+        )
+    else:
+        query = query.order_by(Property.ranking_score.desc(), Property.created_at.desc())
 
     # Contar total
     count_query = select(func.count()).select_from(query.subquery())
