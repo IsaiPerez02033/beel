@@ -61,7 +61,7 @@ export default function SplashScreen({ onFinish }: Props) {
       {/* Botón saltar — encima de la marca de agua de Gemini */}
       <button
         onClick={(e) => { e.stopPropagation(); skip(); }}
-        className="absolute bottom-0 right-0 text-white font-medium px-5 py-3 transition-all active:scale-95 hover:opacity-90"
+        className="absolute bottom-10 right-0 text-white font-medium px-5 py-3 transition-all active:scale-95 hover:opacity-90"
         style={{ fontSize: "15px", backgroundColor: "#147A5C", minWidth: "90px", minHeight: "48px" }}
       >
         Saltar →
