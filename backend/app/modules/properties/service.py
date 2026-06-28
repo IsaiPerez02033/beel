@@ -281,6 +281,49 @@ async def create_property(
     await db.flush()
 
     logger.info("Propiedad creada: %s por host %s", property_.id, host.id)
+
+    # Notificar al admin por email para que revise la propiedad
+    import asyncio
+    try:
+        from app.core.email import _send
+        from app.core.config import settings
+        frontend = settings.FRONTEND_URL or "https://beel.mx"
+        asyncio.ensure_future(_send(
+            to_email="mexicobeel@gmail.com",
+            to_name="Beel Admin",
+            subject=f"🏠 Nueva propiedad en revisión: {data.title}",
+            html=f"""
+            <div style="font-family:Arial,sans-serif;padding:32px;background:#F1EFE8;">
+              <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:32px;">
+                <h2 style="color:#147A5C;margin:0 0 6px;">Nueva propiedad pendiente de revisión</h2>
+                <p style="color:#9C9A96;font-size:13px;margin:0 0 24px;">Requiere tu aprobación antes de publicarse</p>
+
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:24px;">
+                  <tr><td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:13px;color:#9C9A96;width:120px;">Propiedad</td>
+                      <td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:14px;font-weight:600;color:#2C2C2A;">{data.title}</td></tr>
+                  <tr><td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:13px;color:#9C9A96;">Tipo</td>
+                      <td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:14px;color:#2C2C2A;">{data.property_type}</td></tr>
+                  <tr><td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:13px;color:#9C9A96;">Ubicación</td>
+                      <td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:14px;color:#2C2C2A;">{data.city}, {data.state}</td></tr>
+                  <tr><td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:13px;color:#9C9A96;">Precio</td>
+                      <td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:14px;color:#2C2C2A;">${float(data.price_per_night):,.0f} MXN/noche</td></tr>
+                  <tr><td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:13px;color:#9C9A96;">Capacidad</td>
+                      <td style="padding:8px 0;border-bottom:1px solid #EBEBEB;font-size:14px;color:#2C2C2A;">{data.max_guests} huéspedes · {data.bedrooms} rec · {data.beds} camas</td></tr>
+                  <tr><td style="padding:8px 0;font-size:13px;color:#9C9A96;">Anfitrión</td>
+                      <td style="padding:8px 0;font-size:14px;color:#2C2C2A;">{host.full_name} ({host.email})</td></tr>
+                </table>
+
+                <a href="{frontend}/admin/propiedades"
+                   style="display:inline-block;background:#147A5C;color:#fff;padding:12px 28px;border-radius:10px;font-size:15px;font-weight:500;text-decoration:none;">
+                  Ir al panel de moderación →
+                </a>
+              </div>
+            </div>
+            """,
+        ))
+    except Exception as e:
+        logger.error("Error al notificar nueva propiedad al admin: %s", e)
+
     # Re-consultar con relaciones (host/photos/amenities) cargadas para que la
     # serialización del response_model no dispare un lazy-load fuera del greenlet.
     return await get_property(db, property_.id)
