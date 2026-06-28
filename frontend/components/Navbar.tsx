@@ -58,9 +58,9 @@ export default function Navbar({ transparent = false }: NavbarProps) {
         <div className="flex-1 flex items-center min-w-0">
           <Link href="/" className="flex-shrink-0 flex items-center">
             <Image
-              src="/beel_logo_black_white.png"
+              src="/beel_logo_transpa.svg"
               alt="Beel"
-              width={110}
+              width={42}
               height={42}
               className="h-10 w-auto"
               priority
