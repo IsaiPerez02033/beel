@@ -166,7 +166,7 @@ export default function HostProfilePage() {
           </div>
 
           {!isOwnProfile && (
-            <button onClick={openMessage} className="btn btn-primary px-5 py-2.5 flex items-center gap-2 whitespace-nowrap">
+            <button onClick={openMessage} className="btn btn-primary px-5 py-2.5 flex items-center justify-center gap-2 whitespace-nowrap w-full sm:w-auto">
               <MessageCircle size={16} /> Enviar mensaje
             </button>
           )}
