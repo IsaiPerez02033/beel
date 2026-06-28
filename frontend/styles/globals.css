@@ -77,6 +77,7 @@
 
   /* ── Tipografía ── */
   --font-display:            "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-serif:              "Fraunces", Georgia, serif;
   --font-body:               "Inter", system-ui, sans-serif;
   --font-mono:               "JetBrains Mono", "Fira Code", monospace;
 

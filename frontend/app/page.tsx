@@ -49,15 +49,20 @@ export default async function HomePage() {
         </div>
 
         <div className="max-w-4xl mx-auto text-center relative">
-          <h1 className="text-display font-display font-bold text-[var(--text-primary)] mb-3 leading-tight">
+          <h1 className="font-bold text-[var(--text-primary)] mb-3 leading-tight"
+            style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 4vw, 40px)", letterSpacing: "-0.02em" }}>
             Tu próxima escapada en{" "}
             <span className="relative inline-block">
-              <span className="relative z-10 text-[var(--color-primary)]">México</span>
+              <span className="relative z-10 text-[var(--color-primary)]"
+                style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontWeight: 600 }}>
+                México
+              </span>
               <span className="absolute -bottom-1 left-0 right-0 h-2 rounded-full opacity-30"
                 style={{ background: "var(--color-accent)" }} />
             </span>
           </h1>
-          <p className="text-body-lg text-[var(--text-secondary)] mb-2 max-w-xl mx-auto">
+          <p className="text-body-lg text-[var(--text-secondary)] mb-2 max-w-xl mx-auto"
+            style={{ fontFamily: "var(--font-serif)", fontStyle: "italic", fontWeight: 300 }}>
             Hospedajes auténticos con anfitriones locales.
           </p>
           <p className="text-body-sm text-[var(--text-tertiary)] mb-8">
