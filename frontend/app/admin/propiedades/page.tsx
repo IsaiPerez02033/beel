@@ -10,7 +10,7 @@ import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
   ShieldCheck, RefreshCw, Check, X, MapPin, Users, BedDouble,
-  Loader2, ChevronLeft, BadgeCheck, Clock, Trash2,
+  Loader2, ChevronLeft, BadgeCheck, Clock, Trash2, Search,
 } from "lucide-react";
 import type { Property } from "@/types";
 
@@ -29,6 +29,7 @@ export default function AdminPropiedadesPage() {
 
   const [tab, setTab] = useState<Tab>("pending_review");
   const [properties, setProperties] = useState<Property[]>([]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // null = verificando
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -150,6 +151,22 @@ export default function AdminPropiedadesPage() {
           </button>
         </div>
 
+        {/* Buscador */}
+        <div className="input w-full flex items-center gap-2 p-0 overflow-hidden focus-within:ring-1 focus-within:ring-neutral-900 focus-within:border-neutral-900 mb-4">
+          <span className="pl-3 flex-shrink-0 text-[var(--text-tertiary)]"><Search size={15} /></span>
+          <input
+            className="flex-1 py-2.5 pr-3 outline-none border-none bg-transparent text-sm placeholder-[var(--text-tertiary)]"
+            placeholder="Buscar por nombre de propiedad o anfitrión…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="pr-3 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-[var(--border-subtle)]">
           {TABS.map((t) => (
@@ -174,16 +191,25 @@ export default function AdminPropiedadesPage() {
 
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[var(--text-tertiary)]" /></div>
-        ) : properties.length === 0 ? (
+        ) : (() => {
+          const q = search.toLowerCase().trim();
+          const filtered = q
+            ? properties.filter((p) =>
+                p.title?.toLowerCase().includes(q) ||
+                p.host?.full_name?.toLowerCase().includes(q) ||
+                p.city?.toLowerCase().includes(q)
+              )
+            : properties;
+          return filtered.length === 0 ? (
           <div className="text-center py-20">
             <Clock size={40} className="text-[var(--text-tertiary)] mx-auto mb-3" />
             <p className="text-body text-[var(--text-secondary)]">
-              {tab === "pending_review" ? "No hay propiedades en revisión 🎉" : "Sin propiedades en esta categoría"}
+              {q ? `Sin resultados para "${search}"` : tab === "pending_review" ? "No hay propiedades en revisión 🎉" : "Sin propiedades en esta categoría"}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {properties.map((p) => (
+            {filtered.map((p) => (
               <PropertyReviewCard
                 key={p.id}
                 property={p}
@@ -195,7 +221,7 @@ export default function AdminPropiedadesPage() {
               />
             ))}
           </div>
-        )}
+        );})()}
       </main>
 
       {/* Modal de rechazo */}
