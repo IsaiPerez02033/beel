@@ -9,6 +9,10 @@ export default function SplashWrapper({ children }: { children: React.ReactNode 
   const [showSplash, setShowSplash] = useState(false);
 
   useEffect(() => {
+    // Solo mostrar en PC/laptop/tablet (no móvil)
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return;
+
     // Solo mostrar splash la primera vez en esta sesión del navegador
     const seen = sessionStorage.getItem("beel_splash_seen");
     if (!seen) {
