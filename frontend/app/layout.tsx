@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, Fraunces } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import SplashWrapper from "@/components/SplashWrapper";
@@ -7,9 +7,17 @@ import "@/styles/globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-display",
   display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["300", "400", "600"],
+  variable: "--font-serif",
+  display: "swap",
+  axes: ["SOFT", "WONK"],
 });
 
 const inter = Inter({
@@ -71,7 +79,7 @@ export default function RootLayout({
   return (
     <SessionProvider>
       <CurrencyProvider>
-        <html lang="es" className={`${plusJakarta.variable} ${inter.variable}`}>
+        <html lang="es" className={`${plusJakarta.variable} ${inter.variable} ${fraunces.variable}`}>
           <body>
             <SplashWrapper>{children}</SplashWrapper>
           </body>

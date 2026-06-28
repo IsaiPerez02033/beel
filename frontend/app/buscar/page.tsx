@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
+import EmptyIllustration from "@/components/EmptyIllustration";
 import SearchFilters from "@/components/SearchFilters";
 import type { Property, SearchParams } from "@/types";
 
@@ -108,16 +109,10 @@ export default async function BuscarPage({ searchParams }: PageProps) {
             ))}
           </div>
         ) : (
-          <div className="empty-state py-24">
-            <div className="text-5xl">🔍</div>
-            <h2 className="text-h1 text-[var(--text-primary)]">Sin resultados</h2>
-            <p className="text-body text-[var(--text-secondary)] max-w-sm text-center">
-              Intenta cambiar las fechas, destino o quita algunos filtros.
-            </p>
-            <a href="/buscar" className="btn btn-outline mt-2">
-              Limpiar filtros
-            </a>
-          </div>
+          <EmptyIllustration
+            variant="search"
+            action={{ label: "Limpiar filtros", href: "/buscar" }}
+          />
         )}
       </div>
     </div>
