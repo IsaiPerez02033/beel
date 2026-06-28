@@ -10,7 +10,8 @@ import { useApi } from "@/hooks/useApi";
 import Price from "@/components/Price";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { Calendar, MapPin, ArrowLeft, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Calendar, MapPin, ArrowLeft, AlertTriangle, CheckCircle2, XCircle, Navigation } from "lucide-react";
+import PropertyMap from "@/components/PropertyMap";
 
 interface ReservationDetail {
   id: string;
@@ -28,6 +29,10 @@ interface ReservationDetail {
     title: string;
     city: string;
     neighborhood?: string;
+    state?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
     photos: { url: string; is_primary: boolean }[];
   };
   host: {
@@ -234,6 +239,42 @@ export default function ReservationDetailPage() {
                 <Price amount={reservation.total_amount} />
               </p>
             </div>
+
+            {/* Dirección exacta — solo para huésped con reserva confirmada */}
+            {reservation.reservation_property?.address && reservation.status === "confirmed" && (
+              <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]">
+                <div className="flex items-center gap-2 mb-2">
+                  <Navigation size={16} className="text-[var(--color-primary)] flex-shrink-0" />
+                  <p className="text-body-sm font-semibold text-[var(--text-primary)]">Dirección de tu hospedaje</p>
+                </div>
+                <p className="text-body-sm text-[var(--text-secondary)] mb-1">
+                  {reservation.reservation_property.address}
+                  {reservation.reservation_property.neighborhood ? `, ${reservation.reservation_property.neighborhood}` : ""}
+                </p>
+                <p className="text-caption text-[var(--text-tertiary)] mb-3">
+                  {reservation.reservation_property.city}{reservation.reservation_property.state ? `, ${reservation.reservation_property.state}` : ""}
+                </p>
+                {reservation.reservation_property.latitude && reservation.reservation_property.longitude && (
+                  <PropertyMap
+                    lat={reservation.reservation_property.latitude}
+                    lng={reservation.reservation_property.longitude}
+                    title={reservation.reservation_property.title}
+                    exact
+                  />
+                )}
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(
+                    `${reservation.reservation_property.address}, ${reservation.reservation_property.city}, México`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-body-sm text-[var(--color-primary)] hover:underline mt-2"
+                >
+                  <MapPin size={13} />
+                  Abrir en Google Maps
+                </a>
+              </div>
+            )}
 
             {/* Estado del pago */}
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--border-subtle)]">

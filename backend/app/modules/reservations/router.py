@@ -156,6 +156,22 @@ async def get_reservation(
     if reservation.guest_id != user.id and reservation.host_id != user.id and not user.is_admin:
         raise HTTPException(status_code=403, detail="No tienes acceso a esta reserva")
 
+    # Inyectar dirección exacta al snapshot si el huésped tiene reserva confirmada
+    is_confirmed_guest = (
+        reservation.guest_id == user.id and
+        reservation.status in ("confirmed", "completed")
+    )
+    if is_confirmed_guest and reservation.reservation_property:
+        prop = reservation.reservation_property
+        reservation.reservation_property.address = getattr(prop, "address", None)
+        reservation.reservation_property.state = getattr(prop, "state", None)
+        lat = getattr(prop, "latitude", None)
+        lng = getattr(prop, "longitude", None)
+        if lat:
+            reservation.reservation_property.latitude = float(lat)
+        if lng:
+            reservation.reservation_property.longitude = float(lng)
+
     return reservation
 
 
