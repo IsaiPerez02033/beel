@@ -110,7 +110,7 @@ export default function SearchBar({
             value={destino}
             onChange={(e) => setDestino(e.target.value)}
             placeholder="Destino o ciudad"
-            className="search-bar-value bg-transparent outline-none w-full"
+            className="search-bar-value bg-transparent outline-none w-full sm:text-left text-center"
             onFocus={() => setActiveField("destino")}
             onBlur={() => setActiveField(null)}
           />
@@ -132,11 +132,11 @@ export default function SearchBar({
           )}
         >
           <div
-            className="flex flex-col justify-center flex-1 cursor-pointer"
+            className="flex flex-col justify-center flex-1 cursor-pointer items-start sm:items-start"
             onClick={() => setActiveField("guests")}
           >
             <span className="search-bar-label">Huéspedes</span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:justify-start justify-center w-full">
               <button type="button" onClick={(e) => { e.stopPropagation(); setHuespedes(Math.max(1, huespedes - 1)); }}
                 className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-sm leading-none hover:border-[var(--border-strong)] transition-colors">−</button>
               <span className="search-bar-value min-w-[1.5ch] text-center">{huespedes}</span>

@@ -453,12 +453,15 @@ input, textarea, select {
   border-right: 0.5px solid var(--border-default);
   cursor: pointer;
 }
-/* En móvil: borde inferior en vez de derecho */
+/* En móvil: borde inferior en vez de derecho, contenido centrado */
 @media (max-width: 639px) {
   .search-bar-field {
     border-right: none;
     border-bottom: 0.5px solid var(--border-default);
     padding: 14px 16px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
   }
 }
 .search-bar-field:last-of-type {
