@@ -507,15 +507,15 @@ async def sync_payment_status(db: AsyncSession, payment: Payment) -> Payment:
             if results:
                 best = sorted(results, key=lambda x: x.get("date_created", ""), reverse=True)[0]
                 mp_payment_id = str(best.get("id", ""))
-                mp_status = best.get("status")
-                payment.mp_payment_id = mp_payment_id
+                mp_status = (best.get("status") or "")[:20]  # VARCHAR(20) limit
+                payment.mp_payment_id = mp_payment_id[:255]
                 payment.mp_response = best
 
         # Si ya tenemos el ID, consultar estado actual
         if mp_payment_id and not mp_status:
             get_resp = mp.payment().get(mp_payment_id)
             mp_data = (get_resp.get("response") or {})
-            mp_status = mp_data.get("status")
+            mp_status = (mp_data.get("status") or "")[:20]  # VARCHAR(20) limit
             if mp_data:
                 payment.mp_response = mp_data
 
