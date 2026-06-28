@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import SplashWrapper from "@/components/SplashWrapper";
 import "@/styles/globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -71,7 +72,9 @@ export default function RootLayout({
     <SessionProvider>
       <CurrencyProvider>
         <html lang="es" className={`${plusJakarta.variable} ${inter.variable}`}>
-          <body>{children}</body>
+          <body>
+            <SplashWrapper>{children}</SplashWrapper>
+          </body>
         </html>
       </CurrencyProvider>
     </SessionProvider>
