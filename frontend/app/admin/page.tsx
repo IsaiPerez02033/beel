@@ -96,7 +96,14 @@ export default function AdminPage() {
       await post(`/payments/${paymentId}/approve-payout`, { notes: "" });
       setPayments((prev) => prev.map((p) => p.id === paymentId
         ? { ...p, payout_status: "approved", beel_approved_at: new Date().toISOString() } : p));
-    } catch (e) { setError(e instanceof Error ? e.message : "Error al aprobar"); }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al aprobar";
+      if (msg.includes("NO_CLABE")) {
+        setError("⚠️ El anfitrión no tiene CLABE registrada. Se le envió una notificación para que la agregue en Configuración → Pagos. Intenta aprobar de nuevo cuando la haya registrado.");
+      } else {
+        setError(msg);
+      }
+    }
     finally { setActionLoading(null); }
   }
 
