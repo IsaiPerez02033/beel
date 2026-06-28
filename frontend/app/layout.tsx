@@ -5,6 +5,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { ThemeProvider, themeInitScript } from "@/contexts/ThemeContext";
 import SplashWrapper from "@/components/SplashWrapper";
 import DemoBanner from "@/components/DemoBanner";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import "@/styles/globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -39,8 +40,13 @@ export const metadata: Metadata = {
   creator: "Beel",
   icons: {
     icon: "/beel_icon_app.png",
-    apple: "/beel_symbol_app.png",
+    apple: "/apple-touch-icon.png",
     shortcut: "/beel_icon_app.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Beel",
+    statusBarStyle: "default",
   },
   openGraph: {
     type: "website",
@@ -85,6 +91,7 @@ export default function RootLayout({
               <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
             </head>
             <body>
+              <ServiceWorkerRegister />
               <DemoBanner />
               <SplashWrapper>{children}</SplashWrapper>
             </body>
