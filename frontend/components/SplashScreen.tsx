@@ -62,7 +62,7 @@ export default function SplashScreen({ onFinish }: Props) {
       <button
         onClick={(e) => { e.stopPropagation(); skip(); }}
         className="absolute right-0 text-white font-medium px-5 py-3 transition-all active:scale-95 hover:opacity-90"
-        style={{ fontSize: "15px", backgroundColor: "#0A5E40", width: "150px", height: "86px", bottom: "100px", right: "95px" }}
+        style={{ fontSize: "15px", backgroundColor: "#2D5B50", width: "150px", height: "86px", bottom: "100px", right: "95px" }}
       >
         Saltar →
       </button>
