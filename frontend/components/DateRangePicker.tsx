@@ -172,7 +172,7 @@ export default function DateRangePicker({
           // Versión compacta: un solo botón con ambas fechas
           <button
             type="button"
-            onClick={() => openWithPos("from")}
+            onClick={(e) => { e.stopPropagation(); openWithPos("from"); }}
             className="flex items-center gap-1 text-body-sm text-[var(--text-secondary)] cursor-pointer hover:text-[var(--text-primary)] transition-colors"
           >
             <span>{fmtDisplay(checkIn) ?? "Llegada"}</span>
@@ -188,7 +188,7 @@ export default function DateRangePicker({
           <>
             {/* Llegada */}
             <div
-              onClick={() => openWithPos("from")}
+              onClick={(e) => { e.stopPropagation(); openWithPos("from"); }}
               className={cn(
                 "search-bar-field flex flex-col justify-center cursor-pointer",
                 open && selecting === "from" && "bg-white !border-r !border-r-[var(--color-primary)] ring-1 ring-[var(--color-primary)] ring-inset"
@@ -201,7 +201,7 @@ export default function DateRangePicker({
             </div>
             {/* Salida */}
             <div
-              onClick={() => openWithPos("to")}
+              onClick={(e) => { e.stopPropagation(); openWithPos("to"); }}
               className={cn(
                 "search-bar-field flex flex-col justify-center cursor-pointer",
                 open && selecting === "to" && "bg-white ring-1 ring-[var(--color-primary)] ring-inset"
