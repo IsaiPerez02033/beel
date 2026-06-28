@@ -494,39 +494,40 @@ async def sync_payment_status(db: AsyncSession, payment: Payment) -> Payment:
     Útil cuando el webhook no llegó (Render dormido, timeout, etc.).
     """
     mp = _get_mp()
+    mp_status = None
+    mp_payment_id = payment.mp_payment_id
 
-    # Buscar por mp_preference_id si no hay mp_payment_id
-    if not payment.mp_payment_id and payment.mp_preference_id:
-        # Buscar pagos asociados a esta preferencia
-        result = mp.payment().search(
-            filters={"external_reference": str(payment.reservation_id), "sort": "date_created", "criteria": "desc"}
-        )
-        payments_list = result.get("response", {}).get("results", [])
-        if payments_list:
-            mp_payment = payments_list[0]
-            mp_status = mp_payment.get("status")
-            payment.mp_payment_id = str(mp_payment.get("id", ""))
-            payment.mp_response = mp_payment
+    try:
+        # Buscar por external_reference (reservation_id) si no hay mp_payment_id
+        if not mp_payment_id:
+            search_resp = mp.payment().search(
+                filters={"external_reference": str(payment.reservation_id)}
+            )
+            results = (search_resp.get("response") or {}).get("results") or []
+            if results:
+                best = sorted(results, key=lambda x: x.get("date_created", ""), reverse=True)[0]
+                mp_payment_id = str(best.get("id", ""))
+                mp_status = best.get("status")
+                payment.mp_payment_id = mp_payment_id
+                payment.mp_response = best
+
+        # Si ya tenemos el ID, consultar estado actual
+        if mp_payment_id and not mp_status:
+            get_resp = mp.payment().get(mp_payment_id)
+            mp_data = (get_resp.get("response") or {})
+            mp_status = mp_data.get("status")
+            if mp_data:
+                payment.mp_response = mp_data
+
+        if mp_status and mp_status != payment.status:
+            logger.info("Sync pago %s: %s → %s", payment.id, payment.status, mp_status)
             payment.status = mp_status
-            if mp_status == "approved" and payment.payout_status == "pending":
-                reservation_id = payment.reservation_id
-                await _on_payment_approved(db, payment, reservation_id)
-            await db.flush()
-            return payment
+            if mp_status == "approved" and payment.payout_status in ("pending", "awaiting_beel_approval"):
+                await _on_payment_approved(db, payment, payment.reservation_id)
 
-    if not payment.mp_payment_id:
-        return payment  # No hay nada que sincronizar
-
-    response = mp.payment().get(payment.mp_payment_id)
-    mp_data = response.get("response", {})
-    mp_status = mp_data.get("status")
-
-    if mp_status and mp_status != payment.status:
-        payment.status = mp_status
-        payment.mp_response = mp_data
-        if mp_status == "approved" and payment.payout_status == "pending":
-            await _on_payment_approved(db, payment, payment.reservation_id)
         await db.flush()
-        logger.info("Pago %s sincronizado: %s → %s", payment.id, payment.status, mp_status)
+
+    except Exception as e:
+        logger.error("Error en sync_payment_status: %s", e)
 
     return payment
