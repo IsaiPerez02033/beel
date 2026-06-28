@@ -341,7 +341,7 @@ export default function ReservationDetailPage() {
           onClick={() => setShowConfirmModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative animate-slide-up"
+            className="bg-[var(--bg-elevated)] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col items-center text-center">
@@ -382,7 +382,7 @@ export default function ReservationDetailPage() {
           onClick={() => setModalNotification(null)}
         >
           <div 
-            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl relative animate-slide-up"
+            className="bg-[var(--bg-elevated)] rounded-2xl p-6 max-w-sm w-full shadow-2xl relative animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-col items-center text-center">

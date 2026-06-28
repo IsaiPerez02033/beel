@@ -46,7 +46,7 @@ export default function SplashScreen({ onFinish }: Props) {
   return (
     <div
       onClick={skip}
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#F1EFE8] cursor-pointer"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[var(--bg-arena)] cursor-pointer"
       style={{ opacity: fadeOut ? 0 : 1, transition: "opacity 0.6s ease" }}
     >
       <video

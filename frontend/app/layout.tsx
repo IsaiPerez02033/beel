@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Inter, Fraunces } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { ThemeProvider, themeInitScript } from "@/contexts/ThemeContext";
 import SplashWrapper from "@/components/SplashWrapper";
 import DemoBanner from "@/components/DemoBanner";
 import "@/styles/globals.css";
@@ -78,12 +79,17 @@ export default function RootLayout({
   return (
     <SessionProvider>
       <CurrencyProvider>
-        <html lang="es" className={`${plusJakarta.variable} ${inter.variable} ${fraunces.variable}`}>
-          <body>
-            <DemoBanner />
-            <SplashWrapper>{children}</SplashWrapper>
-          </body>
-        </html>
+        <ThemeProvider>
+          <html lang="es" className={`${plusJakarta.variable} ${inter.variable} ${fraunces.variable}`} suppressHydrationWarning>
+            <head>
+              <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+            </head>
+            <body>
+              <DemoBanner />
+              <SplashWrapper>{children}</SplashWrapper>
+            </body>
+          </html>
+        </ThemeProvider>
       </CurrencyProvider>
     </SessionProvider>
   );

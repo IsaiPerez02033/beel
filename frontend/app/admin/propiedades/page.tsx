@@ -227,7 +227,7 @@ export default function AdminPropiedadesPage() {
       {/* Modal de rechazo */}
       {rejectModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setRejectModal(null)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[var(--bg-elevated)] rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">Rechazar propiedad</h3>
             <p className="text-body-sm text-[var(--text-secondary)] mb-4 truncate">{rejectModal.title}</p>
             <textarea
@@ -250,7 +250,7 @@ export default function AdminPropiedadesPage() {
       {/* Modal de eliminación (acción de admin) */}
       {deleteModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setDeleteModal(null)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[var(--bg-elevated)] rounded-2xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">Eliminar propiedad</h3>
             <p className="text-body-sm text-[var(--text-secondary)] mb-2 truncate">{deleteModal.title}</p>
             <p className="text-body-sm text-[var(--text-secondary)] mb-5">

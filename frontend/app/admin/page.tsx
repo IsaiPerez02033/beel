@@ -253,7 +253,7 @@ export default function AdminPage() {
       {/* Modal reembolso */}
       {refundModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md shadow-xl">
+          <div className="bg-[var(--bg-elevated)] rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md shadow-xl">
             <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-2">Emitir reembolso</h3>
             <p className="text-body text-[var(--text-secondary)] mb-4">
               Se reembolsarán <strong><Price amount={refundModal.amount} /></strong> al huésped. La reserva quedará cancelada.
@@ -371,7 +371,7 @@ function PaymentRow({ payment: p, actionLoading, onApprove, onRefund }: {
               <p className="text-caption font-semibold text-[var(--text-primary)]">Datos de transferencia</p>
               <p className="text-caption text-[var(--text-secondary)]">Titular: {res.host.bank_account_holder}</p>
               <p className="text-caption text-[var(--text-secondary)]">Banco: {res.host.bank_name}</p>
-              <p className="text-caption font-mono bg-white px-2 py-0.5 rounded border border-[var(--border-subtle)] select-all w-fit">
+              <p className="text-caption font-mono bg-[var(--bg-elevated)] px-2 py-0.5 rounded border border-[var(--border-subtle)] select-all w-fit">
                 CLABE: {res.host.bank_clabe}
               </p>
             </div>

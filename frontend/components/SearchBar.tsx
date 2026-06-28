@@ -48,7 +48,7 @@ export default function SearchBar({
   if (compact) {
     // Barra compacta con búsqueda funcional
     return (
-      <div className="flex items-center gap-2 bg-white border border-[var(--border-default)] rounded-2xl shadow-sm px-3 py-1.5">
+      <div className="flex items-center gap-2 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-2xl shadow-sm px-3 py-1.5">
         <Search size={15} className="text-[var(--color-primary)] flex-shrink-0" />
 
         {/* Destino */}
@@ -100,7 +100,7 @@ export default function SearchBar({
         <div
           className={cn(
             "search-bar-field flex-[2] flex flex-col justify-center cursor-pointer rounded-l-2xl",
-            activeField === "destino" && "bg-white ring-1 ring-[var(--color-primary)] ring-inset"
+            activeField === "destino" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
           )}
           onClick={() => setActiveField("destino")}
         >
@@ -128,7 +128,7 @@ export default function SearchBar({
         <div
           className={cn(
             "search-bar-field flex items-center justify-between gap-3 rounded-r-2xl border-r-0",
-            activeField === "guests" && "bg-white ring-1 ring-[var(--color-primary)] ring-inset"
+            activeField === "guests" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
           )}
         >
           <div

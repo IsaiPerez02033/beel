@@ -140,7 +140,7 @@ export default async function HomePage() {
 
       {/* ── Señales de confianza ───────────────────────────────────────────── */}
       <section className="py-14 px-4 mt-4" style={{
-        background: "linear-gradient(180deg, #FFFFFF 0%, var(--color-arena) 100%)"
+        background: "linear-gradient(180deg, var(--bg-base) 0%, var(--color-arena) 100%)"
       }}>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
@@ -192,7 +192,7 @@ function TrustItem({
   const color = accent === "primary" ? "var(--color-primary)" : "var(--color-accent)";
   const bg = accent === "primary" ? "var(--color-primary-light)" : "var(--color-accent-light)";
   return (
-    <div className="bg-white rounded-2xl p-6 border border-[var(--border-subtle)] hover:shadow-md transition-shadow duration-200"
+    <div className="bg-[var(--bg-elevated)] rounded-2xl p-6 border border-[var(--border-subtle)] hover:shadow-md transition-shadow duration-200"
       style={{ borderTop: `3px solid ${color}` }}>
       <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
         style={{ background: bg, color }}>

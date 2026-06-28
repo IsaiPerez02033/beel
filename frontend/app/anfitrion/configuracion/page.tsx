@@ -542,7 +542,7 @@ export default function ConfiguracionAnfitrionPage() {
                 {/* Modal de confirmación — Punto 1 */}
                 {bankConfirmStep && (
                   <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-                    <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md shadow-xl">
+                    <div className="bg-[var(--bg-elevated)] rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md shadow-xl">
                       <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">Confirma tus datos bancarios</h3>
                       <p className="text-body-sm text-[var(--text-secondary)] mb-4">
                         Verifica que la información sea correcta antes de guardar. <strong>No nos hacemos responsables de errores en la CLABE.</strong>
@@ -611,7 +611,7 @@ function ToggleRow({
       >
         <span
           className={cn(
-            "inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform duration-200 mt-0.5",
+            "inline-block h-5 w-5 rounded-full bg-[var(--bg-elevated)] shadow transform transition-transform duration-200 mt-0.5",
             value ? "translate-x-5" : "translate-x-0.5"
           )}
         />

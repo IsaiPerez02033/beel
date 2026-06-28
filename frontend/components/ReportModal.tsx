@@ -117,10 +117,10 @@ export default function ReportModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
-      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-xl flex flex-col max-h-[90vh]">
+      <div className="bg-[var(--bg-elevated)] rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md shadow-xl flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-neutral-100 flex-shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-[var(--border-subtle)] flex-shrink-0">
           <div className="flex items-center gap-2">
             <Flag size={18} className="text-[var(--color-primary)]" />
             <h3 className="text-body font-semibold text-[var(--text-primary)]">
@@ -129,7 +129,7 @@ export default function ReportModal({
                targetType === "app" ? "Reportar un problema" : "Contactar a Beel"}
             </h3>
           </div>
-          <button onClick={handleClose} className="p-1.5 rounded-full hover:bg-neutral-100 text-neutral-500">
+          <button onClick={handleClose} className="p-1.5 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-tertiary)]">
             <X size={18} />
           </button>
         </div>
@@ -153,7 +153,7 @@ export default function ReportModal({
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto">
             <div className="p-5 space-y-4 flex-1">
               {targetTitle && (
-                <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-100">
+                <div className="bg-[var(--bg-subtle)] rounded-xl p-3 border border-[var(--border-subtle)]">
                   <p className="text-caption text-[var(--text-tertiary)] mb-0.5">Relacionado con</p>
                   <p className="text-body-sm font-medium text-[var(--text-primary)] truncate">{targetTitle}</p>
                 </div>
@@ -174,7 +174,7 @@ export default function ReportModal({
                         "w-full text-left px-4 py-2.5 rounded-xl border text-body-sm transition-all",
                         selectedType === opt
                           ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)] font-medium"
-                          : "border-neutral-200 hover:border-neutral-300 text-[var(--text-secondary)]"
+                          : "border-[var(--border-subtle)] hover:border-[var(--border-default)] text-[var(--text-secondary)]"
                       )}
                     >
                       {opt}
@@ -213,7 +213,7 @@ export default function ReportModal({
             </div>
 
             {/* Footer */}
-            <div className="p-5 border-t border-neutral-100 flex gap-3 flex-shrink-0">
+            <div className="p-5 border-t border-[var(--border-subtle)] flex gap-3 flex-shrink-0">
               <button type="button" onClick={handleClose} className="btn btn-outline flex-1">
                 Cancelar
               </button>

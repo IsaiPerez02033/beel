@@ -215,7 +215,7 @@ export default function ReservarPage() {
 
                   {/* Editor de fechas inline */}
                   {editingDates && (
-                    <div className="border border-[var(--border-subtle)] rounded-2xl p-4 mt-3 bg-white shadow-sm overflow-x-auto">
+                    <div className="border border-[var(--border-subtle)] rounded-2xl p-4 mt-3 bg-[var(--bg-elevated)] shadow-sm overflow-x-auto">
                       <DayPicker
                         mode="range"
                         selected={{ from: draftRange.from, to: draftRange.to }}
@@ -259,7 +259,7 @@ export default function ReservarPage() {
 
                   {/* Editor de huéspedes inline */}
                   {editingGuests && (
-                    <div className="border border-[var(--border-subtle)] rounded-2xl p-4 mt-3 bg-white shadow-sm flex items-center justify-between">
+                    <div className="border border-[var(--border-subtle)] rounded-2xl p-4 mt-3 bg-[var(--bg-elevated)] shadow-sm flex items-center justify-between">
                       <div>
                         <p className="text-body font-medium text-[var(--text-primary)]">Huéspedes</p>
                         <p className="text-caption text-[var(--text-secondary)]">Máximo {property.max_guests}</p>
@@ -280,7 +280,7 @@ export default function ReservarPage() {
                         >
                           <Plus size={14} />
                         </button>
-                        <button onClick={() => setEditingGuests(false)} className="ml-2 text-neutral-400 hover:text-neutral-700">
+                        <button onClick={() => setEditingGuests(false)} className="ml-2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]">
                           <X size={16} />
                         </button>
                       </div>

@@ -115,7 +115,7 @@ export default function NavbarAuth() {
         {showMenu && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-            <div className="absolute right-0 top-12 z-20 bg-white rounded-2xl shadow-xl border border-[var(--border-subtle)] py-2 min-w-[260px] overflow-hidden">
+            <div className="absolute right-0 top-12 z-20 bg-[var(--bg-elevated)] rounded-2xl shadow-xl border border-[var(--border-subtle)] py-2 min-w-[260px] overflow-hidden">
               {/* Encabezado */}
               {fullName && (
                 <div className="px-4 py-2 mb-1">
@@ -393,7 +393,7 @@ function NotificationsDropdown() {
       {showNotifications && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
-          <div className="absolute right-0 top-11 z-20 bg-white rounded-2xl shadow-xl border border-[var(--border-subtle)] py-2 w-80 max-h-[420px] flex flex-col overflow-hidden animate-fade-in">
+          <div className="absolute right-0 top-11 z-20 bg-[var(--bg-elevated)] rounded-2xl shadow-xl border border-[var(--border-subtle)] py-2 w-80 max-h-[420px] flex flex-col overflow-hidden animate-fade-in">
             <div className="px-4 py-2 border-b border-[var(--border-subtle)] flex items-center justify-between">
               <span className="text-body font-semibold text-[var(--text-primary)]">Notificaciones</span>
               {unreadCount > 0 && (

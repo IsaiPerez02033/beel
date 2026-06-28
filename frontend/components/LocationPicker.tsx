@@ -230,7 +230,7 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
         {/* Input con dropdown custom */}
         <div ref={containerRef} className="relative">
           <div className="input w-full flex items-center gap-2 p-0 overflow-hidden focus-within:ring-1 focus-within:ring-neutral-900 focus-within:border-neutral-900">
-            <span className="pl-3 flex-shrink-0 text-neutral-400 pointer-events-none">
+            <span className="pl-3 flex-shrink-0 text-[var(--text-tertiary)] pointer-events-none">
               {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
             </span>
             <input
@@ -247,14 +247,14 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
               }}
               placeholder="Busca tu dirección exacta..."
               style={{ fontSize: "16px" }}
-              className="flex-1 py-2.5 pr-2 outline-none border-none bg-transparent text-neutral-800 placeholder-neutral-400 min-w-0"
+              className="flex-1 py-2.5 pr-2 outline-none border-none bg-transparent text-[var(--text-primary)] placeholder-neutral-400 min-w-0"
               autoComplete="new-password"
               spellCheck={false}
             />
             {query && (
               <button
                 onClick={() => { setQuery(""); setSuggestions([]); setOpen(false); setSelected(null); }}
-                className="pr-3 flex-shrink-0 text-neutral-400 hover:text-neutral-700"
+                className="pr-3 flex-shrink-0 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
               >
                 <X size={16} />
               </button>
@@ -264,20 +264,20 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
           {/* Dropdown via portal — escapa overflow:hidden de cualquier padre */}
           {open && suggestions.length > 0 && typeof document !== "undefined" && createPortal(
             <div
-              className="bg-white border border-neutral-200 rounded-xl shadow-xl overflow-hidden"
+              className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl shadow-xl overflow-hidden"
               style={{ position: "absolute", top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 99999 }}
             >
               {suggestions.map((s) => (
                 <button
                   key={s.placeId}
                   onMouseDown={(e) => { e.preventDefault(); selectPlace(s); }}
-                  className="w-full text-left px-4 py-3 hover:bg-neutral-50 border-b border-neutral-100 last:border-0 transition-colors"
+                  className="w-full text-left px-4 py-3 hover:bg-[var(--bg-subtle)] border-b border-[var(--border-subtle)] last:border-0 transition-colors"
                 >
                   <div className="flex items-start gap-2.5">
                     <MapPin size={14} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-neutral-900 truncate">{s.mainText}</p>
-                      <p className="text-xs text-neutral-500 truncate">{s.secondaryText}</p>
+                      <p className="text-sm font-medium text-[var(--text-primary)] truncate">{s.mainText}</p>
+                      <p className="text-xs text-[var(--text-tertiary)] truncate">{s.secondaryText}</p>
                     </div>
                   </div>
                 </button>
@@ -294,9 +294,9 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
 
       {/* Mapa */}
       {selected && (
-        <div className="rounded-2xl overflow-hidden border border-neutral-200 shadow-sm">
-          <div ref={mapRef} className="w-full h-56 sm:h-64 bg-neutral-100" />
-          <div className="px-4 py-3 bg-white flex items-start gap-2">
+        <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm">
+          <div ref={mapRef} className="w-full h-56 sm:h-64 bg-[var(--bg-subtle)]" />
+          <div className="px-4 py-3 bg-[var(--bg-elevated)] flex items-start gap-2">
             <MapPin size={14} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
             <div className="min-w-0">
               <p className="text-body-sm font-medium text-[var(--text-primary)] truncate">

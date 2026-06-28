@@ -85,14 +85,14 @@ export default function PropertyCard({
           <>
             <button
               onClick={prevPhoto}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--bg-elevated)]"
               aria-label="Foto anterior"
             >
               <ChevronLeft size={14} />
             </button>
             <button
               onClick={nextPhoto}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[var(--bg-elevated)]"
               aria-label="Foto siguiente"
             >
               <ChevronRight size={14} />
@@ -106,7 +106,7 @@ export default function PropertyCard({
                   className={cn(
                     "w-1 h-1 rounded-full transition-all",
                     i === photoIndex
-                      ? "bg-white w-2"
+                      ? "bg-[var(--bg-elevated)] w-2"
                       : "bg-white/60"
                   )}
                 />

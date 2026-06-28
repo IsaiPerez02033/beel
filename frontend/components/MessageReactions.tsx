@@ -67,11 +67,11 @@ export default function MessageReactions({
                 "flex items-center gap-0.5 px-2 py-0.5 rounded-full text-sm border transition-all active:scale-95",
                 hasReacted
                   ? "bg-[var(--color-primary-light)] border-[var(--color-primary)]"
-                  : "bg-white border-neutral-200 hover:border-neutral-300"
+                  : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
               )}
             >
               <span>{r.emoji}</span>
-              <span className="text-[11px] font-medium text-neutral-600">{r.count}</span>
+              <span className="text-[11px] font-medium text-[var(--text-secondary)]">{r.count}</span>
             </button>
           );
         })}
@@ -87,7 +87,7 @@ export default function MessageReactions({
           onClick={(e) => { e.stopPropagation(); setPickerOpen(!pickerOpen); }}
           className={cn(
             "text-[13px] leading-none opacity-40 hover:opacity-100 active:scale-95 transition-all",
-            isMine ? "text-white" : "text-neutral-500"
+            isMine ? "text-white" : "text-[var(--text-tertiary)]"
           )}
           title="Reaccionar"
         >
@@ -97,7 +97,7 @@ export default function MessageReactions({
         {pickerOpen && (
           <div
             className={cn(
-              "absolute z-50 bg-white border border-neutral-200 rounded-2xl shadow-xl p-2 flex gap-1",
+              "absolute z-50 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl shadow-xl p-2 flex gap-1",
               // Posicionar encima y alineado según lado del mensaje
               "bottom-full mb-2",
               isMine ? "right-0" : "left-0"
@@ -109,7 +109,7 @@ export default function MessageReactions({
                 onMouseDown={(e) => { e.preventDefault(); handleEmoji(emoji); }}
                 onTouchStart={(e) => { e.stopPropagation(); }}
                 onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleEmoji(emoji); }}
-                className="w-9 h-9 rounded-xl hover:bg-neutral-100 text-xl flex items-center justify-center transition-all active:scale-95 hover:scale-125"
+                className="w-9 h-9 rounded-xl hover:bg-[var(--bg-subtle)] text-xl flex items-center justify-center transition-all active:scale-95 hover:scale-125"
               >
                 {emoji}
               </button>
@@ -133,7 +133,7 @@ export default function MessageReactions({
               "flex items-center gap-0.5 px-2 py-0.5 rounded-full text-sm border transition-all active:scale-95",
               hasReacted
                 ? "bg-[var(--color-primary-light)] border-[var(--color-primary)] text-[var(--color-primary)]"
-                : "bg-white border-neutral-200 hover:border-neutral-300 text-neutral-700"
+                : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)] text-[var(--text-secondary)]"
             )}
           >
             <span>{r.emoji}</span>
@@ -144,14 +144,14 @@ export default function MessageReactions({
       <div className="relative" ref={pickerRef}>
         <button
           onClick={() => setPickerOpen(!pickerOpen)}
-          className="w-6 h-6 rounded-full bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 text-neutral-500 text-sm flex items-center justify-center transition-all active:scale-95 opacity-0 group-hover:opacity-100"
+          className="w-6 h-6 rounded-full bg-[var(--bg-subtle)] hover:bg-[var(--bg-arena)] border border-[var(--border-subtle)] text-[var(--text-tertiary)] text-sm flex items-center justify-center transition-all active:scale-95 opacity-0 group-hover:opacity-100"
         >
           <span className="text-xs">😊</span>
         </button>
         {pickerOpen && (
-          <div className={cn("absolute bottom-full mb-2 bg-white border border-neutral-200 rounded-2xl shadow-lg p-2 flex gap-1 z-50", isMine ? "right-0" : "left-0")}>
+          <div className={cn("absolute bottom-full mb-2 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl shadow-lg p-2 flex gap-1 z-50", isMine ? "right-0" : "left-0")}>
             {PRESET_EMOJIS.map((emoji) => (
-              <button key={emoji} onClick={() => handleEmoji(emoji)} className="w-9 h-9 rounded-xl hover:bg-neutral-100 text-xl flex items-center justify-center transition-all active:scale-95 hover:scale-125">
+              <button key={emoji} onClick={() => handleEmoji(emoji)} className="w-9 h-9 rounded-xl hover:bg-[var(--bg-subtle)] text-xl flex items-center justify-center transition-all active:scale-95 hover:scale-125">
                 {emoji}
               </button>
             ))}
