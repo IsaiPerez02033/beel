@@ -36,7 +36,7 @@ export default function SobrePage() {
       </section>
 
       {/* Misión */}
-      <section className="max-w-3xl mx-auto px-4 py-16">
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
         <h2 className="text-h1 font-display font-medium text-[var(--text-primary)] mb-4">
           Nuestra misión
         </h2>

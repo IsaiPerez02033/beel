@@ -205,14 +205,14 @@ export default function ReservarPage() {
 
                   {/* Editor de fechas inline */}
                   {editingDates && (
-                    <div className="border border-[var(--border-subtle)] rounded-2xl p-4 mt-3 bg-white shadow-sm">
+                    <div className="border border-[var(--border-subtle)] rounded-2xl p-4 mt-3 bg-white shadow-sm overflow-x-auto">
                       <DayPicker
                         mode="range"
                         selected={{ from: draftRange.from, to: draftRange.to }}
                         onSelect={(r) => setDraftRange(r ?? {})}
                         locale={es}
                         disabled={{ before: addDays(new Date(), 1) }}
-                        numberOfMonths={2}
+                        numberOfMonths={1}
                         className="text-sm"
                       />
                       <div className="flex gap-2 mt-3 justify-end">

@@ -13,7 +13,7 @@ export default function ContactoPage() {
     <div className="min-h-screen bg-[var(--bg-base)]">
       <Navbar />
 
-      <main className="max-w-3xl mx-auto px-4 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <h1 className="text-display font-display font-medium text-[var(--text-primary)] mb-2">
           Contáctanos
         </h1>

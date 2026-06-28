@@ -64,7 +64,7 @@ export default function AyudaPage() {
         </div>
       </section>
 
-      <main className="max-w-3xl mx-auto px-4 py-14 space-y-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-14 space-y-12">
         {CATEGORIAS.map((cat) => (
           <section key={cat.titulo}>
             <div className="flex items-center gap-3 mb-5">
