@@ -88,7 +88,11 @@ export default function BookingWidget({
   // el "+" concatena (ej. 2 + "0.00" = "20.00").
   const subtotal = nights * Number(property.price_per_night);
   const cleaningFee = Number(property.cleaning_fee ?? 0);
-  const total = subtotal + cleaningFee;
+  // Tarifa de servicio (cubre el procesamiento de pago). Debe coincidir con
+  // PLATFORM_FEE_PERCENTAGE del backend. El anfitrión recibe el 100% de su precio.
+  const SERVICE_FEE_PCT = 0.04;
+  const serviceFee = Math.round(subtotal * SERVICE_FEE_PCT * 100) / 100;
+  const total = subtotal + cleaningFee + serviceFee;
 
   async function handleReserve() {
     if (!checkIn || !checkOut || nights < property.min_stay_nights) return;
@@ -217,6 +221,12 @@ export default function BookingWidget({
             <div className="price-row">
               <span>Limpieza</span>
               <span>{<Price amount={cleaningFee} />}</span>
+            </div>
+          )}
+          {serviceFee > 0 && (
+            <div className="price-row">
+              <span>Tarifa de servicio</span>
+              <span>{<Price amount={serviceFee} />}</span>
             </div>
           )}
           <div className="price-row total">
