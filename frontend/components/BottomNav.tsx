@@ -56,7 +56,7 @@ export default function BottomNav() {
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--bg-elevated)] border-t border-[var(--border-subtle)] safe-area-bottom">
-      <div className="flex items-stretch justify-around pt-1.5">
+      <div className="flex items-stretch justify-around pt-2.5 pb-1">
         {TABS.map((tab) => {
           const active = tab.match(pathname);
           const href = tab.authOnly && !isSignedIn ? `/iniciar-sesion?callbackUrl=${encodeURIComponent(tab.href)}` : tab.href;
@@ -66,7 +66,7 @@ export default function BottomNav() {
               key={tab.label}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-1 flex-1 py-1 transition-colors",
+                "flex flex-col items-center gap-1.5 flex-1 py-1 transition-colors",
                 active ? "text-[var(--color-primary)]" : "text-[var(--text-tertiary)]"
               )}
             >
