@@ -3,10 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, ChevronLeft, ChevronRight, Zap, Home, Building2, Trees, Ship, Bed, Hotel } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Star, ChevronLeft, ChevronRight, Zap, Home, Building2, Trees, Ship, Bed, Hotel, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatRating } from "@/lib/utils";
 import Price from "@/components/Price";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { useAuth } from "@/hooks/useSafeAuth";
 import type { Property } from "@/types";
 
 interface PropertyCardProps {
@@ -21,6 +24,20 @@ export default function PropertyCard({
 }: PropertyCardProps) {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [imgError, setImgError] = useState(false);
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const fav = isFavorite(property.id);
+
+  function onHeartClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isSignedIn) {
+      router.push(`/iniciar-sesion?callbackUrl=/p/${property.id}`);
+      return;
+    }
+    toggleFavorite(property.id);
+  }
 
   const photos = property.photos;
   const hasMultiplePhotos = photos.length > 1;
@@ -115,27 +132,35 @@ export default function PropertyCard({
           </>
         )}
 
-        {/* Guardar (próximamente) */}
-        {/* Botón oculto hasta implementar favoritos en backend */}
+        {/* Botón de favorito — esquina superior derecha */}
+        <button
+          onClick={onHeartClick}
+          aria-label={fav ? "Quitar de favoritos" : "Guardar en favoritos"}
+          className="absolute top-2.5 right-2.5 z-20 p-2 rounded-full transition-transform active:scale-90 hover:scale-110"
+        >
+          <Heart
+            size={22}
+            className={cn(
+              "drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition-colors",
+              fav ? "fill-[var(--color-accent)] text-[var(--color-accent)]" : "fill-black/25 text-white"
+            )}
+          />
+        </button>
 
-        {/* Badge tipo de propiedad — esquina superior derecha */}
-        <div className="absolute top-2.5 right-2.5 z-10">
+        {/* Badges — esquina superior izquierda (apilados) */}
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col items-start gap-1.5">
+          {property.instant_booking && (
+            <span className="badge badge-fast gap-1">
+              <Zap size={9} className="fill-current" />
+              Reserva ya
+            </span>
+          )}
           <span className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold backdrop-blur-md"
             style={{ background: "rgba(255,255,255,0.85)", color: "var(--color-tierra)" }}>
             {typeConfig.icon}
             {typeConfig.label}
           </span>
         </div>
-
-        {/* Badge reserva inmediata — esquina superior izquierda */}
-        {property.instant_booking && (
-          <div className="absolute top-2.5 left-2.5 z-10">
-            <span className="badge badge-fast gap-1">
-              <Zap size={9} className="fill-current" />
-              Reserva ya
-            </span>
-          </div>
-        )}
 
         {/* Host chip — glassmorphism */}
         <div className="host-chip" style={{

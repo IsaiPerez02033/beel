@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Search, Briefcase, MessageSquare, User, ShieldCheck } from "lucide-react";
+import { Search, Briefcase, MessageSquare, User, ShieldCheck, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
@@ -28,6 +28,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { href: "/", label: "Explorar", icon: Search, match: (p) => p === "/" || p.startsWith("/buscar") },
+  { href: "/favoritos", label: "Favoritos", icon: Heart, match: (p) => p.startsWith("/favoritos"), authOnly: true },
   { href: "/reservaciones", label: "Viajes", icon: Briefcase, match: (p) => p.startsWith("/reservaciones"), authOnly: true },
   { href: "/mensajes", label: "Mensajes", icon: MessageSquare, match: (p) => p.startsWith("/mensajes"), authOnly: true },
   { href: "/cuenta", label: "Perfil", icon: User, match: (p) => p.startsWith("/cuenta"), authOnly: true },

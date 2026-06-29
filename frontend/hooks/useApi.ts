@@ -81,7 +81,11 @@ export function useApi() {
     <T>(path: string, body: unknown) => request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
     [request]
   );
+  const put = useCallback(
+    <T>(path: string, body: unknown) => request<T>(path, { method: "PUT", body: JSON.stringify(body) }),
+    [request]
+  );
   const del = useCallback(<T>(path: string) => request<T>(path, { method: "DELETE" }), [request]);
 
-  return { get, post, patch, del };
+  return { get, post, patch, put, del };
 }
