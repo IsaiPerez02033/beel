@@ -743,6 +743,13 @@ input, textarea, select {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
+/* Espacio inferior en móvil para que la barra de navegación no tape contenido */
+@media (max-width: 767px) {
+  body.has-bottom-nav {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  }
+}
+
 /* Indicador de conexión SSE */
 .sse-connected::before {
   content: "";

@@ -7,6 +7,7 @@ import SplashWrapper from "@/components/SplashWrapper";
 import DemoBanner from "@/components/DemoBanner";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import InstallPrompt from "@/components/InstallPrompt";
+import BottomNav from "@/components/BottomNav";
 import "@/styles/globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -96,6 +97,7 @@ export default function RootLayout({
               <InstallPrompt />
               <DemoBanner />
               <SplashWrapper>{children}</SplashWrapper>
+              <BottomNav />
             </body>
           </html>
         </ThemeProvider>
