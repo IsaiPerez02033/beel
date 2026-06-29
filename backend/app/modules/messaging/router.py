@@ -279,6 +279,13 @@ async def websocket_messages(
                                     data=MessageCreateIn(body=data["body"][:4000]),
                                 )
                                 await db.commit()
+                    elif data.get("type") == "typing":
+                        # Relay efímero del indicador "escribiendo…" (sin DB)
+                        await service._broadcast(conv.id, {
+                            "type": "typing",
+                            "sender_id": str(user.id),
+                            "is_typing": bool(data.get("is_typing", True)),
+                        })
             except WebSocketDisconnect:
                 pass
             except Exception as e:
