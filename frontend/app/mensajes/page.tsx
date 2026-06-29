@@ -489,7 +489,7 @@ export default function MensajesPage() {
           </div>
 
           {/* Listado de chats */}
-          <div className="flex-1 overflow-y-auto divide-y divide-neutral-100">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
             {loading ? (
               <div className="p-5 space-y-4">
                 {[1, 2, 3, 4].map((i) => (
@@ -1091,10 +1091,10 @@ function ConversationItem({
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-start gap-3.5 px-5 py-4 text-left transition-all border-b border-[var(--border-subtle)]",
+        "w-full flex items-start gap-3.5 px-3.5 py-3.5 text-left transition-all rounded-2xl",
         active
-          ? "bg-[var(--color-primary-light)] border-l-4 border-l-[var(--color-primary)]"
-          : "hover:bg-[var(--bg-subtle)]/60 border-l-4 border-l-transparent"
+          ? "bg-[var(--color-primary-light)] ring-1 ring-[var(--color-primary-border)]"
+          : "hover:bg-[var(--bg-subtle)]"
       )}
     >
       <div className="relative flex-shrink-0">
@@ -1136,7 +1136,7 @@ function ConversationItem({
         </p>
 
         {/* Rol descriptivo del chat */}
-        <span className="inline-block text-[9px] text-[var(--text-tertiary)] font-semibold mt-1 bg-[var(--bg-subtle)] px-2 py-0.5 rounded-md">
+        <span className="inline-block text-[9px] text-[var(--text-tertiary)] font-semibold mt-1.5 border border-[var(--border-subtle)] px-2 py-0.5 rounded-md">
           {isGuest ? "Hospedaje" : "Tu propiedad"}
         </span>
       </div>
