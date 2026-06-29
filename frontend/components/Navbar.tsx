@@ -113,13 +113,17 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           <div className="hidden sm:block">
             <NavbarAuth />
           </div>
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors"
-            aria-label="Menú"
-          >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          {/* Con sesión, en móvil se navega por la barra inferior y /cuenta;
+              la hamburguesa solo se muestra a invitados (para iniciar sesión). */}
+          {!isSignedIn && (
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] transition-colors"
+              aria-label="Menú"
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          )}
         </div>
       </nav>
 
