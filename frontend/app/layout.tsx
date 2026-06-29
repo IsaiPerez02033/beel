@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Inter, Fraunces } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { ThemeProvider, themeInitScript } from "@/contexts/ThemeContext";
+import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import SplashWrapper from "@/components/SplashWrapper";
 import DemoBanner from "@/components/DemoBanner";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
@@ -87,6 +88,7 @@ export default function RootLayout({
   return (
     <SessionProvider>
       <CurrencyProvider>
+        <FavoritesProvider>
         <ThemeProvider>
           <html lang="es" className={`${plusJakarta.variable} ${inter.variable} ${fraunces.variable}`} suppressHydrationWarning>
             <head>
@@ -101,6 +103,7 @@ export default function RootLayout({
             </body>
           </html>
         </ThemeProvider>
+        </FavoritesProvider>
       </CurrencyProvider>
     </SessionProvider>
   );

@@ -80,7 +80,7 @@ export default function CuentaPage() {
         {/* Accesos rápidos */}
         <div className="grid grid-cols-2 gap-4 mb-5">
           <HubCard href="/reservaciones" icon={<Map size={22} />} label="Viajes" />
-          <HubCard href="/mensajes" icon={<Heart size={22} />} label="Favoritos" disabled />
+          <HubCard href="/favoritos" icon={<Heart size={22} />} label="Favoritos" />
         </div>
 
         {/* Conviértete en anfitrión / Modo anfitrión */}

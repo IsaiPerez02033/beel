@@ -33,6 +33,7 @@ from app.modules.messaging.router import router as messaging_router
 from app.modules.reviews.router import router as reviews_router
 from app.modules.webhooks.clerk import router as clerk_webhook_router
 from app.modules.notifications.router import router as notifications_router
+from app.modules.favorites.router import router as favorites_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -140,6 +141,7 @@ app.include_router(messaging_router, prefix=f"{API_PREFIX}/messaging", tags=["me
 app.include_router(reviews_router, prefix=f"{API_PREFIX}/reviews", tags=["reviews"])
 app.include_router(clerk_webhook_router, prefix=f"{API_PREFIX}/webhooks", tags=["webhooks"])
 app.include_router(notifications_router, prefix=f"{API_PREFIX}/notifications", tags=["notifications"])
+app.include_router(favorites_router, prefix=f"{API_PREFIX}/favorites", tags=["favorites"])
 
 
 # ── Root ────────────────────────────────────────────────────────────────────────
