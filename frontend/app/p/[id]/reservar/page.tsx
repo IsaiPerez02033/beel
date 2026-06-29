@@ -396,16 +396,13 @@ export default function ReservarPage() {
                     <span><Price amount={breakdown.platform_fee} /></span>
                   </div>
                 )}
-                <div className="flex justify-between text-[var(--text-secondary)]">
-                  <span>Impuestos</span>
-                  <span><Price amount={iva} /></span>
-                </div>
-
                 <div className="border-t border-[var(--border-subtle)] pt-3 mt-1 flex justify-between font-semibold text-[var(--text-primary)]">
                   <span>Total MXN</span>
                   <span><Price amount={totalWithIva} /></span>
                 </div>
-                <p className="text-[11px] text-[var(--text-tertiary)] mt-1">IVA y tarifa de pago incluidos en el precio</p>
+                <p className="text-[11px] text-[var(--text-tertiary)] mt-1">
+                  Precio final. Incluye IVA (<Price amount={iva} />) y tarifa de servicio.
+                </p>
               </div>
             </div>
           </div>
