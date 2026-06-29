@@ -391,8 +391,7 @@ export default function ReservarPage() {
                 {breakdown.platform_fee > 0 && (
                   <div className="flex justify-between text-[var(--text-secondary)]">
                     <span className="flex items-center gap-1">
-                      Tarifa de procesamiento
-                      <span className="text-[11px] text-[var(--text-tertiary)]">(MercadoPago)</span>
+                      Tarifa de servicio
                     </span>
                     <span><Price amount={breakdown.platform_fee} /></span>
                   </div>

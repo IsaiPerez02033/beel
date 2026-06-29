@@ -1,0 +1,150 @@
+% =====================================================================
+%  Beel — Presentación para anfitriones
+%  Compilar con: pdflatex beel-anfitriones.tex   (o subir a Overleaf)
+%  Requiere en la misma carpeta: beel_logo.png, beel_icon.png
+% =====================================================================
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1.8cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+
+% ---- Colores de marca Beel ----
+\definecolor{beelgreen}{HTML}{147A5C}
+\definecolor{beelgreendark}{HTML}{0E5C44}
+\definecolor{beelamber}{HTML}{F5A623}
+\definecolor{beelsand}{HTML}{F1EFE8}
+\definecolor{beeltext}{HTML}{2C2C2A}
+\definecolor{beelgray}{HTML}{5C5A57}
+
+\hypersetup{
+  colorlinks=true,
+  urlcolor=beelgreen,
+  linkcolor=beelgreen,
+  pdftitle={Beel — Hospedajes auténticos en México},
+  pdfauthor={Beel}
+}
+
+\setlength{\parindent}{0pt}
+\renewcommand{\familydefault}{\sfdefault}
+\color{beeltext}
+
+% ---- Estilo de secciones ----
+\titleformat{\section}
+  {\color{beelgreen}\Large\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+
+% ---- Caja de beneficio ----
+\newtcolorbox{benefit}[1]{
+  enhanced, colback=beelsand, colframe=beelsand,
+  arc=4pt, boxrule=0pt, left=10pt, right=10pt, top=8pt, bottom=8pt,
+  borderline west={3pt}{0pt}{beelgreen},
+  fontupper=\small,
+  before skip=4pt, after skip=4pt,
+  title={\bfseries\color{beelgreendark} #1}, coltitle=beelgreendark,
+  fonttitle=\bfseries\small
+}
+
+\newcommand{\paso}[2]{%
+  \begin{tcolorbox}[enhanced, colback=white, colframe=beelgreen,
+      arc=6pt, boxrule=1pt, left=8pt, right=8pt, top=6pt, bottom=6pt,
+      before skip=4pt, after skip=4pt]
+    {\color{beelgreen}\bfseries\large #1}\quad #2
+  \end{tcolorbox}}
+
+\begin{document}
+
+% ============ ENCABEZADO ============
+\begin{center}
+  \includegraphics[height=1.5cm]{beel_logo.png}\\[6pt]
+  {\color{beelgray}\large Hospedajes auténticos con anfitriones locales en todo México}
+\end{center}
+
+\vspace{6pt}
+{\color{beelgreen}\rule{\linewidth}{1.5pt}}
+\vspace{10pt}
+
+% ============ QUÉ ES BEEL ============
+\section{¿Qué es Beel?}
+Beel es una plataforma mexicana para publicar y reservar hospedajes: casas,
+departamentos, villas y cabañas. Conectamos a \textbf{anfitriones locales} con
+\textbf{viajeros} que buscan lugares auténticos para hospedarse, con pagos
+seguros y comunicación directa. Pensada para México, sin intermediarios
+corporativos.
+
+\vspace{4pt}
+\begin{center}
+\begin{tcolorbox}[enhanced, colback=beelgreen, colframe=beelgreen, arc=8pt,
+  boxrule=0pt, width=\linewidth, halign=center, top=8pt, bottom=8pt]
+  {\color{white}\Large\bfseries Recibes el 100\% de tu precio}\\[2pt]
+  {\color{white}\small Beel no te cobra comisión. La pequeña tarifa de servicio ($\approx$4\%)\\ la paga el huésped, no tú. Tú defines el precio y eso es lo que recibes.}
+\end{tcolorbox}
+\end{center}
+
+% ============ POR QUÉ PUBLICAR ============
+\section{¿Por qué publicar tu propiedad en Beel?}
+
+\begin{benefit}{Ganas más: recibes el 100\%}
+A diferencia de otras plataformas que descuentan al anfitrión del 10\% al 20\%,
+en Beel recibes el 100\% del precio que defines. La tarifa de servicio
+($\approx$4\%) la cubre el huésped, no tú.
+\end{benefit}
+
+\begin{benefit}{Pagos protegidos}
+El dinero del huésped se retiene de forma segura y se libera a tu cuenta una vez
+confirmada la estancia. Cobras por transferencia a tu CLABE.
+\end{benefit}
+
+\begin{benefit}{Huéspedes verificados}
+Verificamos teléfono e identidad (INE/pasaporte) de los usuarios, para que
+recibas a gente real y confiable.
+\end{benefit}
+
+\begin{benefit}{Comunicación directa}
+Chatea con tus huéspedes dentro de la app: dudas, llegada y detalles de la
+reserva, todo en un mismo lugar.
+\end{benefit}
+
+\begin{benefit}{Publicar es rápido y gratis}
+Subes fotos, descripción, ubicación y precio en minutos. Tu anuncio incluye mapa,
+reglas de la casa y política de cancelación.
+\end{benefit}
+
+% ============ CÓMO FUNCIONA ============
+\section{¿Cómo funciona?}
+\paso{1.}{Creas tu cuenta y verificas tu identidad (una sola vez).}
+\paso{2.}{Publicas tu propiedad: fotos, ubicación, precio y reglas.}
+\paso{3.}{Recibes solicitudes de reserva y chateas con los huéspedes.}
+\paso{4.}{Se completa la estancia y recibes tu pago en tu cuenta bancaria.}
+
+% ============ CONFIANZA ============
+\section{Seguridad y confianza}
+Beel actúa como intermediario tecnológico con pagos en garantía: el huésped paga
+por adelantado, el dinero queda resguardado y se libera al anfitrión tras la
+estancia. Sumado a la verificación de identidad, esto protege a ambas partes.
+
+% ============ LLAMADA A LA ACCIÓN ============
+\vspace{8pt}
+\begin{tcolorbox}[enhanced, colback=beelamber, colframe=beelamber, arc=8pt,
+  boxrule=0pt, width=\linewidth, halign=center, top=10pt, bottom=10pt]
+  {\color{beeltext}\Large\bfseries Conoce Beel y publica tu propiedad}\\[4pt]
+  {\color{beeltext}\large\bfseries \href{https://www.beel-mx.com}{www.beel-mx.com}}\\[2pt]
+  {\color{beeltext}\small Puedes instalarla en tu celular desde el navegador (icono ``Agregar a inicio'').}
+\end{tcolorbox}
+
+\vspace{10pt}
+\begin{center}
+  \includegraphics[height=1.1cm]{beel_icon.png}\\[4pt]
+  {\color{beelgray}\small ¿Dudas? Escríbenos a \href{mailto:hola@beel-mx.com}{hola@beel-mx.com}}\\[2pt]
+  {\color{beelgray}\footnotesize Beel · México · \href{https://www.beel-mx.com}{beel-mx.com}}
+\end{center}
+
+\end{document}
