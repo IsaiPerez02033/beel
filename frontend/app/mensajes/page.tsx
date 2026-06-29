@@ -16,6 +16,8 @@ import {
   Info,
   X,
   CheckCircle2,
+  Check,
+  CheckCheck,
   MessageSquare,
   Calendar,
   Users,
@@ -25,7 +27,7 @@ import {
 } from "lucide-react";
 import MessageReactions from "@/components/MessageReactions";
 import ReportButton from "@/components/ReportButton";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isToday, isYesterday } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface Participant {
@@ -67,6 +69,7 @@ interface Message {
   content?: string;
   message_type: string;
   created_at: string;
+  is_read?: boolean;
   sender?: Participant;
   reactions?: Reaction[];
   reply_to_id?: string;
@@ -134,6 +137,10 @@ export default function MensajesPage() {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [localUserId, setLocalUserId] = useState<string>("");
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingSentRef = useRef(false);
+  const typingStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Filtros y búsqueda
   const [searchQuery, setSearchQuery] = useState("");
@@ -221,7 +228,15 @@ export default function MensajesPage() {
   }, [activeConv?.reservation_id, get]);
 
   // WebSocket: recibir mensajes en tiempo real
-  const { send: wsSend } = useWebSocket(activeConvId, {
+  const { send: wsSend, sendTyping } = useWebSocket(activeConvId, {
+    onTyping: (data) => {
+      if (data.sender_id === localUserId) return;
+      setOtherTyping(data.is_typing);
+      if (typingClearRef.current) clearTimeout(typingClearRef.current);
+      if (data.is_typing) {
+        typingClearRef.current = setTimeout(() => setOtherTyping(false), 4000);
+      }
+    },
     onMessage: (data) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === data.id)) return prev;
@@ -243,7 +258,34 @@ export default function MensajesPage() {
   // Auto-scroll al fondo al recibir mensajes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, otherTyping]);
+
+  // Limpiar indicador "escribiendo" al cambiar de conversación
+  useEffect(() => {
+    setOtherTyping(false);
+    typingSentRef.current = false;
+  }, [activeConvId]);
+
+  // Notifica "escribiendo…" (throttle + auto-stop tras pausa)
+  function notifyTyping() {
+    if (!typingSentRef.current) {
+      typingSentRef.current = true;
+      sendTyping(true);
+    }
+    if (typingStopRef.current) clearTimeout(typingStopRef.current);
+    typingStopRef.current = setTimeout(() => {
+      typingSentRef.current = false;
+      sendTyping(false);
+    }, 2500);
+  }
+
+  function stopTyping() {
+    if (typingStopRef.current) clearTimeout(typingStopRef.current);
+    if (typingSentRef.current) {
+      typingSentRef.current = false;
+      sendTyping(false);
+    }
+  }
 
   async function handleSend() {
     const text = input.trim();
@@ -251,6 +293,7 @@ export default function MensajesPage() {
 
     setSending(true);
     setInput("");
+    stopTyping();
     const replyId = replyingTo?.id ?? null;
     setReplyingTo(null);
 
@@ -341,7 +384,11 @@ export default function MensajesPage() {
     let lastDateStr = "";
     return messages.map((msg) => {
       const msgDate = parseISO(msg.created_at);
-      const dateStr = format(msgDate, "d 'de' MMMM", { locale: es });
+      const dateStr = isToday(msgDate)
+        ? "Hoy"
+        : isYesterday(msgDate)
+          ? "Ayer"
+          : format(msgDate, "d 'de' MMMM", { locale: es });
       let dateSeparator = null;
       if (dateStr !== lastDateStr) {
         lastDateStr = dateStr;
@@ -542,6 +589,15 @@ export default function MensajesPage() {
               {/* Contenedor de Mensajes */}
               <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 bg-[var(--bg-elevated)]">
                 {renderMessages()}
+                {otherTyping && (
+                  <div className="flex items-center gap-1.5 mt-2 ml-1">
+                    <span className="flex gap-1 bg-[var(--bg-subtle)] border border-[var(--border-subtle)]/50 rounded-2xl rounded-tl-none px-3 py-2.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-tertiary)] animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-tertiary)] animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-tertiary)] animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </span>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -567,10 +623,12 @@ export default function MensajesPage() {
                     value={input}
                     onChange={(e) => {
                       setInput(e.target.value);
+                      if (e.target.value.trim()) notifyTyping();
                       // Auto-resize
                       e.target.style.height = "auto";
                       e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                     }}
+                    onBlur={stopTyping}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -956,7 +1014,14 @@ function SwipeableMessage({
                   compact
                 />
               )}
-              <span className="text-[9px] opacity-60 flex-shrink-0">{format(msgDate, "HH:mm")}</span>
+              <span className="text-[9px] opacity-60 flex-shrink-0 flex items-center gap-1">
+                {format(msgDate, "HH:mm")}
+                {isMine && (
+                  msg.is_read
+                    ? <CheckCheck size={13} className="text-white" />
+                    : <Check size={13} className="text-white/70" />
+                )}
+              </span>
               {isMine && (
                 <MessageReactions
                   messageId={msg.id}

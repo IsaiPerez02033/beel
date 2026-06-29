@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useSafeAuth";
 interface WSOptions {
   onMessage?: (data: any) => void;
   onSystem?: (data: any) => void;
+  onTyping?: (data: { sender_id: string; is_typing: boolean }) => void;
   onConnected?: () => void;
   onError?: (err: Event) => void;
 }
@@ -57,6 +58,8 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
           optionsRef.current.onMessage?.(data);
         } else if (data.type === "system") {
           optionsRef.current.onSystem?.(data);
+        } else if (data.type === "typing") {
+          optionsRef.current.onTyping?.(data);
         }
       } catch {}
     };
@@ -91,5 +94,12 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
     }
   }, []);
 
-  return { send };
+  /** Notifica al otro participante que estás escribiendo (o dejaste de hacerlo). */
+  const sendTyping = useCallback((isTyping: boolean) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: "typing", is_typing: isTyping }));
+    }
+  }, []);
+
+  return { send, sendTyping };
 }
