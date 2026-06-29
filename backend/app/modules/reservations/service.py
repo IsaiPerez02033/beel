@@ -312,11 +312,13 @@ async def create_reservation(
             property_id=property_.id,
             reservation_id=reservation.id,
         )
-        if created:
-            msg_text = f"Nueva solicitud de reserva para {property_.title} ({data.check_in} → {data.check_out})."
-            if initial_status == "confirmed":
-                msg_text = f"Reserva confirmada en {property_.title} ({data.check_in} → {data.check_out})."
-            await send_system_message(db, conv, msg_text)
+        # Publicar el aviso en cada reserva nueva, aunque la conversación ya
+        # exista (misma propiedad reservada de nuevo) — una sola conversación
+        # por propiedad, pero el chat refleja cada reserva.
+        msg_text = f"Nueva solicitud de reserva para {property_.title} ({data.check_in} → {data.check_out})."
+        if initial_status == "confirmed":
+            msg_text = f"Reserva confirmada en {property_.title} ({data.check_in} → {data.check_out})."
+        await send_system_message(db, conv, msg_text)
     except Exception as e:
         logger.error("Error al crear conversación para reserva: %s", e)
 
