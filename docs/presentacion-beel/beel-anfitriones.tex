@@ -11,6 +11,7 @@
 \usepackage{lmodern}
 \usepackage[a4paper,margin=1.8cm]{geometry}
 \usepackage{graphicx}
+\usepackage{array}
 \usepackage{xcolor}
 \usepackage{enumitem}
 \usepackage{titlesec}
@@ -118,6 +119,21 @@ reserva, todo en un mismo lugar.
 Subes fotos, descripción, ubicación y precio en minutos. Tu anuncio incluye mapa,
 reglas de la casa y política de cancelación.
 \end{benefit}
+
+% ============ EJEMPLO NUMÉRICO ============
+\vspace{2pt}
+\begin{tcolorbox}[enhanced, colback=white, colframe=beelgreen, arc=8pt,
+  boxrule=1.2pt, width=\linewidth, top=8pt, bottom=8pt, left=12pt, right=12pt]
+  {\color{beelgreendark}\bfseries Ejemplo: tu propiedad a \$1,000 por noche (2 noches)}\\[4pt]
+  \begin{tabular}{@{}p{0.62\linewidth}>{\raggedleft\arraybackslash}p{0.30\linewidth}@{}}
+  Precio que tú defines ($\$$1,000 $\times$ 2) & $\$$2,000 \\
+  Tarifa de servicio (la paga el huésped, $\approx$6\%) & $\$$120 \\[2pt]
+  \hline\\[-7pt]
+  {\bfseries El huésped paga} & {\bfseries $\$$2,120} \\
+  {\color{beelgreen}\bfseries Tú recibes} & {\color{beelgreen}\bfseries $\$$2,000} \\
+  \end{tabular}\\[4pt]
+  {\color{beelgray}\small Tú recibes el 100\% de tu precio. Beel no te descuenta nada.}
+\end{tcolorbox}
 
 % ============ CÓMO FUNCIONA ============
 \section{¿Cómo funciona?}
