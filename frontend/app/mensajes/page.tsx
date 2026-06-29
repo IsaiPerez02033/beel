@@ -410,7 +410,7 @@ export default function MensajesPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por nombre o contenido..."
-                className="w-full pl-10 pr-4 py-2 rounded-full border border-[var(--border-subtle)] text-sm focus:outline-none focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 placeholder-neutral-400 bg-[var(--bg-subtle)]"
+                className="w-full pl-10 pr-4 py-2 rounded-full border border-[var(--border-subtle)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] placeholder-neutral-400 bg-[var(--bg-subtle)]"
               />
             </div>
 
@@ -421,7 +421,7 @@ export default function MensajesPage() {
                 className={cn(
                   "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
                   !filterUnread
-                    ? "bg-neutral-900 text-white border-neutral-900"
+                    ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
                     : "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
                 )}
               >
@@ -432,7 +432,7 @@ export default function MensajesPage() {
                 className={cn(
                   "px-4 py-1.5 rounded-full text-xs font-semibold border transition-all",
                   filterUnread
-                    ? "bg-neutral-900 text-white border-neutral-900"
+                    ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
                     : "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
                 )}
               >
@@ -494,9 +494,10 @@ export default function MensajesPage() {
                         setActiveConvId(null);
                       }
                     }}
-                    className="md:hidden p-1.5 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors"
+                    aria-label="Volver a conversaciones"
+                    className="md:hidden p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors"
                   >
-                    <ArrowLeft size={18} />
+                    <ArrowLeft size={20} />
                   </button>
                   <div className="relative">
                     {otherParticipant?.avatar_url ? (
@@ -511,7 +512,6 @@ export default function MensajesPage() {
                         {otherParticipant?.full_name.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
@@ -528,9 +528,10 @@ export default function MensajesPage() {
                 {/* Botón Info Reservación */}
                 <button
                   onClick={() => setShowInfoSidebar(!showInfoSidebar)}
+                  aria-label="Detalles de la reserva"
                   className={cn(
                     "p-2 rounded-full border transition-all text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)]",
-                    showInfoSidebar ? "border-neutral-900 bg-[var(--bg-subtle)]" : "border-[var(--border-subtle)]"
+                    showInfoSidebar ? "border-[var(--color-primary)] bg-[var(--color-primary-light)] text-[var(--color-primary)]" : "border-[var(--border-subtle)]"
                   )}
                   title="Detalles de la reserva"
                 >
@@ -561,7 +562,7 @@ export default function MensajesPage() {
 
               {/* Caja de Input */}
               <div className="px-3 sm:px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex-shrink-0 safe-area-bottom">
-                <div className="relative border border-[var(--border-subtle)] focus-within:border-neutral-900 focus-within:ring-1 focus-within:ring-neutral-900 rounded-2xl sm:rounded-3xl py-2.5 pl-4 pr-12 transition-all bg-[var(--bg-elevated)] max-w-3xl mx-auto flex items-end gap-2 shadow-sm">
+                <div className="relative border border-[var(--border-subtle)] focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] rounded-3xl py-2 pl-4 pr-2 transition-all bg-[var(--bg-subtle)] max-w-3xl mx-auto flex items-end gap-2 shadow-sm">
                   <textarea
                     value={input}
                     onChange={(e) => {
@@ -585,9 +586,10 @@ export default function MensajesPage() {
                   <button
                     onClick={handleSend}
                     disabled={!input.trim() || sending}
-                    className="flex-shrink-0 w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center hover:bg-neutral-800 active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:pointer-events-none shadow-sm mb-0.5"
+                    aria-label="Enviar mensaje"
+                    className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-dark)] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:pointer-events-none shadow-sm"
                   >
-                    <Send size={13} className="text-white -mr-[1px] -mt-[1px]" strokeWidth={2.5} />
+                    <Send size={16} className="text-white -mr-[1px] -mt-[1px]" strokeWidth={2.5} />
                   </button>
                 </div>
                 {/* Hint solo en desktop */}
@@ -919,7 +921,7 @@ function SwipeableMessage({
             className={cn(
               "px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm",
               isMine
-                ? "bg-[#222222] text-white rounded-tr-none"
+                ? "bg-[var(--color-primary)] text-white rounded-tr-none"
                 : "bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-tl-none border border-[var(--border-subtle)]/50"
             )}
           >
@@ -1026,7 +1028,7 @@ function ConversationItem({
       className={cn(
         "w-full flex items-start gap-3.5 px-5 py-4 text-left transition-all border-b border-[var(--border-subtle)]",
         active
-          ? "bg-[var(--bg-subtle)] border-l-4 border-l-neutral-900"
+          ? "bg-[var(--color-primary-light)] border-l-4 border-l-[var(--color-primary)]"
           : "hover:bg-[var(--bg-subtle)]/60 border-l-4 border-l-transparent"
       )}
     >

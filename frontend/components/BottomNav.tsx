@@ -13,6 +13,7 @@ const HIDDEN_PREFIXES = [
   "/iniciar-sesion",
   "/registro",
   "/p/nueva",
+  "/mensajes", // pantalla completa con su propio input al fondo
 ];
 const HIDDEN_MATCHES = (p: string) =>
   p.includes("/editar") || p.includes("/reservar");
