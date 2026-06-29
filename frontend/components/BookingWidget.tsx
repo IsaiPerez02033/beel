@@ -90,7 +90,7 @@ export default function BookingWidget({
   const cleaningFee = Number(property.cleaning_fee ?? 0);
   // Tarifa de servicio (cubre el procesamiento de pago). Debe coincidir con
   // PLATFORM_FEE_PERCENTAGE del backend. El anfitrión recibe el 100% de su precio.
-  const SERVICE_FEE_PCT = 0.04;
+  const SERVICE_FEE_PCT = 0.06;
   const serviceFee = Math.round(subtotal * SERVICE_FEE_PCT * 100) / 100;
   const total = subtotal + cleaningFee + serviceFee;
 
