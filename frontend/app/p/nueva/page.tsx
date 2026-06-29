@@ -10,7 +10,7 @@ import PhotoUploader from "@/components/PhotoUploader";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft, ChevronRight, Home, MapPin, DollarSign,
-  Settings, Check, Loader2, Plus, Minus, Camera,
+  Settings, Check, Loader2, Plus, Minus, Camera, Info,
 } from "lucide-react";
 import type { Amenity } from "@/types";
 import LocationPicker from "@/components/LocationPicker";
@@ -513,6 +513,14 @@ function Step3({ form, set }: StepProps) {
             />
           </div>
           <p className="text-caption text-[var(--text-tertiary)] mt-1">MXN / noche</p>
+          <div className="mt-2 flex items-start gap-2 rounded-xl bg-[var(--color-primary-light)] border border-[var(--color-primary-border)] p-3">
+            <Info size={15} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
+            <p className="text-caption text-[var(--text-secondary)] leading-snug">
+              Este es el <strong>monto que recibirás</strong> por noche — Beel no te
+              descuenta comisión. El precio se considera con <strong>IVA incluido</strong>.
+              Cada anfitrión es responsable de su propia <strong>facturación e impuestos</strong>.
+            </p>
+          </div>
         </div>
 
         <div>

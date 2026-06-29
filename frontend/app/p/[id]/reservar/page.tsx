@@ -49,10 +49,6 @@ const POLICY_DESC: Record<string, string> = {
   estricta: "Sin reembolso una vez confirmada la reserva.",
 };
 
-// IVA incluido: el precio del anfitrión ya lleva IVA. Extraemos la parte
-// que corresponde al impuesto (misma lógica que Airbnb México).
-const IVA_FACTOR = 16 / 116;
-
 export default function ReservarPage() {
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -81,9 +77,7 @@ export default function ReservarPage() {
     ? differenceInCalendarDays(parseISO(checkOut), parseISO(checkIn))
     : 0;
 
-  // IVA ya incluido en el precio — extraemos la parte del impuesto
-  const iva = breakdown ? breakdown.total * IVA_FACTOR : 0;
-  // El total que paga el huésped es el mismo (el IVA ya está dentro)
+  // El total que paga el huésped (impuestos incluidos en cada precio)
   const totalWithIva = breakdown ? breakdown.total : 0;
 
   const fetchBreakdown = useCallback(async (ci: string, co: string) => {
@@ -401,7 +395,8 @@ export default function ReservarPage() {
                   <span><Price amount={totalWithIva} /></span>
                 </div>
                 <p className="text-[11px] text-[var(--text-tertiary)] mt-1">
-                  Precio final. Incluye IVA (<Price amount={iva} />) y tarifa de servicio.
+                  Precio final con impuestos incluidos. La factura del hospedaje la emite
+                  el anfitrión; la de la tarifa de servicio, Beel.
                 </p>
               </div>
             </div>

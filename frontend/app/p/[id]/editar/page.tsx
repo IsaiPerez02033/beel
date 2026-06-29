@@ -10,7 +10,7 @@ import PhotoUploader from "@/components/PhotoUploader";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft, Save, Loader2, Check, Eye, EyeOff,
-  AlertCircle, Plus, Minus,
+  AlertCircle, Plus, Minus, Info,
 } from "lucide-react";
 import type { Property } from "@/types";
 
@@ -320,6 +320,15 @@ export default function EditarPropiedadPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-xl bg-[var(--color-primary-light)] border border-[var(--color-primary-border)] p-3">
+              <Info size={15} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
+              <p className="text-caption text-[var(--text-secondary)] leading-snug">
+                El precio por noche es el <strong>monto que recibirás</strong> (Beel no te
+                descuenta comisión) y se considera con <strong>IVA incluido</strong>. Cada
+                anfitrión es responsable de su propia <strong>facturación e impuestos</strong>.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
