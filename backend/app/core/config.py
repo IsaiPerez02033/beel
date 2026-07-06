@@ -79,6 +79,9 @@ class Settings(BaseSettings):
     MERCADOPAGO_WEBHOOK_SECRET: Optional[str] = None
     PLATFORM_FEE_PERCENTAGE: float = 6.0  # Tarifa de servicio al huesped: ~4% cubre MercadoPago, ~2% Beel
 
+    # ── Impuestos del hospedaje (modelo Airbnb: IVA sumado al huesped) ────────
+    LODGING_IVA_PERCENTAGE: float = 16.0      # IVA del hospedaje, se suma al huesped
+
     # ── Retencion de impuestos al anfitrion (plataformas digitales MX) ────────
     APPLY_TAX_RETENTION: bool = True          # Feature flag global
     ISR_RETENTION_WITH_RFC: float = 4.0       # % ISR si el anfitrion registro RFC

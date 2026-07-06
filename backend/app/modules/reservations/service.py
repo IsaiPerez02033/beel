@@ -157,7 +157,12 @@ def _calculate_price(
     platform_fee = round(
         subtotal * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE / 100)), 2
     )
-    total = subtotal + cleaning_fee + platform_fee
+    # IVA del hospedaje: se suma al total del huésped (modelo Airbnb) sobre
+    # la base = habitación + limpieza. Se le "pasa" al anfitrión en su payout.
+    lodging_iva = round(
+        (subtotal + cleaning_fee) * Decimal(str(settings.LODGING_IVA_PERCENTAGE / 100)), 2
+    )
+    total = subtotal + cleaning_fee + platform_fee + lodging_iva
 
     return PriceBreakdownOut(
         nights=nights,
@@ -166,6 +171,7 @@ def _calculate_price(
         cleaning_fee=cleaning_fee,
         security_deposit=security_deposit,
         platform_fee=platform_fee,
+        lodging_iva=lodging_iva,
         total=total,
         currency=property_.currency,
     )
@@ -281,7 +287,9 @@ async def create_reservation(
     host_has_rfc = bool(host_rfc)
     ret_base = breakdown.subtotal + breakdown.cleaning_fee
     ret = _calculate_host_retention(ret_base, host_has_rfc)
-    host_net_payout = ret_base - ret["isr"] - ret["iva"]
+    # El IVA del hospedaje se le suma al huésped y se le pasa al anfitrión;
+    # Beel retiene la parte que corresponde (ISR e IVA) y la entera al SAT.
+    host_net_payout = ret_base + breakdown.lodging_iva - ret["isr"] - ret["iva"]
 
     # Calcular deadline de respuesta del host
     host_deadline = (
@@ -308,6 +316,7 @@ async def create_reservation(
         platform_fee_pct=Decimal(str(settings.PLATFORM_FEE_PERCENTAGE)),
         total_amount=breakdown.total,
         currency=breakdown.currency,
+        lodging_iva_snapshot=breakdown.lodging_iva,
         host_has_rfc=host_has_rfc,
         isr_retention_pct=ret["isr_pct"],
         iva_retention_pct=ret["iva_pct"],

@@ -72,6 +72,7 @@ class ReservationOut(BaseModel):
 
     # Retención de impuestos al anfitrión
     subtotal: Decimal = Decimal("0")
+    lodging_iva_snapshot: Decimal = Decimal("0")
     host_has_rfc: bool = False
     isr_retention_pct: Decimal = Decimal("0")
     iva_retention_pct: Decimal = Decimal("0")
@@ -127,6 +128,7 @@ class PriceBreakdownOut(BaseModel):
     cleaning_fee: Decimal
     security_deposit: Decimal
     platform_fee: Decimal
+    lodging_iva: Decimal = Decimal("0")
     total: Decimal
     currency: str
 

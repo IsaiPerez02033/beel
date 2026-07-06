@@ -24,6 +24,7 @@ interface ReservationDetail {
   status: string;
   subtotal?: number;
   cleaning_fee_snapshot?: number;
+  lodging_iva_snapshot?: number;
   host_has_rfc?: boolean;
   isr_retention_pct?: number;
   iva_retention_pct?: number;
@@ -257,6 +258,12 @@ export default function ReservationDetailPage() {
                     <span>Habitación + limpieza</span>
                     <span><Price amount={(reservation.subtotal ?? 0) + (reservation.cleaning_fee_snapshot ?? 0)} /></span>
                   </div>
+                  {(reservation.lodging_iva_snapshot ?? 0) > 0 && (
+                    <div className="flex justify-between text-[var(--text-secondary)]">
+                      <span>IVA del hospedaje (16%)</span>
+                      <span>+<Price amount={reservation.lodging_iva_snapshot ?? 0} /></span>
+                    </div>
+                  )}
                   {(reservation.isr_retention_snapshot ?? 0) > 0 && (
                     <div className="flex justify-between text-[var(--text-secondary)]">
                       <span>ISR retenido ({Number(reservation.isr_retention_pct ?? 0)}%)</span>

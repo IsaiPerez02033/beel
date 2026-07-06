@@ -118,6 +118,9 @@ class Reservation(Base, TimestampMixin):
     total_amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="MXN")
 
+    # IVA del hospedaje sumado al huésped (modelo Airbnb)
+    lodging_iva_snapshot: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
+
     # Snapshot de retención de impuestos al anfitrión (ISR e IVA)
     host_has_rfc: Mapped[bool] = mapped_column(Boolean, default=False)
     isr_retention_pct: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0"))

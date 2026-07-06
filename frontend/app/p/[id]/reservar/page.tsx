@@ -35,6 +35,7 @@ interface PriceBreakdown {
   subtotal: number;
   cleaning_fee: number;
   platform_fee: number;
+  lodging_iva: number;
   total: number;
   currency: string;
 }
@@ -382,6 +383,12 @@ export default function ReservarPage() {
                     <span><Price amount={breakdown.cleaning_fee} /></span>
                   </div>
                 )}
+                {breakdown.lodging_iva > 0 && (
+                  <div className="flex justify-between text-[var(--text-secondary)]">
+                    <span>IVA (16%)</span>
+                    <span><Price amount={breakdown.lodging_iva} /></span>
+                  </div>
+                )}
                 {breakdown.platform_fee > 0 && (
                   <div className="flex justify-between text-[var(--text-secondary)]">
                     <span className="flex items-center gap-1">
@@ -395,8 +402,8 @@ export default function ReservarPage() {
                   <span><Price amount={totalWithIva} /></span>
                 </div>
                 <p className="text-[11px] text-[var(--text-tertiary)] mt-1">
-                  Precio final con impuestos incluidos. La factura del hospedaje la emite
-                  el anfitrión; la de la tarifa de servicio, Beel.
+                  La factura del hospedaje (con IVA) la emite el anfitrión; la de la
+                  tarifa de servicio, Beel.
                 </p>
               </div>
             </div>

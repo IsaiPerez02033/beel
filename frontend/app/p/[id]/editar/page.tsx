@@ -325,9 +325,10 @@ export default function EditarPropiedadPage() {
             <div className="flex items-start gap-2 rounded-xl bg-[var(--color-primary-light)] border border-[var(--color-primary-border)] p-3">
               <Info size={15} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
               <p className="text-caption text-[var(--text-secondary)] leading-snug">
-                El precio por noche es tu <strong>monto base</strong> (Beel no te cobra comisión).
-                Beel <strong>retiene tu ISR e IVA</strong> y los entera al SAT; con tu
-                <strong> RFC registrado</strong> te retenemos menos (ISR 4% + IVA 8% en vez de 20% + 16%).
+                Tu precio por noche es <strong>base (sin IVA)</strong>. Al huésped se le suma
+                el IVA (16%) y se te transfiere; Beel <strong>retiene tu ISR e IVA</strong> y los
+                entera al SAT. Con <strong>RFC registrado</strong> te retenemos menos
+                (ISR 4% + IVA 8% en vez de 20% + 16%). Beel no te cobra comisión.
               </p>
             </div>
 
