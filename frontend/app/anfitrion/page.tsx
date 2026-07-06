@@ -25,6 +25,7 @@ interface HostReservation {
   nights: number;
   guests_count: number;
   total_amount: number;
+  host_net_payout?: number;
   currency: string;
   status: string;
   guest: { full_name: string; avatar_url?: string };
@@ -115,7 +116,7 @@ export default function AnfitrionPage() {
         active_listings: activeProps.length,
         pending_reservations: reservas.filter((r) => r.status === "pending").length,
         confirmed_this_month: confirmedThisMonth.length,
-        earnings_this_month: confirmedThisMonth.reduce((s, r) => s + r.total_amount, 0),
+        earnings_this_month: confirmedThisMonth.reduce((s, r) => s + (r.host_net_payout ?? r.total_amount), 0),
         avg_rating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
         total_reviews: props.reduce((s, p) => s + p.total_reviews, 0),
       });
@@ -256,11 +257,14 @@ export default function AnfitrionPage() {
               value={stats.pending_reservations}
               highlight={stats.pending_reservations > 0}
             />
-            <StatCard
-              icon={<DollarSign size={18} className="text-[var(--color-primary)]" />}
-              label="Ingresos este mes"
-              value={<Price amount={stats.earnings_this_month} />}
-            />
+            <Link href="/anfitrion/ingresos" className="block hover:shadow-md transition-shadow rounded-2xl">
+              <StatCard
+                icon={<DollarSign size={18} className="text-[var(--color-primary)]" />}
+                label="Ingresos este mes"
+                value={<Price amount={stats.earnings_this_month} />}
+                linkHint="Ver movimientos →"
+              />
+            </Link>
             <StatCard
               icon={<Star size={18} className="text-[var(--color-accent)]" />}
               label="Calificación promedio"
@@ -331,20 +335,22 @@ export default function AnfitrionPage() {
 }
 
 function StatCard({
-  icon, label, value, highlight = false,
+  icon, label, value, highlight = false, linkHint,
 }: {
   icon: React.ReactNode;
   label: string;
   value: React.ReactNode;
   highlight?: boolean;
+  linkHint?: string;
 }) {
   return (
-    <div className={cn("card p-4", highlight && "border-amber-300 bg-amber-50")}>
+    <div className={cn("card p-4 h-full", highlight && "border-amber-300 bg-amber-50")}>
       <div className="flex items-center gap-2 mb-2">{icon}</div>
       <p className="text-caption text-[var(--text-secondary)] mb-1">{label}</p>
       <p className={cn("text-h2 font-semibold", highlight ? "text-amber-700" : "text-[var(--text-primary)]")}>
         {value}
       </p>
+      {linkHint && <p className="text-caption text-[var(--color-primary)] font-medium mt-1">{linkHint}</p>}
     </div>
   );
 }
