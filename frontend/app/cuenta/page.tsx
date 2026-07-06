@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck, Briefcase, Settings, HelpCircle, LogOut,
-  ChevronRight, Map, Heart, User as UserIcon, BadgeCheck,
+  ChevronRight, Map, Heart, User as UserIcon, BadgeCheck, Wallet,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BecomeHostModal from "@/components/BecomeHostModal";
@@ -104,6 +104,9 @@ export default function CuentaPage() {
 
         {/* Menú de opciones */}
         <div className="card divide-y divide-[var(--border-subtle)] overflow-hidden">
+          {isHost && (
+            <MenuRow href="/anfitrion/ingresos" icon={<Wallet size={18} />} label="Ingresos y movimientos" />
+          )}
           <MenuRow href="/anfitrion/configuracion?seccion=perfil" icon={<UserIcon size={18} />} label="Información personal" />
           <MenuRow href="/anfitrion/configuracion?seccion=seguridad" icon={<Settings size={18} />} label="Configuración y seguridad" />
           <MenuRow href="/ayuda" icon={<HelpCircle size={18} />} label="Centro de ayuda" />
