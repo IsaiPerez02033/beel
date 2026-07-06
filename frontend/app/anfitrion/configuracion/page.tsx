@@ -27,6 +27,7 @@ interface UserProfile {
   bank_name?: string;
   bank_clabe?: string;
   bank_account_holder?: string;
+  rfc?: string;
 }
 
 type Section = "perfil" | "notificaciones" | "seguridad" | "pagos";
@@ -80,6 +81,12 @@ export default function ConfiguracionAnfitrionPage() {
   const [bankError, setBankError] = useState("");
   const [bankConfirmStep, setBankConfirmStep] = useState(false);
 
+  // Form state datos fiscales (RFC)
+  const [rfc, setRfc] = useState("");
+  const [savingRfc, setSavingRfc] = useState(false);
+  const [rfcSaved, setRfcSaved] = useState(false);
+  const [rfcError, setRfcError] = useState("");
+
   // Notification prefs (UI only — backend a futuro)
   const [notifReservations, setNotifReservations] = useState(true);
   const [notifMessages, setNotifMessages] = useState(true);
@@ -100,6 +107,7 @@ export default function ConfiguracionAnfitrionPage() {
         setLanguage(data.preferred_language ?? "es");
         setBankName(data.bank_name ?? "");
         setBankClabe(data.bank_clabe ?? "");
+        setRfc(data.rfc ?? "");
         setBankAccountHolder(data.bank_account_holder ?? "");
       })
       .catch(console.error)
@@ -160,6 +168,28 @@ export default function ConfiguracionAnfitrionPage() {
       setBankConfirmStep(false);
     } finally {
       setSavingBank(false);
+    }
+  }
+
+  async function handleSaveRfc() {
+    setRfcError("");
+    setRfcSaved(false);
+    const cleaned = rfc.trim().toUpperCase();
+    if (cleaned && !/^[A-ZÑ&]{3,4}\d{6}[A-V0-9]{3}$/.test(cleaned)) {
+      setRfcError("El RFC no tiene un formato válido (12 o 13 caracteres).");
+      return;
+    }
+    setSavingRfc(true);
+    try {
+      const updated = await patch<UserProfile>("/users/me", { rfc: cleaned || null });
+      setProfile(updated);
+      setRfc(cleaned);
+      setRfcSaved(true);
+      setTimeout(() => setRfcSaved(false), 3000);
+    } catch (err) {
+      setRfcError(err instanceof Error ? err.message : "Error al guardar el RFC");
+    } finally {
+      setSavingRfc(false);
     }
   }
 
@@ -577,6 +607,48 @@ export default function ConfiguracionAnfitrionPage() {
                     </div>
                   </div>
                 )}
+
+                {/* ── Datos fiscales (RFC) ── */}
+                <div className="border-t border-[var(--border-subtle)] pt-6 mt-6">
+                  <h3 className="text-h3 font-semibold text-[var(--text-primary)] mb-1">
+                    Datos fiscales (RFC)
+                  </h3>
+                  <p className="text-body-sm text-[var(--text-secondary)] mb-4">
+                    Registra tu RFC para que te retengamos <strong>menos impuestos</strong>.
+                    Beel retiene tu ISR e IVA y los entera al SAT por ti.
+                  </p>
+
+                  <div className="bg-[var(--color-primary-light)] border border-[var(--color-primary-border)] rounded-xl p-3 mb-4">
+                    <p className="text-caption text-[var(--text-secondary)]">
+                      🧾 <strong>Con RFC:</strong> ISR 4% + IVA 8%. &nbsp;
+                      <strong>Sin RFC:</strong> ISR 20% + IVA 16%. Registrar tu RFC te deja mucho más dinero.
+                    </p>
+                  </div>
+
+                  <div className="max-w-md">
+                    <label className="block text-caption font-medium text-[var(--text-secondary)] mb-1">
+                      RFC (12 o 13 caracteres)
+                    </label>
+                    <input
+                      type="text"
+                      value={rfc}
+                      onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                      maxLength={13}
+                      placeholder="XAXX010101000"
+                      className="input w-full font-mono uppercase"
+                    />
+                    {rfcError && <p className="text-caption text-red-600 mt-1">{rfcError}</p>}
+                    {rfcSaved && <p className="text-caption text-[var(--color-primary)] mt-1">✓ RFC guardado</p>}
+                    <button
+                      type="button"
+                      onClick={handleSaveRfc}
+                      disabled={savingRfc}
+                      className="btn btn-primary mt-3"
+                    >
+                      {savingRfc ? "Guardando..." : "Guardar RFC"}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

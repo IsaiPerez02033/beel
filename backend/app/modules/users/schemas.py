@@ -99,6 +99,9 @@ class UserMeOut(BaseModel):
     bank_clabe: Optional[str] = None
     bank_account_holder: Optional[str] = None
 
+    # Datos fiscales
+    rfc: Optional[str] = None
+
     model_config = {"from_attributes": True}
 
 
@@ -114,6 +117,7 @@ class UserUpdateIn(BaseModel):
     bank_name: Optional[str] = Field(None, max_length=100)
     bank_clabe: Optional[str] = Field(None, max_length=50)
     bank_account_holder: Optional[str] = Field(None, max_length=255)
+    rfc: Optional[str] = Field(None, max_length=13)
 
 
 class PhoneSendIn(BaseModel):

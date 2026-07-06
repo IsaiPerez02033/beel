@@ -79,6 +79,13 @@ class Settings(BaseSettings):
     MERCADOPAGO_WEBHOOK_SECRET: Optional[str] = None
     PLATFORM_FEE_PERCENTAGE: float = 6.0  # Tarifa de servicio al huesped: ~4% cubre MercadoPago, ~2% Beel
 
+    # ── Retencion de impuestos al anfitrion (plataformas digitales MX) ────────
+    APPLY_TAX_RETENTION: bool = True          # Feature flag global
+    ISR_RETENTION_WITH_RFC: float = 4.0       # % ISR si el anfitrion registro RFC
+    ISR_RETENTION_WITHOUT_RFC: float = 20.0   # % ISR sin RFC
+    IVA_RETENTION_WITH_RFC: float = 8.0       # % IVA si registro RFC (50% del IVA)
+    IVA_RETENTION_WITHOUT_RFC: float = 16.0   # % IVA sin RFC (100%)
+
     # ── Stripe ───────────────────────────────────────────────────────────────
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_PUBLISHABLE_KEY: Optional[str] = None

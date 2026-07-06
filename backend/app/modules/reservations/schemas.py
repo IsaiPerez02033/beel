@@ -70,6 +70,15 @@ class ReservationOut(BaseModel):
     total_amount: Decimal
     currency: str
 
+    # Retención de impuestos al anfitrión
+    subtotal: Decimal = Decimal("0")
+    host_has_rfc: bool = False
+    isr_retention_pct: Decimal = Decimal("0")
+    iva_retention_pct: Decimal = Decimal("0")
+    isr_retention_snapshot: Decimal = Decimal("0")
+    iva_retention_snapshot: Decimal = Decimal("0")
+    host_net_payout: Decimal = Decimal("0")
+
     cancellation_policy_snapshot: str
     status: str
     rejection_reason: Optional[str]

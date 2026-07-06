@@ -124,6 +124,26 @@ async def _unblock_dates(
     await db.flush()
 
 
+def _calculate_host_retention(base: Decimal, has_rfc: bool) -> dict:
+    """Retención de ISR e IVA al anfitrión (plataformas digitales MX).
+
+    base = ingreso del anfitrión (subtotal + limpieza). Con RFC las tasas son
+    reducidas; sin RFC son altas. Devuelve montos y porcentajes aplicados.
+    """
+    if not settings.APPLY_TAX_RETENTION:
+        return {"isr": Decimal("0"), "iva": Decimal("0"),
+                "isr_pct": Decimal("0"), "iva_pct": Decimal("0")}
+    isr_pct = Decimal(str(
+        settings.ISR_RETENTION_WITH_RFC if has_rfc else settings.ISR_RETENTION_WITHOUT_RFC
+    ))
+    iva_pct = Decimal(str(
+        settings.IVA_RETENTION_WITH_RFC if has_rfc else settings.IVA_RETENTION_WITHOUT_RFC
+    ))
+    isr = round(base * isr_pct / 100, 2)
+    iva = round(base * iva_pct / 100, 2)
+    return {"isr": isr, "iva": iva, "isr_pct": isr_pct, "iva_pct": iva_pct}
+
+
 def _calculate_price(
     property_: Property,
     nights: int,
@@ -254,6 +274,15 @@ async def create_reservation(
     # Calcular precios
     breakdown = _calculate_price(property_, nights)
 
+    # Retención de impuestos al anfitrión (según si tiene RFC registrado)
+    host_rfc = (
+        await db.execute(select(User.rfc).where(User.id == property_.host_id))
+    ).scalar_one_or_none()
+    host_has_rfc = bool(host_rfc)
+    ret_base = breakdown.subtotal + breakdown.cleaning_fee
+    ret = _calculate_host_retention(ret_base, host_has_rfc)
+    host_net_payout = ret_base - ret["isr"] - ret["iva"]
+
     # Calcular deadline de respuesta del host
     host_deadline = (
         datetime.now(timezone.utc) + timedelta(hours=settings.RESERVATION_REQUEST_TIMEOUT_HOURS)
@@ -279,6 +308,12 @@ async def create_reservation(
         platform_fee_pct=Decimal(str(settings.PLATFORM_FEE_PERCENTAGE)),
         total_amount=breakdown.total,
         currency=breakdown.currency,
+        host_has_rfc=host_has_rfc,
+        isr_retention_pct=ret["isr_pct"],
+        iva_retention_pct=ret["iva_pct"],
+        isr_retention_snapshot=ret["isr"],
+        iva_retention_snapshot=ret["iva"],
+        host_net_payout=host_net_payout,
         cancellation_policy_snapshot=property_.cancellation_policy,
         status=initial_status,
         guest_message=data.guest_message,

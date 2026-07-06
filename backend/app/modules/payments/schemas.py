@@ -17,6 +17,8 @@ class PaymentOut(BaseModel):
     currency: str
     platform_fee: Decimal
     host_payout: Decimal
+    isr_retention: Decimal = Decimal("0")
+    iva_retention: Decimal = Decimal("0")
     status: str
     payment_method: Optional[str]
     payout_status: str

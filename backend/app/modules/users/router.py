@@ -141,6 +141,14 @@ async def update_me(
         user.bank_clabe_set_at = datetime.now(timezone.utc)
         user.bank_clabe_set_ip = client_ip.split(",")[0].strip()[:45]
 
+    # Auditoría al registrar/actualizar el RFC
+    new_rfc = getattr(data, "rfc", None)
+    if new_rfc and new_rfc != user.rfc:
+        from datetime import datetime, timezone
+        client_ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown")
+        user.rfc_set_at = datetime.now(timezone.utc)
+        user.rfc_set_ip = client_ip.split(",")[0].strip()[:45]
+
     updated = await service.update_user(db, user, data)
 
     # Email de confirmación al registrar CLABE

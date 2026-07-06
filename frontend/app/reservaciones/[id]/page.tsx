@@ -22,6 +22,14 @@ interface ReservationDetail {
   total_amount: number;
   currency: string;
   status: string;
+  subtotal?: number;
+  cleaning_fee_snapshot?: number;
+  host_has_rfc?: boolean;
+  isr_retention_pct?: number;
+  iva_retention_pct?: number;
+  isr_retention_snapshot?: number;
+  iva_retention_snapshot?: number;
+  host_net_payout?: number;
   guest_message?: string;
   created_at: string;
   reservation_property: {
@@ -59,7 +67,7 @@ const STATUS: Record<string, { label: string; className: string }> = {
 export default function ReservationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, userId } = useAuth();
   const { get, post } = useApi();
   const [reservation, setReservation] = useState<ReservationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -239,6 +247,43 @@ export default function ReservationDetailPage() {
                 <Price amount={reservation.total_amount} />
               </p>
             </div>
+
+            {/* Ingresos del anfitrión (solo si el que ve es el anfitrión) */}
+            {userId && reservation.host?.id === userId && (
+              <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]">
+                <p className="text-body-sm font-semibold text-[var(--text-primary)] mb-2">Tus ingresos</p>
+                <div className="space-y-2 text-body-sm">
+                  <div className="flex justify-between text-[var(--text-secondary)]">
+                    <span>Habitación + limpieza</span>
+                    <span><Price amount={(reservation.subtotal ?? 0) + (reservation.cleaning_fee_snapshot ?? 0)} /></span>
+                  </div>
+                  {(reservation.isr_retention_snapshot ?? 0) > 0 && (
+                    <div className="flex justify-between text-[var(--text-secondary)]">
+                      <span>ISR retenido ({Number(reservation.isr_retention_pct ?? 0)}%)</span>
+                      <span>−<Price amount={reservation.isr_retention_snapshot ?? 0} /></span>
+                    </div>
+                  )}
+                  {(reservation.iva_retention_snapshot ?? 0) > 0 && (
+                    <div className="flex justify-between text-[var(--text-secondary)]">
+                      <span>IVA retenido ({Number(reservation.iva_retention_pct ?? 0)}%)</span>
+                      <span>−<Price amount={reservation.iva_retention_snapshot ?? 0} /></span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold text-[var(--color-primary)] border-t border-[var(--border-subtle)] pt-2">
+                    <span>Tú recibes</span>
+                    <span><Price amount={reservation.host_net_payout ?? 0} /></span>
+                  </div>
+                </div>
+
+                {!reservation.host_has_rfc && (
+                  <Link href="/anfitrion/configuracion?seccion=pagos" className="mt-3 flex items-start gap-2 rounded-xl bg-[var(--color-accent-light)] border border-[var(--color-accent-border)] p-3 hover:opacity-90 transition-opacity">
+                    <span className="text-caption text-[var(--text-secondary)] leading-snug">
+                      💡 <strong>Registra tu RFC y recibe más.</strong> Hoy te retenemos ISR 20% + IVA 16%; con RFC baja a 4% + 8%. Tócame para agregarlo →
+                    </span>
+                  </Link>
+                )}
+              </div>
+            )}
 
             {/* Dirección exacta — solo para huésped con reserva confirmada */}
             {reservation.reservation_property?.address && reservation.status === "confirmed" && (

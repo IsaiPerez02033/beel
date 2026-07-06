@@ -66,7 +66,9 @@ async def create_checkout(
     """
     mp = _get_mp()
 
-    host_payout = reservation.total_amount - reservation.platform_fee_snapshot
+    # El anfitrión recibe el neto tras retención de impuestos (ISR e IVA).
+    # host_net_payout ya = (subtotal + limpieza) − ISR − IVA.
+    host_payout = reservation.host_net_payout
     nights = reservation.nights
 
     preference_data = {
@@ -117,6 +119,8 @@ async def create_checkout(
         currency=reservation.currency,
         platform_fee=reservation.platform_fee_snapshot,
         host_payout=host_payout,
+        isr_retention=reservation.isr_retention_snapshot,
+        iva_retention=reservation.iva_retention_snapshot,
         status="pending",
         mp_response=pref,
     )

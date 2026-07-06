@@ -52,6 +52,8 @@ class Payment(Base, TimestampMixin):
     currency: Mapped[str] = mapped_column(String(3), default="MXN")
     platform_fee: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
     host_payout: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
+    isr_retention: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
+    iva_retention: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
 
     # Estado
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="pending")

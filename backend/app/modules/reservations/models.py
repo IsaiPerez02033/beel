@@ -118,6 +118,14 @@ class Reservation(Base, TimestampMixin):
     total_amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="MXN")
 
+    # Snapshot de retención de impuestos al anfitrión (ISR e IVA)
+    host_has_rfc: Mapped[bool] = mapped_column(Boolean, default=False)
+    isr_retention_pct: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0"))
+    iva_retention_pct: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0"))
+    isr_retention_snapshot: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
+    iva_retention_snapshot: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
+    host_net_payout: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
+
     # Snapshot de política de cancelación
     cancellation_policy_snapshot: Mapped[str] = mapped_column(String(20), nullable=False)
 

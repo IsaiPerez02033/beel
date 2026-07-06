@@ -74,6 +74,11 @@ class User(Base, TimestampMixin):
     bank_clabe_set_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     bank_clabe_set_ip: Mapped[Optional[str]] = mapped_column(String(45))
 
+    # Datos fiscales — RFC (menor retención de impuestos si está registrado)
+    rfc: Mapped[Optional[str]] = mapped_column(String(13))
+    rfc_set_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    rfc_set_ip: Mapped[Optional[str]] = mapped_column(String(45))
+
     # Métricas de negocio
     host_since: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     total_listings: Mapped[int] = mapped_column(Integer, default=0)
