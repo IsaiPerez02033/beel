@@ -116,7 +116,7 @@ export default function AnfitrionPage() {
         active_listings: activeProps.length,
         pending_reservations: reservas.filter((r) => r.status === "pending").length,
         confirmed_this_month: confirmedThisMonth.length,
-        earnings_this_month: confirmedThisMonth.reduce((s, r) => s + (r.host_net_payout ?? r.total_amount), 0),
+        earnings_this_month: confirmedThisMonth.reduce((s, r) => s + (Number(r.host_net_payout) > 0 ? Number(r.host_net_payout) : Number(r.total_amount) || 0), 0),
         avg_rating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0,
         total_reviews: props.reduce((s, p) => s + p.total_reviews, 0),
       });

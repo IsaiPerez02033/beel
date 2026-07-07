@@ -18,6 +18,8 @@ interface HostReservation {
   nights: number;
   total_amount: number;
   host_net_payout?: number;
+  subtotal?: number;
+  cleaning_fee_snapshot?: number;
   currency: string;
   status: string;
   guest: { full_name: string; avatar_url?: string };
@@ -50,7 +52,14 @@ export default function IngresosPage() {
     .filter((r) => r.status === "confirmed" || r.status === "completed")
     .sort((a, b) => (a.check_in < b.check_in ? 1 : -1));
 
-  const net = (r: HostReservation) => r.host_net_payout ?? r.total_amount;
+  // Neto al anfitrión. Fallback para reservas viejas (sin host_net_payout):
+  // usa habitación + limpieza (base sin retención, modelo previo).
+  const net = (r: HostReservation) => {
+    const hn = Number(r.host_net_payout);
+    if (hn > 0) return hn;
+    const base = Number(r.subtotal ?? 0) + Number(r.cleaning_fee_snapshot ?? 0);
+    return base > 0 ? base : Number(r.total_amount) || 0;
+  };
   const totalRecibido = movimientos.filter((r) => r.status === "completed").reduce((s, r) => s + net(r), 0);
   const pendiente = movimientos.filter((r) => r.status === "confirmed").reduce((s, r) => s + net(r), 0);
   const esteMes = movimientos.filter((r) => r.check_in.startsWith(thisMonth)).reduce((s, r) => s + net(r), 0);
