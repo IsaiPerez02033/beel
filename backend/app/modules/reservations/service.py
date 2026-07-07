@@ -443,12 +443,9 @@ async def respond_to_reservation(
             detail=f"La reserva está en estado '{reservation.status}' y no puede ser respondida",
         )
 
-    if reservation.host_response_deadline and datetime.now(timezone.utc) > reservation.host_response_deadline:
-        reservation.status = "rejected"
-        raise HTTPException(
-            status_code=400,
-            detail="El plazo para responder ha expirado",
-        )
+    # Nota: aunque el plazo de respuesta haya pasado, se permite que el anfitrión
+    # acepte o rechace la solicitud (está tomando la acción activamente). Al
+    # confirmar se revalida la disponibilidad, evitando dobles reservas.
 
     if data.action == "confirm":
         # Verificar disponibilidad (pudo haber cambiado mientras esperaba)
