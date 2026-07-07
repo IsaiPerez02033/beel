@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { MapPin, Loader2, Search, X } from "lucide-react";
+import { loadLeaflet } from "@/lib/loadLeaflet";
 
 interface LocationResult {
   address: string;
@@ -20,103 +21,64 @@ interface Props {
   initialAddress?: string;
 }
 
-declare global {
-  interface Window { google: any; initGoogleMapsBasic?: () => void; }
-}
-
-// Carga solo Maps JS (sin Places) para el mapa visual
-let mapScriptLoaded = false;
-let mapScriptLoading = false;
-const mapCallbacks: Array<() => void> = [];
-
-function loadMapsJS(apiKey: string): Promise<void> {
-  return new Promise((resolve) => {
-    if (mapScriptLoaded) { resolve(); return; }
-    mapCallbacks.push(resolve);
-    if (mapScriptLoading) return;
-    mapScriptLoading = true;
-    window.initGoogleMapsBasic = () => {
-      mapScriptLoaded = true;
-      mapCallbacks.forEach((cb) => cb());
-      mapCallbacks.length = 0;
-    };
-    const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initGoogleMapsBasic&language=es&region=MX`;
-    s.async = true; s.defer = true;
-    document.head.appendChild(s);
-  });
-}
-
 interface Suggestion {
-  placeId: string;
-  description: string;
   mainText: string;
   secondaryText: string;
+  address: string;
+  street: string;
+  number: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  lat: number;
+  lng: number;
 }
 
 export default function LocationPicker({ onSelect, initialAddress = "" }: Props) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
   const [query, setQuery] = useState(initialAddress);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<LocationResult | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [mapsReady, setMapsReady] = useState(false);
 
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
-  const selectedRef = useRef<LocationResult | null>(null);
-  selectedRef.current = selected;
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
-  // Cargar Maps JS para el mapa visual
-  useEffect(() => {
-    if (!apiKey) return;
-    loadMapsJS(apiKey).then(() => setMapsReady(true));
-  }, [apiKey]);
-
   // Cerrar dropdown al clic fuera
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Buscar sugerencias via proxy interno (evita CORS)
   const search = useCallback(async (input: string) => {
     if (input.length < 3) { setSuggestions([]); setOpen(false); return; }
     setLoading(true);
     try {
-      const res = await fetch(`/api/places/autocomplete?q=${encodeURIComponent(input)}`);
+      const res = await fetch(`/api/geo/address?q=${encodeURIComponent(input)}`);
       const data = await res.json();
-      const suggs: Suggestion[] = (data.suggestions ?? []).map((s: any) => ({
-        placeId: s.placePrediction?.placeId ?? "",
-        description: s.placePrediction?.text?.text ?? "",
-        mainText: s.placePrediction?.structuredFormat?.mainText?.text ?? "",
-        secondaryText: s.placePrediction?.structuredFormat?.secondaryText?.text ?? "",
-      })).filter((s: Suggestion) => s.placeId);
+      const suggs: Suggestion[] = data.suggestions ?? [];
       setSuggestions(suggs);
       setOpen(suggs.length > 0);
     } catch (e) {
-      console.error("Places search error:", e);
+      console.error("Geo search error:", e);
     }
     setLoading(false);
   }, []);
 
   function handleInput(val: string) {
     setQuery(val);
-    // Calcular posición del dropdown relativa al viewport para el portal
     if (inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
       setDropdownPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX, width: rect.width });
@@ -125,135 +87,83 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     debounceRef.current = setTimeout(() => search(val), 350);
   }
 
-  // Obtener detalles del lugar seleccionado via proxy interno
-  async function selectPlace(s: Suggestion) {
+  function selectSuggestion(s: Suggestion) {
     setOpen(false);
-    setQuery(s.description);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/places/details?id=${encodeURIComponent(s.placeId)}`);
-      const place = await res.json();
-      const comps: any[] = place.addressComponents ?? [];
-      const get = (types: string[]) => {
-        const c = comps.find((c) => types.some((t) => (c.types ?? []).includes(t)));
-        return c?.longText ?? "";
-      };
-      const streetName = get(["route"]);
-      const number = get(["street_number"]);
-      const colonia = get(["sublocality", "sublocality_level_1", "neighborhood"]);
-      const city = get(["locality"]) || get(["administrative_area_level_3"]) || get(["administrative_area_level_2"]);
-      const state = get(["administrative_area_level_1"]);
-      const postal_code = get(["postal_code"]);
-      const address = number ? `${streetName} ${number}` : streetName || place.formattedAddress?.split(",")[0] || s.mainText;
-      const lat = place.location?.latitude ?? 19.4326;
-      const lng = place.location?.longitude ?? -99.1332;
-
-      const result: LocationResult = { address, street: streetName, postal_code, neighborhood: colonia, city, state, lat, lng };
-      setSelected(result);
-      onSelectRef.current(result);
-      initMap(lat, lng, result);
-    } catch (e) {
-      console.error("Place details error:", e);
-    }
-    setLoading(false);
+    setQuery([s.mainText, s.secondaryText].filter(Boolean).join(", "));
+    const result: LocationResult = {
+      address: s.address || s.mainText,
+      street: s.street,
+      postal_code: s.postal_code,
+      neighborhood: s.neighborhood,
+      city: s.city,
+      state: s.state,
+      lat: s.lat,
+      lng: s.lng,
+    };
+    setSelected(result);
+    onSelectRef.current(result);
+    initMap(s.lat, s.lng, result);
   }
 
-  // Fallback: geocodifica el texto escrito/pegado cuando el usuario no elige
-  // una sugerencia (p.ej. pega la dirección completa desde Google Maps).
-  const geocodeTypedAddress = useCallback(() => {
-    const text = query.trim();
-    if (!text || selectedRef.current || !window.google?.maps) return;
-    const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ address: text, region: "MX", language: "es" }, (results: any[], status: string) => {
-      if (status !== "OK" || !results?.[0]) return;
-      const r = results[0];
-      const comps: any[] = r.address_components ?? [];
-      const get = (types: string[]) => {
-        const c = comps.find((c: any) => types.some((t: string) => c.types.includes(t)));
-        return c?.long_name ?? "";
-      };
-      const streetName = get(["route"]);
-      const number = get(["street_number"]);
-      const colonia = get(["sublocality", "sublocality_level_1", "neighborhood"]);
-      const city = get(["locality"]) || get(["administrative_area_level_3"]) || get(["administrative_area_level_2"]);
-      const state = get(["administrative_area_level_1"]);
-      const postal_code = get(["postal_code"]);
-      const address = number ? `${streetName} ${number}` : streetName || r.formatted_address.split(",")[0];
-      const lat = r.geometry.location.lat();
-      const lng = r.geometry.location.lng();
-      const result: LocationResult = { address, street: streetName, postal_code, neighborhood: colonia, city, state, lat, lng };
-      setQuery(r.formatted_address);
-      setOpen(false);
-      setSuggestions([]);
-      setSelected(result);
-      onSelectRef.current(result);
-      initMap(lat, lng, result);
-    });
-  }, [query]);
-
   const initMap = useCallback((lat: number, lng: number, result: LocationResult) => {
-    if (!window.google) return;
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setCenter({ lat, lng });
-      markerRef.current?.setPosition({ lat, lng });
-      return;
-    }
-    // Esperar a que el div sea visible en el DOM tras el re-render
-    setTimeout(() => {
-      if (!mapRef.current) return;
-    const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat, lng }, zoom: 16, disableDefaultUI: true, zoomControl: true,
-      styles: [
-        { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-        { featureType: "transit", stylers: [{ visibility: "off" }] },
-      ],
-    });
-    mapInstanceRef.current = map;
-    const marker = new window.google.maps.Marker({
-      position: { lat, lng }, map, draggable: true,
-      icon: { path: window.google.maps.SymbolPath.CIRCLE, scale: 10, fillColor: "#147A5C", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 },
-    });
-    markerRef.current = marker;
-    marker.addListener("dragstart", () => setDragging(true));
-    marker.addListener("dragend", () => {
-      setDragging(false);
-      const pos = marker.getPosition();
-      if (!pos) return;
-      const lat = pos.lat(), lng = pos.lng();
-      // Geocoding inverso para actualizar campos con la nueva posición
-      const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ location: { lat, lng }, language: "es" }, (results: any[], status: string) => {
-        if (status === "OK" && results[0]) {
-          const comps = results[0].address_components ?? [];
-          const get = (types: string[]) => {
-            const c = comps.find((c: any) => types.some((t: string) => c.types.includes(t)));
-            return c?.long_name ?? "";
-          };
-          const streetName = get(["route"]);
-          const number = get(["street_number"]);
-          const colonia = get(["sublocality", "sublocality_level_1", "neighborhood"]);
-          const city = get(["locality"]) || get(["administrative_area_level_3"]) || get(["administrative_area_level_2"]);
-          const state = get(["administrative_area_level_1"]);
-          const postal_code = get(["postal_code"]);
-          const address = number ? `${streetName} ${number}` : streetName || results[0].formatted_address.split(",")[0];
-          const updated = { address, street: streetName, postal_code, neighborhood: colonia, city, state, lat, lng };
-          setSelected(updated);
-          onSelectRef.current(updated);
-        } else {
-          const updated = { ...result, lat, lng };
-          setSelected(updated);
-          onSelectRef.current(updated);
-        }
-      });
-    });
-    // Forzar resize para que Google Maps calcule dimensiones correctamente
-    window.google.maps.event.trigger(map, "resize");
-    map.setCenter({ lat, lng });
-    }, 100); // esperar 100ms a que el div sea visible tras setSelected
-  }, []);
+    loadLeaflet().then(() => {
+      const L = (window as any).L;
+      if (!L) return;
+      // Recentra si ya existe
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.setView([lat, lng], 16);
+        markerRef.current?.setLatLng([lat, lng]);
+        return;
+      }
+      // Esperar a que el div sea visible tras el re-render (setSelected)
+      setTimeout(() => {
+        if (!mapRef.current || mapInstanceRef.current) return;
+        const map = L.map(mapRef.current, {
+          center: [lat, lng], zoom: 16, zoomControl: true, scrollWheelZoom: false,
+        });
+        mapInstanceRef.current = map;
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19, attribution: "&copy; OpenStreetMap",
+        }).addTo(map);
 
-  // No bloquear aunque no haya apiKey — el proxy de /api/places/ no necesita
-  // exponer la key al cliente, funciona igual sin ella en el componente.
+        const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        markerRef.current = marker;
+        marker.on("dragstart", () => setDragging(true));
+        marker.on("dragend", async () => {
+          setDragging(false);
+          const pos = marker.getLatLng();
+          try {
+            const res = await fetch(`/api/geo/reverse?lat=${pos.lat}&lng=${pos.lng}`);
+            const data = await res.json();
+            const r = data.result;
+            setSelected((prev) => {
+              const base = prev ?? result;
+              const updated: LocationResult = r
+                ? {
+                    address: r.address || base.address,
+                    street: r.street || base.street,
+                    postal_code: r.postal_code || base.postal_code,
+                    neighborhood: r.neighborhood || base.neighborhood,
+                    city: r.city || base.city,
+                    state: r.state || base.state,
+                    lat: pos.lat, lng: pos.lng,
+                  }
+                : { ...base, lat: pos.lat, lng: pos.lng };
+              onSelectRef.current(updated);
+              return updated;
+            });
+          } catch {
+            setSelected((prev) => {
+              const updated = { ...(prev ?? result), lat: pos.lat, lng: pos.lng };
+              onSelectRef.current(updated);
+              return updated;
+            });
+          }
+        });
+        setTimeout(() => map.invalidateSize(), 120);
+      }, 100);
+    });
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -262,9 +172,8 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
           Dirección <span className="text-red-500">*</span>
         </label>
 
-        {/* Input con dropdown custom */}
         <div ref={containerRef} className="relative">
-          <div className="input w-full flex items-center gap-2 p-0 overflow-hidden focus-within:ring-1 focus-within:ring-neutral-900 focus-within:border-neutral-900">
+          <div className="input w-full flex items-center gap-2 p-0 overflow-hidden focus-within:ring-1 focus-within:ring-[var(--color-primary)] focus-within:border-[var(--color-primary)]">
             <span className="pl-3 flex-shrink-0 text-[var(--text-tertiary)] pointer-events-none">
               {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
             </span>
@@ -273,10 +182,6 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
               type="text"
               value={query}
               onChange={(e) => handleInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { e.preventDefault(); geocodeTypedAddress(); }
-              }}
-              onBlur={() => { setTimeout(geocodeTypedAddress, 200); }}
               onFocus={() => {
                 if (suggestions.length > 0 && inputRef.current) {
                   const rect = inputRef.current.getBoundingClientRect();
@@ -284,7 +189,7 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
                   setOpen(true);
                 }
               }}
-              placeholder="Busca tu dirección exacta..."
+              placeholder="Busca tu dirección (calle, colonia, ciudad)..."
               style={{ fontSize: "16px" }}
               className="flex-1 py-2.5 pr-2 outline-none border-none bg-transparent text-[var(--text-primary)] placeholder-neutral-400 min-w-0"
               autoComplete="new-password"
@@ -294,8 +199,7 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
               <button
                 onClick={() => {
                   setQuery(""); setSuggestions([]); setOpen(false); setSelected(null);
-                  // Limpiar el mapa para que la próxima selección lo recree en el div nuevo
-                  mapInstanceRef.current = null;
+                  if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
                   markerRef.current = null;
                 }}
                 className="pr-3 flex-shrink-0 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
@@ -305,16 +209,15 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
             )}
           </div>
 
-          {/* Dropdown via portal — escapa overflow:hidden de cualquier padre */}
           {open && suggestions.length > 0 && typeof document !== "undefined" && createPortal(
             <div
               className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl shadow-xl overflow-hidden"
               style={{ position: "absolute", top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 99999 }}
             >
-              {suggestions.map((s) => (
+              {suggestions.map((s, i) => (
                 <button
-                  key={s.placeId}
-                  onMouseDown={(e) => { e.preventDefault(); selectPlace(s); }}
+                  key={`${s.mainText}-${i}`}
+                  onMouseDown={(e) => { e.preventDefault(); selectSuggestion(s); }}
                   className="w-full text-left px-4 py-3 hover:bg-[var(--bg-subtle)] border-b border-[var(--border-subtle)] last:border-0 transition-colors"
                 >
                   <div className="flex items-start gap-2.5">
@@ -339,7 +242,7 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
       {/* Mapa */}
       {selected && (
         <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm">
-          <div ref={mapRef} className="w-full h-56 sm:h-64 bg-[var(--bg-subtle)]" />
+          <div ref={mapRef} className="w-full h-56 sm:h-64 bg-[var(--bg-subtle)] z-0" />
           <div className="px-4 py-3 bg-[var(--bg-elevated)] flex items-start gap-2">
             <MapPin size={14} className="text-[var(--color-primary)] flex-shrink-0 mt-0.5" />
             <div className="min-w-0">

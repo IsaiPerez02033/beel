@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { loadLeaflet } from "@/lib/loadLeaflet";
 
 interface Props {
   lat: number;
@@ -11,36 +12,6 @@ interface Props {
 
 declare global {
   interface Window { L: any; }
-}
-
-const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-const LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-
-let leafletLoaded = false;
-let leafletLoading = false;
-const cbs: Array<() => void> = [];
-
-function loadLeaflet(): Promise<void> {
-  return new Promise((resolve) => {
-    if (leafletLoaded && window.L) { resolve(); return; }
-    cbs.push(resolve);
-    if (leafletLoading) return;
-    leafletLoading = true;
-
-    // CSS (necesario para que el mapa se renderice correctamente)
-    if (!document.querySelector(`link[href="${LEAFLET_CSS}"]`)) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = LEAFLET_CSS;
-      document.head.appendChild(link);
-    }
-    // JS
-    const s = document.createElement("script");
-    s.src = LEAFLET_JS;
-    s.async = true;
-    s.onload = () => { leafletLoaded = true; cbs.forEach((c) => c()); cbs.length = 0; };
-    document.head.appendChild(s);
-  });
 }
 
 export default function PropertyMap({ lat, lng, title, exact = false }: Props) {
