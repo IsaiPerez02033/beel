@@ -105,21 +105,50 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
     initMap(s.lat, s.lng, result);
   }
 
-  const initMap = useCallback((lat: number, lng: number, result: LocationResult) => {
+  // Reverse geocode y actualizar campos al mover el pin (arrastrar o clic)
+  async function applyLatLng(lat: number, lng: number, fallback: LocationResult) {
+    try {
+      const res = await fetch(`/api/geo/reverse?lat=${lat}&lng=${lng}`);
+      const data = await res.json();
+      const r = data.result;
+      setSelected((prev) => {
+        const base = prev ?? fallback;
+        const updated: LocationResult = r
+          ? {
+              address: r.address || base.address,
+              street: r.street || base.street,
+              postal_code: r.postal_code || base.postal_code,
+              neighborhood: r.neighborhood || base.neighborhood,
+              city: r.city || base.city,
+              state: r.state || base.state,
+              lat, lng,
+            }
+          : { ...base, lat, lng };
+        onSelectRef.current(updated);
+        return updated;
+      });
+    } catch {
+      setSelected((prev) => {
+        const updated = { ...(prev ?? fallback), lat, lng };
+        onSelectRef.current(updated);
+        return updated;
+      });
+    }
+  }
+
+  const initMap = useCallback((lat: number, lng: number, result: LocationResult, zoom = 16) => {
     loadLeaflet().then(() => {
       const L = (window as any).L;
       if (!L) return;
-      // Recentra si ya existe
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.setView([lat, lng], 16);
+        mapInstanceRef.current.setView([lat, lng], zoom);
         markerRef.current?.setLatLng([lat, lng]);
         return;
       }
-      // Esperar a que el div sea visible tras el re-render (setSelected)
       setTimeout(() => {
         if (!mapRef.current || mapInstanceRef.current) return;
         const map = L.map(mapRef.current, {
-          center: [lat, lng], zoom: 16, zoomControl: true, scrollWheelZoom: false,
+          center: [lat, lng], zoom, zoomControl: true, scrollWheelZoom: false,
         });
         mapInstanceRef.current = map;
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -129,41 +158,44 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
         const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
         markerRef.current = marker;
         marker.on("dragstart", () => setDragging(true));
-        marker.on("dragend", async () => {
+        marker.on("dragend", () => {
           setDragging(false);
           const pos = marker.getLatLng();
-          try {
-            const res = await fetch(`/api/geo/reverse?lat=${pos.lat}&lng=${pos.lng}`);
-            const data = await res.json();
-            const r = data.result;
-            setSelected((prev) => {
-              const base = prev ?? result;
-              const updated: LocationResult = r
-                ? {
-                    address: r.address || base.address,
-                    street: r.street || base.street,
-                    postal_code: r.postal_code || base.postal_code,
-                    neighborhood: r.neighborhood || base.neighborhood,
-                    city: r.city || base.city,
-                    state: r.state || base.state,
-                    lat: pos.lat, lng: pos.lng,
-                  }
-                : { ...base, lat: pos.lat, lng: pos.lng };
-              onSelectRef.current(updated);
-              return updated;
-            });
-          } catch {
-            setSelected((prev) => {
-              const updated = { ...(prev ?? result), lat: pos.lat, lng: pos.lng };
-              onSelectRef.current(updated);
-              return updated;
-            });
-          }
+          applyLatLng(pos.lat, pos.lng, result);
+        });
+        // Clic en el mapa: mover el pin ahí (para ubicar manualmente)
+        map.on("click", (e: any) => {
+          marker.setLatLng(e.latlng);
+          applyLatLng(e.latlng.lat, e.latlng.lng, result);
         });
         setTimeout(() => map.invalidateSize(), 120);
       }, 100);
     });
   }, []);
+
+  // Abrir el mapa para ubicar manualmente (cuando no se encuentra la dirección)
+  async function startManual() {
+    setOpen(false);
+    // Intentar centrar en lo que escribió (ciudad); si no, en el centro de México
+    let center = { lat: 23.6345, lng: -102.5528 };
+    let zoom = 5;
+    let base: LocationResult = { address: "", street: "", postal_code: "", neighborhood: "", city: "", state: "", lat: center.lat, lng: center.lng };
+    try {
+      if (query.trim().length >= 3) {
+        const res = await fetch(`/api/geo/address?q=${encodeURIComponent(query.trim())}`);
+        const data = await res.json();
+        const s = (data.suggestions ?? [])[0];
+        if (s) {
+          center = { lat: s.lat, lng: s.lng };
+          zoom = 14;
+          base = { address: "", street: s.street || "", postal_code: s.postal_code || "", neighborhood: s.neighborhood || "", city: s.city || "", state: s.state || "", lat: s.lat, lng: s.lng };
+        }
+      }
+    } catch {}
+    setSelected(base);
+    onSelectRef.current(base);
+    initMap(center.lat, center.lng, base, zoom);
+  }
 
   return (
     <div className="space-y-4">
@@ -234,9 +266,18 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
           )}
         </div>
 
-        <p className="text-[11px] text-[var(--text-tertiary)] mt-1.5">
-          Escribe la dirección y selecciona una opción de la lista
-        </p>
+        <div className="flex items-center justify-between mt-1.5 gap-2 flex-wrap">
+          <p className="text-[11px] text-[var(--text-tertiary)]">
+            Escribe la dirección y selecciona una opción de la lista
+          </p>
+          <button
+            type="button"
+            onClick={startManual}
+            className="text-[11px] font-medium text-[var(--color-primary)] hover:underline flex-shrink-0"
+          >
+            ¿No encuentras tu dirección? Ubícala en el mapa →
+          </button>
+        </div>
       </div>
 
       {/* Mapa */}
@@ -253,7 +294,7 @@ export default function LocationPicker({ onSelect, initialAddress = "" }: Props)
                 {selected.city}{selected.state ? `, ${selected.state}` : ""}
               </p>
               <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">
-                {dragging ? "Suelta el pin para ajustar" : "Arrastra el pin para ajustar la posición exacta"}
+                {dragging ? "Suelta el pin para ajustar" : "Arrastra el pin o toca el mapa para marcar la posición exacta"}
               </p>
             </div>
           </div>
