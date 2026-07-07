@@ -10,87 +10,113 @@ interface Props {
 }
 
 declare global {
-  interface Window { google: any; initPropertyMap?: () => void; }
+  interface Window { L: any; }
 }
 
-let scriptLoaded = false;
-let scriptLoading = false;
+const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+const LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+
+let leafletLoaded = false;
+let leafletLoading = false;
 const cbs: Array<() => void> = [];
 
-function loadMaps(apiKey: string): Promise<void> {
+function loadLeaflet(): Promise<void> {
   return new Promise((resolve) => {
-    if (scriptLoaded) { resolve(); return; }
+    if (leafletLoaded && window.L) { resolve(); return; }
     cbs.push(resolve);
-    if (scriptLoading) return;
-    scriptLoading = true;
-    window.initPropertyMap = () => { scriptLoaded = true; cbs.forEach((c) => c()); cbs.length = 0; };
+    if (leafletLoading) return;
+    leafletLoading = true;
+
+    // CSS (necesario para que el mapa se renderice correctamente)
+    if (!document.querySelector(`link[href="${LEAFLET_CSS}"]`)) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = LEAFLET_CSS;
+      document.head.appendChild(link);
+    }
+    // JS
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initPropertyMap&language=es&region=MX`;
-    s.async = true; s.defer = true;
+    s.src = LEAFLET_JS;
+    s.async = true;
+    s.onload = () => { leafletLoaded = true; cbs.forEach((c) => c()); cbs.length = 0; };
     document.head.appendChild(s);
   });
 }
 
 export default function PropertyMap({ lat, lng, title, exact = false }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? "";
+  const mapInstanceRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!apiKey || !mapRef.current) return;
-    loadMaps(apiKey).then(() => {
-      if (!mapRef.current || !window.google) return;
+    if (!mapRef.current) return;
+    let cancelled = false;
+
+    loadLeaflet().then(() => {
+      if (cancelled || !mapRef.current || !window.L) return;
+      const L = window.L;
+
+      // Limpiar mapa previo si existe (evita "container already initialized")
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
 
       // Sin offset si es dirección exacta para huésped confirmado
-      const approxLat = exact ? lat : lat + 0.002;
-      const approxLng = exact ? lng : lng + 0.002;
+      const cLat = exact ? lat : lat + 0.002;
+      const cLng = exact ? lng : lng + 0.002;
 
-      const map = new window.google.maps.Map(mapRef.current, {
-        center: { lat: approxLat, lng: approxLng },
+      const map = L.map(mapRef.current, {
+        center: [cLat, cLng],
         zoom: exact ? 17 : 14,
-        disableDefaultUI: true,
         zoomControl: true,
-        styles: [
-          { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-          { featureType: "transit", stylers: [{ visibility: "off" }] },
-        ],
+        attributionControl: true,
+        scrollWheelZoom: false,
       });
+      mapInstanceRef.current = map;
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap',
+      }).addTo(map);
 
       if (exact) {
         // Pin exacto para huéspedes confirmados
-        new window.google.maps.Marker({
-          position: { lat: approxLat, lng: approxLng },
-          map,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: "#147A5C",
-            fillOpacity: 1,
-            strokeColor: "#fff",
-            strokeWeight: 3,
-          },
-        });
+        L.circleMarker([cLat, cLng], {
+          radius: 9,
+          color: "#fff",
+          weight: 3,
+          fillColor: "#147A5C",
+          fillOpacity: 1,
+        }).addTo(map);
       } else {
         // Círculo aproximado para el público (estilo Airbnb)
-        new window.google.maps.Circle({
-          map,
-          center: { lat: approxLat, lng: approxLng },
+        L.circle([cLat, cLng], {
           radius: 300,
+          color: "#147A5C",
+          weight: 2,
+          opacity: 0.5,
           fillColor: "#147A5C",
           fillOpacity: 0.15,
-          strokeColor: "#147A5C",
-          strokeOpacity: 0.5,
-          strokeWeight: 2,
-        });
+        }).addTo(map);
       }
-    });
-  }, [lat, lng, apiKey]);
 
-  if (!apiKey) return null;
+      // Recalcular tamaño por si el contenedor cambió de layout
+      setTimeout(() => map.invalidateSize(), 100);
+    });
+
+    return () => {
+      cancelled = true;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [lat, lng, exact]);
 
   return (
     <div
       ref={mapRef}
-      className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm bg-[var(--bg-subtle)]"
+      className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden border border-[var(--border-subtle)] shadow-sm bg-[var(--bg-subtle)] z-0"
     />
   );
 }
