@@ -19,6 +19,8 @@ interface PhotoUploaderProps {
   initialPhotos?: Photo[];
   onChange?: (photos: Photo[]) => void;
   maxPhotos?: number;
+  /** Entidad backend a la que suben las fotos: "properties" (default) o "experiences" */
+  basePath?: string;
 }
 
 // Proxy de Vercel (mismo origen, sin CORS). El proxy agrega el prefijo /api/v1.
@@ -29,6 +31,7 @@ export default function PhotoUploader({
   initialPhotos = [],
   onChange,
   maxPhotos = 20,
+  basePath = "properties",
 }: PhotoUploaderProps) {
   const { getToken } = useAuth();
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
@@ -72,7 +75,7 @@ export default function PhotoUploader({
         formData.append("file", file);
 
         const res = await fetch(
-          `${API}/properties/${propertyId}/photos`,
+          `${API}/${basePath}/${propertyId}/photos`,
           {
             method: "POST",
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -99,7 +102,7 @@ export default function PhotoUploader({
 
   async function deletePhoto(photoId: string) {
     const token = await getToken();
-    await fetch(`${API}/properties/${propertyId}/photos/${photoId}`, {
+    await fetch(`${API}/${basePath}/${propertyId}/photos/${photoId}`, {
       method: "DELETE",
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
@@ -108,7 +111,7 @@ export default function PhotoUploader({
 
   async function setPrimary(photoId: string) {
     const token = await getToken();
-    await fetch(`${API}/properties/${propertyId}/photos/${photoId}`, {
+    await fetch(`${API}/${basePath}/${propertyId}/photos/${photoId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

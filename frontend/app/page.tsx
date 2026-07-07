@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
+import ExploreTabs from "@/components/ExploreTabs";
 import { Suspense } from "react";
 import { Shield, Star, MessageCircle } from "lucide-react";
 
@@ -113,6 +114,7 @@ export default async function HomePage() {
 
       {/* ── Propiedades destacadas ─────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <ExploreTabs active="alojamientos" />
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-h1 text-[var(--text-primary)]">
             Hospedajes destacados

@@ -104,6 +104,44 @@ export interface Host {
   total_listings: number;
 }
 
+// ── Experiencias ─────────────────────────────────────────────────────────────
+
+export type ExperienceCategory =
+  | "gastronomia" | "aventura" | "cultura" | "arte" | "naturaleza"
+  | "deporte" | "bienestar" | "vida_nocturna" | "tour" | "otro";
+
+export interface Experience {
+  id: string;
+  host_id?: string;
+  title: string;
+  description?: string;
+  category: ExperienceCategory;
+  status: PropertyStatus;
+  address?: string;
+  neighborhood?: string;
+  city: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+  latitude_approx?: number;
+  longitude_approx?: number;
+  price_per_person: number;
+  currency: string;
+  duration_minutes: number;
+  min_participants: number;
+  max_participants: number;
+  languages?: string;
+  included?: string;
+  requirements?: string;
+  instant_booking: boolean;
+  cancellation_policy: CancellationPolicy;
+  total_reviews: number;
+  avg_rating?: number;
+  total_bookings?: number;
+  host: Host;
+  photos: PropertyPhoto[];
+}
+
 // ── Búsqueda ─────────────────────────────────────────────────────────────────
 
 export interface SearchParams {

@@ -34,6 +34,7 @@ from app.modules.reviews.router import router as reviews_router
 from app.modules.webhooks.clerk import router as clerk_webhook_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.favorites.router import router as favorites_router
+from app.modules.experiences.router import router as experiences_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -142,6 +143,7 @@ app.include_router(reviews_router, prefix=f"{API_PREFIX}/reviews", tags=["review
 app.include_router(clerk_webhook_router, prefix=f"{API_PREFIX}/webhooks", tags=["webhooks"])
 app.include_router(notifications_router, prefix=f"{API_PREFIX}/notifications", tags=["notifications"])
 app.include_router(favorites_router, prefix=f"{API_PREFIX}/favorites", tags=["favorites"])
+app.include_router(experiences_router, prefix=f"{API_PREFIX}/experiences", tags=["experiences"])
 
 
 # ── Root ────────────────────────────────────────────────────────────────────────
