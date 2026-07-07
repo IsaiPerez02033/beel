@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Link from "next/link";
+import { MapPin, Home } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
@@ -107,6 +109,28 @@ export default async function BuscarPage({ searchParams }: PageProps) {
             {properties.map((property) => (
               <PropertyCard key={property.id} property={property} />
             ))}
+          </div>
+        ) : params.destino ? (
+          <div className="max-w-xl mx-auto text-center py-16 px-4">
+            <div className="w-16 h-16 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center mx-auto mb-5">
+              <MapPin size={28} className="text-[var(--color-primary)]" />
+            </div>
+            <h2 className="text-h1 font-display font-semibold text-[var(--text-primary)] mb-2">
+              Próximamente más propiedades en {params.destino}
+            </h2>
+            <p className="text-body text-[var(--text-secondary)] mb-8">
+              Aún no tenemos hospedajes disponibles aquí, pero Beel está creciendo rápido.
+              ¿Tienes una propiedad en {params.destino}? Publícala gratis y sé de los primeros
+              anfitriones de la zona.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/ser-anfitrion" className="btn btn-primary px-6 py-3 inline-flex items-center justify-center gap-2">
+                <Home size={16} /> Conviértete en anfitrión
+              </Link>
+              <Link href="/buscar" className="btn btn-outline px-6 py-3 inline-flex items-center justify-center">
+                Ver todos los hospedajes
+              </Link>
+            </div>
           </div>
         ) : (
           <EmptyIllustration

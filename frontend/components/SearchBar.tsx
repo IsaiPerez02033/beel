@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import DateRangePicker from "@/components/DateRangePicker";
@@ -19,6 +19,14 @@ interface SearchBarProps {
   };
 }
 
+interface GeoSuggestion {
+  label: string;
+  city: string;
+  state: string;
+  lat: number;
+  lng: number;
+}
+
 export default function SearchBar({
   compact = false,
   initialValues = {},
@@ -30,12 +38,43 @@ export default function SearchBar({
   const [checkOut, setCheckOut] = useState(initialValues.checkOut ?? "");
   const [huespedes, setHuespedes] = useState(initialValues.huespedes ?? 1);
   const [activeField, setActiveField] = useState<string | null>(null);
+
+  // Autocompletado de destino (OpenStreetMap)
+  const [suggestions, setSuggestions] = useState<GeoSuggestion[]>([]);
+  const [showSug, setShowSug] = useState(false);
+  const [loadingSug, setLoadingSug] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const justSelectedRef = useRef(false);
+
   const today = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
-  const tomorrow = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    return format(d, "yyyy-MM-dd");
-  }, []);
+
+  useEffect(() => {
+    if (justSelectedRef.current) { justSelectedRef.current = false; return; }
+    const q = destino.trim();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (q.length < 2) { setSuggestions([]); setShowSug(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      setLoadingSug(true);
+      try {
+        const res = await fetch(`/api/geo/autocomplete?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        setSuggestions(data.suggestions ?? []);
+        setShowSug(true);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setLoadingSug(false);
+      }
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [destino]);
+
+  function pickSuggestion(s: GeoSuggestion) {
+    justSelectedRef.current = true;
+    setDestino(s.city || s.label);
+    setShowSug(false);
+    setSuggestions([]);
+  }
 
   function handleSearch() {
     const params = new URLSearchParams();
@@ -46,36 +85,58 @@ export default function SearchBar({
     router.push(`/buscar?${params.toString()}`);
   }
 
+  // Dropdown de sugerencias reutilizable
+  const suggestionsDropdown = showSug && (suggestions.length > 0 || loadingSug) && (
+    <div className="absolute left-0 right-0 top-full mt-2 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl shadow-lg overflow-hidden z-50 max-h-72 overflow-y-auto">
+      {loadingSug && suggestions.length === 0 ? (
+        <div className="flex items-center gap-2 px-4 py-3 text-body-sm text-[var(--text-tertiary)]">
+          <Loader2 size={14} className="animate-spin" /> Buscando destinos...
+        </div>
+      ) : (
+        suggestions.map((s, i) => (
+          <button
+            key={`${s.label}-${i}`}
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); pickSuggestion(s); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[var(--bg-subtle)] transition-colors"
+          >
+            <span className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] flex items-center justify-center flex-shrink-0">
+              <MapPin size={15} className="text-[var(--text-secondary)]" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-body-sm font-medium text-[var(--text-primary)] truncate">{s.city || s.label}</span>
+              {s.state && <span className="block text-caption text-[var(--text-tertiary)] truncate">{s.state}, México</span>}
+            </span>
+          </button>
+        ))
+      )}
+    </div>
+  );
+
   if (compact) {
-    // Barra compacta con búsqueda funcional
     return (
       <div className="flex items-center gap-2 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-2xl shadow-sm px-3 py-1.5">
         <Search size={15} className="text-[var(--color-primary)] flex-shrink-0" />
 
-        {/* Destino */}
-        <input
-          type="text"
-          value={destino}
-          onChange={(e) => setDestino(e.target.value)}
-          placeholder="¿A dónde vas?"
-          className="text-body-sm text-[var(--text-primary)] bg-transparent outline-none w-28 placeholder:text-[var(--text-tertiary)]"
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-        />
+        <div className="relative">
+          <input
+            type="text"
+            value={destino}
+            onChange={(e) => setDestino(e.target.value)}
+            placeholder="¿A dónde vas?"
+            className="text-body-sm text-[var(--text-primary)] bg-transparent outline-none w-28 placeholder:text-[var(--text-tertiary)]"
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            onBlur={() => setTimeout(() => setShowSug(false), 150)}
+          />
+          {suggestionsDropdown}
+        </div>
 
         <span className="text-[var(--border-strong)] text-body-sm">·</span>
 
-        {/* Fechas compactas */}
-        <DateRangePicker
-          checkIn={checkIn}
-          checkOut={checkOut}
-          onCheckIn={setCheckIn}
-          onCheckOut={setCheckOut}
-          compact
-        />
+        <DateRangePicker checkIn={checkIn} checkOut={checkOut} onCheckIn={setCheckIn} onCheckOut={setCheckOut} compact />
 
         <span className="text-[var(--border-strong)] text-body-sm">·</span>
 
-        {/* Huéspedes */}
         <div className="flex items-center gap-1.5">
           <button type="button" onClick={() => setHuespedes(Math.max(1, huespedes - 1))}
             className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-caption hover:border-[var(--text-primary)] transition-colors">−</button>
@@ -84,10 +145,8 @@ export default function SearchBar({
             className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-caption hover:border-[var(--text-primary)] transition-colors">+</button>
         </div>
 
-        <button
-          onClick={handleSearch}
-          className="ml-1 w-7 h-7 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors flex-shrink-0"
-        >
+        <button onClick={handleSearch}
+          className="ml-1 w-7 h-7 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors flex-shrink-0">
           <Search size={13} />
         </button>
       </div>
@@ -100,7 +159,7 @@ export default function SearchBar({
         {/* Destino */}
         <div
           className={cn(
-            "search-bar-field flex-[2] flex flex-col justify-center cursor-pointer rounded-l-2xl",
+            "search-bar-field flex-[2] flex flex-col justify-center cursor-pointer rounded-l-2xl relative",
             activeField === "destino" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
           )}
           onClick={() => { setActiveField("destino"); destinoInputRef.current?.focus(); }}
@@ -113,30 +172,22 @@ export default function SearchBar({
             onChange={(e) => setDestino(e.target.value)}
             placeholder="Destino o ciudad"
             className="search-bar-value bg-transparent outline-none w-full sm:text-left text-center"
-            onFocus={() => setActiveField("destino")}
-            onBlur={() => setActiveField(null)}
+            onFocus={() => { setActiveField("destino"); if (suggestions.length) setShowSug(true); }}
+            onBlur={() => { setActiveField(null); setTimeout(() => setShowSug(false), 150); }}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
+          {suggestionsDropdown}
         </div>
 
-        {/* Fechas — DateRangePicker personalizado (sin wrapper search-bar-field para que el popover no quede clippeado) */}
-        <DateRangePicker
-          checkIn={checkIn}
-          checkOut={checkOut}
-          onCheckIn={setCheckIn}
-          onCheckOut={setCheckOut}
-        />
+        <DateRangePicker checkIn={checkIn} checkOut={checkOut} onCheckIn={setCheckIn} onCheckOut={setCheckOut} />
 
-        {/* Huéspedes + botón buscar (desktop: inline / móvil: separados) */}
         <div
           className={cn(
             "search-bar-field flex items-center justify-between gap-3 rounded-r-2xl border-r-0",
             activeField === "guests" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
           )}
         >
-          <div
-            className="flex flex-col justify-center flex-1 cursor-pointer items-center sm:items-start"
-            onClick={() => setActiveField("guests")}
-          >
+          <div className="flex flex-col justify-center flex-1 cursor-pointer items-center sm:items-start" onClick={() => setActiveField("guests")}>
             <span className="search-bar-label">Huéspedes</span>
             <div className="flex items-center gap-2">
               <button type="button" onClick={(e) => { e.stopPropagation(); setHuespedes(Math.max(1, huespedes - 1)); }}
@@ -147,7 +198,6 @@ export default function SearchBar({
             </div>
           </div>
 
-          {/* Botón circular solo en desktop */}
           <button onClick={handleSearch} aria-label="Buscar"
             className="hidden sm:flex flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] text-white items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm">
             <Search size={16} />
@@ -155,7 +205,6 @@ export default function SearchBar({
         </div>
       </div>
 
-      {/* Botón buscar full-width solo en móvil — fuera del card */}
       <button onClick={handleSearch}
         className="sm:hidden mt-3 w-full h-12 rounded-2xl bg-[var(--color-primary)] text-white flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm font-medium">
         <Search size={16} />
