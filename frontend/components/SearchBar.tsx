@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,9 +9,7 @@ import { format } from "date-fns";
 import DateRangePicker from "@/components/DateRangePicker";
 
 interface SearchBarProps {
-  /** Versión compacta para navbar en página de búsqueda */
   compact?: boolean;
-  /** Valores iniciales (para pre-llenar desde URL) */
   initialValues?: {
     destino?: string;
     checkIn?: string;
@@ -27,26 +26,43 @@ interface GeoSuggestion {
   lng: number;
 }
 
-export default function SearchBar({
-  compact = false,
-  initialValues = {},
-}: SearchBarProps) {
+export default function SearchBar({ compact = false, initialValues = {} }: SearchBarProps) {
   const router = useRouter();
   const destinoInputRef = useRef<HTMLInputElement>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
   const [destino, setDestino] = useState(initialValues.destino ?? "");
   const [checkIn, setCheckIn] = useState(initialValues.checkIn ?? "");
   const [checkOut, setCheckOut] = useState(initialValues.checkOut ?? "");
   const [huespedes, setHuespedes] = useState(initialValues.huespedes ?? 1);
   const [activeField, setActiveField] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Autocompletado de destino (OpenStreetMap)
   const [suggestions, setSuggestions] = useState<GeoSuggestion[]>([]);
   const [showSug, setShowSug] = useState(false);
   const [loadingSug, setLoadingSug] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const justSelectedRef = useRef(false);
 
-  const today = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+  useEffect(() => setMounted(true), []);
+
+  function updatePos() {
+    const r = anchorRef.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + window.scrollY + 6, left: r.left + window.scrollX, width: r.width });
+  }
+
+  useEffect(() => {
+    if (!showSug) return;
+    updatePos();
+    const onScroll = () => updatePos();
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [showSug, suggestions]);
 
   useEffect(() => {
     if (justSelectedRef.current) { justSelectedRef.current = false; return; }
@@ -55,11 +71,11 @@ export default function SearchBar({
     if (q.length < 2) { setSuggestions([]); setShowSug(false); return; }
     debounceRef.current = setTimeout(async () => {
       setLoadingSug(true);
+      setShowSug(true);
       try {
         const res = await fetch(`/api/geo/autocomplete?q=${encodeURIComponent(q)}`);
         const data = await res.json();
         setSuggestions(data.suggestions ?? []);
-        setShowSug(true);
       } catch {
         setSuggestions([]);
       } finally {
@@ -77,6 +93,7 @@ export default function SearchBar({
   }
 
   function handleSearch() {
+    setShowSug(false);
     const params = new URLSearchParams();
     if (destino) params.set("destino", destino);
     if (checkIn) params.set("check_in", checkIn);
@@ -85,40 +102,47 @@ export default function SearchBar({
     router.push(`/buscar?${params.toString()}`);
   }
 
-  // Dropdown de sugerencias reutilizable
-  const suggestionsDropdown = showSug && (suggestions.length > 0 || loadingSug) && (
-    <div className="absolute left-0 right-0 top-full mt-2 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl shadow-lg overflow-hidden z-50 max-h-72 overflow-y-auto">
-      {loadingSug && suggestions.length === 0 ? (
-        <div className="flex items-center gap-2 px-4 py-3 text-body-sm text-[var(--text-tertiary)]">
-          <Loader2 size={14} className="animate-spin" /> Buscando destinos...
-        </div>
-      ) : (
-        suggestions.map((s, i) => (
-          <button
-            key={`${s.label}-${i}`}
-            type="button"
-            onMouseDown={(e) => { e.preventDefault(); pickSuggestion(s); }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[var(--bg-subtle)] transition-colors"
+  const dropdown =
+    mounted && showSug && pos && (loadingSug || suggestions.length > 0)
+      ? createPortal(
+          <div
+            style={{ position: "absolute", top: pos.top, left: pos.left, width: Math.max(pos.width, 260), zIndex: 9999 }}
+            className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl shadow-xl overflow-hidden max-h-72 overflow-y-auto"
           >
-            <span className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] flex items-center justify-center flex-shrink-0">
-              <MapPin size={15} className="text-[var(--text-secondary)]" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-body-sm font-medium text-[var(--text-primary)] truncate">{s.city || s.label}</span>
-              {s.state && <span className="block text-caption text-[var(--text-tertiary)] truncate">{s.state}, México</span>}
-            </span>
-          </button>
-        ))
-      )}
-    </div>
-  );
+            {loadingSug && suggestions.length === 0 ? (
+              <div className="flex items-center gap-2 px-4 py-3 text-body-sm text-[var(--text-tertiary)]">
+                <Loader2 size={14} className="animate-spin" /> Buscando destinos...
+              </div>
+            ) : suggestions.length === 0 ? (
+              <div className="px-4 py-3 text-body-sm text-[var(--text-tertiary)]">Sin resultados</div>
+            ) : (
+              suggestions.map((s, i) => (
+                <button
+                  key={`${s.label}-${i}`}
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); pickSuggestion(s); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[var(--bg-subtle)] transition-colors"
+                >
+                  <span className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] flex items-center justify-center flex-shrink-0">
+                    <MapPin size={15} className="text-[var(--text-secondary)]" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-body-sm font-medium text-[var(--text-primary)] truncate">{s.city || s.label}</span>
+                    {s.state && <span className="block text-caption text-[var(--text-tertiary)] truncate">{s.state}, México</span>}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>,
+          document.body
+        )
+      : null;
 
   if (compact) {
     return (
       <div className="flex items-center gap-2 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-2xl shadow-sm px-3 py-1.5">
         <Search size={15} className="text-[var(--color-primary)] flex-shrink-0" />
-
-        <div className="relative">
+        <div ref={anchorRef} className="relative">
           <input
             type="text"
             value={destino}
@@ -126,17 +150,13 @@ export default function SearchBar({
             placeholder="¿A dónde vas?"
             className="text-body-sm text-[var(--text-primary)] bg-transparent outline-none w-28 placeholder:text-[var(--text-tertiary)]"
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            onFocus={() => suggestions.length && setShowSug(true)}
             onBlur={() => setTimeout(() => setShowSug(false), 150)}
           />
-          {suggestionsDropdown}
         </div>
-
         <span className="text-[var(--border-strong)] text-body-sm">·</span>
-
         <DateRangePicker checkIn={checkIn} checkOut={checkOut} onCheckIn={setCheckIn} onCheckOut={setCheckOut} compact />
-
         <span className="text-[var(--border-strong)] text-body-sm">·</span>
-
         <div className="flex items-center gap-1.5">
           <button type="button" onClick={() => setHuespedes(Math.max(1, huespedes - 1))}
             className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-caption hover:border-[var(--text-primary)] transition-colors">−</button>
@@ -144,11 +164,11 @@ export default function SearchBar({
           <button type="button" onClick={() => setHuespedes(Math.min(16, huespedes + 1))}
             className="w-5 h-5 rounded-full border border-[var(--border-default)] flex items-center justify-center text-caption hover:border-[var(--text-primary)] transition-colors">+</button>
         </div>
-
         <button onClick={handleSearch}
           className="ml-1 w-7 h-7 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors flex-shrink-0">
           <Search size={13} />
         </button>
+        {dropdown}
       </div>
     );
   }
@@ -156,8 +176,8 @@ export default function SearchBar({
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="search-bar rounded-2xl">
-        {/* Destino */}
         <div
+          ref={anchorRef}
           className={cn(
             "search-bar-field flex-[2] flex flex-col justify-center cursor-pointer rounded-l-2xl relative",
             activeField === "destino" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
@@ -176,7 +196,6 @@ export default function SearchBar({
             onBlur={() => { setActiveField(null); setTimeout(() => setShowSug(false), 150); }}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
-          {suggestionsDropdown}
         </div>
 
         <DateRangePicker checkIn={checkIn} checkOut={checkOut} onCheckIn={setCheckIn} onCheckOut={setCheckOut} />
@@ -210,6 +229,8 @@ export default function SearchBar({
         <Search size={16} />
         Buscar
       </button>
+
+      {dropdown}
     </div>
   );
 }

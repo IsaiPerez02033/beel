@@ -18,27 +18,42 @@ export async function GET(req: NextRequest) {
     if (!res.ok) return NextResponse.json({ suggestions: [] });
     const data = await res.json();
 
+    const norm = (v: string) =>
+      (v ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const nq = norm(q);
+    // Solo lugares poblados relevantes (evita hamlets/terrenos/ruido)
+    const PLACE_TYPES = new Set(["city", "town", "village", "municipality", "state", "county", "region", "locality"]);
+
     const seen = new Set<string>();
-    const suggestions = (data.features ?? [])
+    const rows = (data.features ?? [])
       .filter((f: any) => f.properties?.countrycode === "MX")
       .map((f: any) => {
         const p = f.properties ?? {};
         const [lng, lat] = f.geometry?.coordinates ?? [];
-        // Nombre principal: ciudad/localidad; si no, el nombre del lugar
         const city = p.city || p.name || p.county || "";
         const state = p.state || "";
         const label = [city, state].filter(Boolean).join(", ");
-        return { label, city, state, lat, lng };
+        return { label, city, state, lat, lng, _type: p.type, _key: p.osm_key };
       })
       .filter((s: any) => {
-        if (!s.label || s.lat == null) return false;
+        if (!s.label || s.lat == null || !s.city) return false;
+        const isPlace = s._key === "place" || PLACE_TYPES.has(s._type);
+        if (!isPlace) return false;
         if (seen.has(s.label)) return false;
         seen.add(s.label);
         return true;
       })
-      .slice(0, 6);
+      .map((s: any) => {
+        // Relevancia: prioriza los que empiezan/contienen lo escrito
+        const nc = norm(s.city);
+        s._score = nc.startsWith(nq) ? 3 : nc.includes(nq) ? 2 : 1;
+        return s;
+      })
+      .sort((a: any, b: any) => b._score - a._score)
+      .slice(0, 6)
+      .map(({ label, city, state, lat, lng }: any) => ({ label, city, state, lat, lng }));
 
-    return NextResponse.json({ suggestions });
+    return NextResponse.json({ suggestions: rows });
   } catch {
     return NextResponse.json({ suggestions: [] });
   }
