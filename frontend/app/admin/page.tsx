@@ -195,7 +195,7 @@ export default function AdminPage() {
         </div>
 
         {/* Tabs — scroll horizontal en móvil */}
-        <div className="flex gap-0 mb-6 border-b border-[var(--border-subtle)] overflow-x-auto scrollbar-hide -mx-4 px-4">
+        <div className="flex gap-0 mb-6 border-b border-[var(--border-subtle)] w-full">
           {([
             { key: "pendientes",   label: `Pendientes${pendingCount > 0 ? ` (${pendingCount})` : ""}` },
             { key: "aprobados",    label: "Aprobados" },
@@ -206,7 +206,7 @@ export default function AdminPage() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className={cn(
-                "px-3 sm:px-4 py-2.5 text-body-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap flex-shrink-0",
+                "flex-1 px-1 sm:px-4 py-2.5 text-caption sm:text-body-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap text-center",
                 tab === t.key
                   ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                   : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
