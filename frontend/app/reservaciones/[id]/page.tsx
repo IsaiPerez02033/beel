@@ -363,28 +363,33 @@ export default function ReservationDetailPage() {
           </div>
         </div>
 
-        {(reservation.status === "pending" || reservation.status === "confirmed") && (
-          <div className="mt-4 space-y-2 px-4">
-            {/* Botón de pago — solo si aún no se ha pagado */}
-            {paymentStatus !== "approved" && (
-              <PayButton reservationId={id} initialUrl={checkoutUrl} />
-            )}
-            <Link
-              href={`/mensajes?conv=${reservation.id}`}
-              className="btn btn-outline w-full justify-center"
-            >
-              Contactar a {reservation.host?.full_name ?? "el anfitrión"}
-            </Link>
-            
-            <button
-              onClick={handleCancel}
-              disabled={cancelling}
-              className="btn !border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error-light)] w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              {cancelling ? "Cancelando..." : "Cancelar reservación"}
-            </button>
-          </div>
-        )}
+        {(reservation.status === "pending" || reservation.status === "confirmed") && (() => {
+          const isHost = !!userId && reservation.host?.id === userId;
+          const other = isHost ? reservation.guest : reservation.host;
+          const otherLabel = other?.full_name ?? (isHost ? "el huésped" : "el anfitrión");
+          return (
+            <div className="mt-4 space-y-2 px-4">
+              {/* Botón de pago — solo para el HUÉSPED, si aún no se ha pagado */}
+              {!isHost && paymentStatus !== "approved" && (
+                <PayButton reservationId={id} initialUrl={checkoutUrl} />
+              )}
+              <Link
+                href={`/mensajes?conv=${reservation.id}`}
+                className="btn btn-outline w-full justify-center"
+              >
+                Contactar a {otherLabel}
+              </Link>
+
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="btn !border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error-light)] w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                {cancelling ? "Cancelando..." : "Cancelar reservación"}
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {showConfirmModal && (
