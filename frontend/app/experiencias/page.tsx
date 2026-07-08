@@ -51,10 +51,17 @@ export default async function ExperienciasPage({ searchParams }: { searchParams:
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <ExploreTabs active="experiencias" />
 
-        <h1 className="text-display font-display font-semibold text-[var(--text-primary)] mb-2">Experiencias</h1>
-        <p className="text-body text-[var(--text-secondary)] mb-6">
-          Actividades y tours con anfitriones locales en todo México.
-        </p>
+        <div className="flex items-end justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-display font-display font-semibold text-[var(--text-primary)] mb-2">Experiencias</h1>
+            <p className="text-body text-[var(--text-secondary)]">
+              Actividades y tours con anfitriones locales en todo México.
+            </p>
+          </div>
+          <Link href="/experiencias/reservas" className="text-body-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium whitespace-nowrap">
+            Mis reservas →
+          </Link>
+        </div>
 
         {/* Filtros por categoría */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6 -mx-1 px-1">

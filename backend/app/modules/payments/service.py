@@ -130,6 +130,78 @@ async def create_checkout(
     return payment
 
 
+async def create_checkout_experience(
+    db: AsyncSession,
+    booking,
+    back_urls: dict,
+) -> Payment:
+    """
+    Crea una preferencia de pago en MercadoPago para una reserva de experiencia
+    y registra el Payment en BD (usa `experience_booking_id`).
+    """
+    mp = _get_mp()
+    exp = booking.experience
+    fecha = booking.booking_date
+
+    preference_data = {
+        "items": [
+            {
+                "id": str(booking.id),
+                "title": f"Experiencia: {exp.title}",
+                "description": (
+                    f"{booking.participants} "
+                    f"{'persona' if booking.participants == 1 else 'personas'} | {fecha}"
+                ),
+                "quantity": 1,
+                "unit_price": float(booking.total_amount),
+                "currency_id": booking.currency,
+            }
+        ],
+        "payer": {
+            "name": booking.guest.full_name,
+            "email": booking.guest.email,
+        },
+        "back_urls": back_urls,
+        "auto_return": "approved",
+        "notification_url": f"{settings.BACKEND_URL or settings.ALLOWED_ORIGINS[-1]}/api/v1/payments/webhook/mercadopago",
+        "external_reference": str(booking.id),
+        "expires": False,
+        "metadata": {
+            "experience_booking_id": str(booking.id),
+            "guest_id": str(booking.guest_id),
+            "host_id": str(booking.host_id),
+            "beel_env": settings.ENVIRONMENT,
+        },
+    }
+
+    response = mp.preference().create(preference_data)
+    pref = response.get("response", {})
+
+    if response.get("status") not in (200, 201):
+        logger.error("Error al crear preferencia MP (experiencia): %s", response)
+        from fastapi import HTTPException
+        raise HTTPException(status_code=502, detail="Error al iniciar el pago con MercadoPago")
+
+    payment = Payment(
+        experience_booking_id=booking.id,
+        payment_provider="mercadopago",
+        payment_type="full",
+        mp_preference_id=pref.get("id"),
+        amount=booking.total_amount,
+        currency=booking.currency,
+        platform_fee=booking.platform_fee_snapshot,
+        host_payout=booking.host_net_payout,
+        isr_retention=booking.isr_retention_snapshot,
+        iva_retention=booking.iva_retention_snapshot,
+        status="pending",
+        mp_response=pref,
+    )
+    db.add(payment)
+    await db.flush()
+    logger.info("Preferencia MP creada: %s para experiencia booking %s", pref.get("id"), booking.id)
+    return payment
+
+
 async def get_checkout_urls(payment: Payment) -> dict:
     """Retorna las URLs de checkout desde la respuesta de MP."""
     pref = payment.mp_response or {}
@@ -226,21 +298,22 @@ async def handle_mp_webhook(
     external_ref = mp_data.get("external_reference", "")
     payment_method = mp_data.get("payment_type_id", "")
 
-    # Buscar el Payment por mp_preference_id o external_reference (reservation_id)
+    # external_reference es el id de una reserva de alojamiento O de experiencia.
     try:
-        reservation_id = uuid.UUID(external_ref)
+        ref_id = uuid.UUID(external_ref)
     except (ValueError, AttributeError):
         logger.warning("external_reference inválido: %s", external_ref)
         return "invalid_ref"
 
     result = await db.execute(
-        select(Payment).where(Payment.reservation_id == reservation_id)
-        .order_by(Payment.created_at.desc())
+        select(Payment).where(
+            (Payment.reservation_id == ref_id) | (Payment.experience_booking_id == ref_id)
+        ).order_by(Payment.created_at.desc())
     )
     payment = result.scalar_one_or_none()
 
     if not payment:
-        logger.warning("Payment no encontrado para reserva %s", reservation_id)
+        logger.warning("Payment no encontrado para referencia %s", ref_id)
         return "not_found"
 
     # Actualizar el Payment
@@ -253,11 +326,14 @@ async def handle_mp_webhook(
         amount_ok = await _verify_payment_amount(db, payment, mp_data)
         if not amount_ok:
             return "amount_mismatch"
-        await _on_payment_approved(db, payment, reservation_id)
+        if payment.experience_booking_id:
+            await _on_experience_payment_approved(db, payment, payment.experience_booking_id)
+        else:
+            await _on_payment_approved(db, payment, payment.reservation_id)
 
     elif mp_status in ("rejected", "cancelled"):
         payment.failure_reason = mp_data.get("status_detail", "")
-        logger.info("Pago rechazado para reserva %s: %s", reservation_id, payment.failure_reason)
+        logger.info("Pago rechazado para referencia %s: %s", ref_id, payment.failure_reason)
 
     await db.flush()
     return mp_status
@@ -329,6 +405,44 @@ async def _on_payment_approved(
     await db.flush()
 
 
+async def _on_experience_payment_approved(
+    db: AsyncSession, payment: Payment, booking_id: uuid.UUID
+) -> None:
+    """Post-pago aprobado de una experiencia: confirma la reserva si estaba pending."""
+    from app.modules.experiences.models import Experience, ExperienceBooking
+
+    result = await db.execute(
+        select(ExperienceBooking).where(ExperienceBooking.id == booking_id).with_for_update()
+    )
+    booking = result.scalar_one_or_none()
+    if not booking:
+        return
+
+    if booking.status == "pending":
+        booking.status = "confirmed"
+        await db.execute(
+            update(Experience)
+            .where(Experience.id == booking.experience_id)
+            .values(total_bookings=Experience.total_bookings + 1)
+        )
+        logger.info("Experiencia booking %s confirmada vía pago aprobado", booking_id)
+
+    booking.payment_status = "paid"
+    payment.payout_status = "awaiting_beel_approval"
+    await db.flush()
+
+
+async def get_payment_by_experience_booking(
+    db: AsyncSession, booking_id: uuid.UUID
+) -> Optional[Payment]:
+    result = await db.execute(
+        select(Payment)
+        .where(Payment.experience_booking_id == booking_id)
+        .order_by(Payment.created_at.desc())
+    )
+    return result.scalar_one_or_none()
+
+
 async def get_payment_by_reservation(
     db: AsyncSession, reservation_id: uuid.UUID
 ) -> Optional[Payment]:
@@ -350,12 +464,14 @@ async def list_payments_for_admin(
     Lista todos los pagos para el panel de administración.
     Incluye las relaciones de reserva, huésped, anfitrión y propiedad via selectin.
     """
-    from app.modules.reservations.models import Reservation
+    from app.modules.experiences.models import ExperienceBooking
 
     base_q = (
         select(Payment)
-        .join(Reservation, Payment.reservation_id == Reservation.id)
-        .options(selectinload(Payment.reservation))
+        .options(
+            selectinload(Payment.reservation),
+            selectinload(Payment.experience_booking).selectinload(ExperienceBooking.experience),
+        )
     )
     if payout_status:
         base_q = base_q.where(Payment.payout_status == payout_status)
@@ -401,13 +517,22 @@ async def approve_payout(
             detail=f"El payout ya fue procesado (status: '{payment.payout_status}')",
         )
 
-    # Verificar que el anfitrión tiene CLABE registrada
+    # Verificar que el anfitrión tiene CLABE registrada (reserva o experiencia)
     from app.modules.users.models import User
     from app.modules.reservations.models import Reservation
+    from app.modules.experiences.models import ExperienceBooking
     from sqlalchemy import select as _select
-    res_result = await db.execute(_select(Reservation).where(Reservation.id == payment.reservation_id))
-    reservation = res_result.scalar_one_or_none()
-    host_id = reservation.host_id if reservation else None
+    host_id = None
+    if payment.experience_booking_id:
+        bk = (await db.execute(
+            _select(ExperienceBooking).where(ExperienceBooking.id == payment.experience_booking_id)
+        )).scalar_one_or_none()
+        host_id = bk.host_id if bk else None
+    else:
+        reservation = (await db.execute(
+            _select(Reservation).where(Reservation.id == payment.reservation_id)
+        )).scalar_one_or_none()
+        host_id = reservation.host_id if reservation else None
     host = await db.get(User, host_id) if host_id else None
     if not host or not host.bank_clabe:
         # Notificar al anfitrión para que agregue su CLABE
@@ -496,18 +621,29 @@ async def issue_refund(
     payment.refund_reason = reason
     payment.payout_status = "refunded"
 
-    # Cancelar la reserva y desbloquear fechas
-    result = await db.execute(
-        select(Reservation)
-        .where(Reservation.id == payment.reservation_id)
-        .with_for_update()
-    )
-    reservation = result.scalar_one_or_none()
-    if reservation and reservation.status == "confirmed":
-        reservation.status = "cancelled_host"
-        reservation.cancellation_reason = f"Reembolso emitido por Beel: {reason}"
-        from app.modules.reservations.service import _unblock_dates
-        await _unblock_dates(db, reservation.property_id, reservation.id)
+    # Cancelar la reserva asociada (alojamiento o experiencia)
+    if payment.experience_booking_id:
+        from app.modules.experiences.models import ExperienceBooking
+        bk = (await db.execute(
+            select(ExperienceBooking)
+            .where(ExperienceBooking.id == payment.experience_booking_id)
+            .with_for_update()
+        )).scalar_one_or_none()
+        if bk and bk.status == "confirmed":
+            bk.status = "cancelled_host"
+            bk.cancellation_reason = f"Reembolso emitido por Beel: {reason}"
+    else:
+        result = await db.execute(
+            select(Reservation)
+            .where(Reservation.id == payment.reservation_id)
+            .with_for_update()
+        )
+        reservation = result.scalar_one_or_none()
+        if reservation and reservation.status == "confirmed":
+            reservation.status = "cancelled_host"
+            reservation.cancellation_reason = f"Reembolso emitido por Beel: {reason}"
+            from app.modules.reservations.service import _unblock_dates
+            await _unblock_dates(db, reservation.property_id, reservation.id)
 
     await db.flush()
     logger.info(
@@ -529,12 +665,13 @@ async def sync_payment_status(db: AsyncSession, payment: Payment) -> Payment:
     mp = _get_mp()
     mp_status = None
     mp_payment_id = payment.mp_payment_id
+    ref_id = payment.experience_booking_id or payment.reservation_id
 
     try:
-        # Buscar por external_reference (reservation_id) si no hay mp_payment_id
+        # Buscar por external_reference (id de reserva/experiencia) si no hay mp_payment_id
         if not mp_payment_id:
             search_resp = mp.payment().search(
-                filters={"external_reference": str(payment.reservation_id)}
+                filters={"external_reference": str(ref_id)}
             )
             results = (search_resp.get("response") or {}).get("results") or []
             if results:
@@ -556,7 +693,10 @@ async def sync_payment_status(db: AsyncSession, payment: Payment) -> Payment:
             logger.info("Sync pago %s: %s → %s", payment.id, payment.status, mp_status)
             payment.status = mp_status
             if mp_status == "approved" and payment.payout_status in ("pending", "awaiting_beel_approval"):
-                await _on_payment_approved(db, payment, payment.reservation_id)
+                if payment.experience_booking_id:
+                    await _on_experience_payment_approved(db, payment, payment.experience_booking_id)
+                else:
+                    await _on_payment_approved(db, payment, payment.reservation_id)
 
         await db.flush()
 

@@ -142,6 +142,52 @@ export interface Experience {
   photos: PropertyPhoto[];
 }
 
+export interface ExperienceBooking {
+  id: string;
+  experience_id: string;
+  guest_id: string;
+  host_id: string;
+  booking_date: string;
+  start_time?: string | null;
+  participants: number;
+  price_per_person_snapshot: number;
+  subtotal: number;
+  platform_fee_snapshot: number;
+  total_amount: number;
+  currency: string;
+  lodging_iva_snapshot: number;
+  host_net_payout: number;
+  cancellation_policy_snapshot: string;
+  status: string;
+  payment_status: string;
+  rejection_reason?: string | null;
+  host_message?: string | null;
+  guest_message?: string | null;
+  experience?: {
+    id: string;
+    title: string;
+    city: string;
+    neighborhood?: string | null;
+    category: string;
+    duration_minutes: number;
+    photos: { url: string; is_primary: boolean }[];
+  } | null;
+  guest?: { id: string; full_name: string; avatar_url?: string | null } | null;
+  host?: { id: string; full_name: string; avatar_url?: string | null } | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExperiencePriceBreakdown {
+  participants: number;
+  price_per_person: number;
+  subtotal: number;
+  platform_fee: number;
+  lodging_iva: number;
+  total: number;
+  currency: string;
+}
+
 // ── Búsqueda ─────────────────────────────────────────────────────────────────
 
 export interface SearchParams {

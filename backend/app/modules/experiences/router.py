@@ -12,10 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import CurrentUser, OptionalUser
 from app.core.database import get_db
 from app.modules.experiences import service
+from app.modules.experiences import booking_service
 from app.modules.experiences.models import Experience, ExperiencePhoto
 from app.modules.experiences.schemas import (
     ExperienceOut, ExperienceCardOut, ExperienceListOut,
     ExperienceCreateIn, ExperienceUpdateIn, ExperiencePhotoOut,
+    ExperienceBookingOut, ExperienceBookingListOut, ExperienceBookingCreateIn,
+    ExperienceBookingRespondIn, ExperienceBookingCancelIn, ExperiencePriceBreakdownOut,
 )
 from app.modules.users import service as user_service
 
@@ -119,6 +122,86 @@ async def delete(experience_id: uuid.UUID, current_user: CurrentUser, db: AsyncS
     if exp.host_id != user.id and not user.is_admin:
         raise HTTPException(status_code=403, detail="No tienes permiso")
     await service.delete_experience(db, exp)
+
+
+# ── Reservas de experiencia (bookings) ──────────────────────────────────────────
+
+@router.get("/bookings/price", response_model=ExperiencePriceBreakdownOut)
+async def booking_price(
+    experience_id: uuid.UUID, participants: int = Query(1, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    return await booking_service.get_price_breakdown(db, experience_id, participants)
+
+
+@router.get("/bookings/mine", response_model=ExperienceBookingListOut)
+async def my_bookings(
+    current_user: CurrentUser, status: Optional[str] = None,
+    page: int = Query(1, ge=1), per_page: int = Query(10, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+):
+    items, total = await booking_service.list_guest_bookings(db, current_user.id, status, page, per_page)
+    return ExperienceBookingListOut(bookings=items, total=total, page=page, per_page=per_page)
+
+
+@router.get("/bookings/host", response_model=ExperienceBookingListOut)
+async def host_bookings(
+    current_user: CurrentUser, status: Optional[str] = None,
+    page: int = Query(1, ge=1), per_page: int = Query(10, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+):
+    items, total = await booking_service.list_host_bookings(db, current_user.id, status, page, per_page)
+    return ExperienceBookingListOut(bookings=items, total=total, page=page, per_page=per_page)
+
+
+@router.post("/bookings", response_model=ExperienceBookingOut, status_code=status.HTTP_201_CREATED)
+async def create_booking(
+    data: ExperienceBookingCreateIn, current_user: CurrentUser, db: AsyncSession = Depends(get_db),
+):
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    booking = await booking_service.create_booking(db, user, data)
+    await db.commit()
+    return booking
+
+
+@router.get("/bookings/{booking_id}", response_model=ExperienceBookingOut)
+async def get_booking(booking_id: uuid.UUID, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+    booking = await booking_service.get_booking(db, booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    if current_user.id not in (booking.guest_id, booking.host_id):
+        raise HTTPException(status_code=403, detail="Sin acceso")
+    return booking
+
+
+@router.post("/bookings/{booking_id}/respond", response_model=ExperienceBookingOut)
+async def respond_booking(
+    booking_id: uuid.UUID, data: ExperienceBookingRespondIn,
+    current_user: CurrentUser, db: AsyncSession = Depends(get_db),
+):
+    user = await user_service.get_user_by_id(db, current_user.id)
+    booking = await booking_service.get_booking(db, booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    booking = await booking_service.respond_to_booking(db, booking, user, data)
+    await db.commit()
+    return booking
+
+
+@router.post("/bookings/{booking_id}/cancel", response_model=ExperienceBookingOut)
+async def cancel_booking(
+    booking_id: uuid.UUID, data: ExperienceBookingCancelIn,
+    current_user: CurrentUser, db: AsyncSession = Depends(get_db),
+):
+    user = await user_service.get_user_by_id(db, current_user.id)
+    booking = await booking_service.get_booking(db, booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    booking = await booking_service.cancel_booking(db, booking, user, data)
+    await db.commit()
+    return booking
 
 
 # ── Fotos ──────────────────────────────────────────────────────────────────────

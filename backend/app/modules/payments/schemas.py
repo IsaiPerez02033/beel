@@ -10,7 +10,8 @@ from pydantic import BaseModel
 
 class PaymentOut(BaseModel):
     id: uuid.UUID
-    reservation_id: uuid.UUID
+    reservation_id: Optional[uuid.UUID] = None
+    experience_booking_id: Optional[uuid.UUID] = None
     mp_preference_id: Optional[str]
     mp_payment_id: Optional[str]
     amount: Decimal
@@ -57,9 +58,19 @@ class AdminPaymentReservationOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AdminPaymentExperienceBookingOut(BaseModel):
+    booking_date: date
+    participants: int
+    guest: AdminPaymentUserOut
+    host: AdminPaymentUserOut
+    experience: AdminPaymentPropertyOut  # reusa {title}
+    model_config = {"from_attributes": True}
+
+
 class AdminPaymentOut(BaseModel):
     id: uuid.UUID
-    reservation_id: uuid.UUID
+    reservation_id: Optional[uuid.UUID] = None
+    experience_booking_id: Optional[uuid.UUID] = None
     amount: Decimal
     currency: str
     platform_fee: Decimal
@@ -72,7 +83,8 @@ class AdminPaymentOut(BaseModel):
     refunded_at: Optional[datetime]
     refund_reason: Optional[str]
     created_at: datetime
-    reservation: Optional[AdminPaymentReservationOut]
+    reservation: Optional[AdminPaymentReservationOut] = None
+    experience_booking: Optional[AdminPaymentExperienceBookingOut] = None
     model_config = {"from_attributes": True}
 
 

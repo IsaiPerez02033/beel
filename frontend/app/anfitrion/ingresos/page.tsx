@@ -10,6 +10,7 @@ import Price from "@/components/Price";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Loader2, Wallet, Clock, TrendingUp } from "lucide-react";
+import type { ExperienceBooking } from "@/types";
 
 interface HostReservation {
   id: string;
@@ -26,13 +27,26 @@ interface HostReservation {
   reservation_property: { title: string };
 }
 
+interface Movimiento {
+  id: string;
+  href: string;
+  title: string;
+  guestName: string;
+  dateLabel: string;
+  dateKey: string;
+  total: number;
+  net: number;
+  status: string;
+  kind: "alojamiento" | "experiencia";
+}
+
 const thisMonth = new Date().toISOString().slice(0, 7);
 
 export default function IngresosPage() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const { get } = useApi();
-  const [reservations, setReservations] = useState<HostReservation[]>([]);
+  const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,28 +55,39 @@ export default function IngresosPage() {
 
   useEffect(() => {
     if (!isSignedIn) return;
-    get<{ reservations: HostReservation[] }>("/reservations/host-requests?per_page=50")
-      .then((d) => setReservations(d.reservations ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const resNet = (r: HostReservation) => {
+      const hn = Number(r.host_net_payout);
+      if (hn > 0) return hn;
+      const base = Number(r.subtotal ?? 0) + Number(r.cleaning_fee_snapshot ?? 0);
+      return base > 0 ? base : Number(r.total_amount) || 0;
+    };
+    Promise.all([
+      get<{ reservations: HostReservation[] }>("/reservations/host-requests?per_page=50").catch(() => ({ reservations: [] })),
+      get<{ bookings: ExperienceBooking[] }>("/experiences/bookings/host?per_page=50").catch(() => ({ bookings: [] })),
+    ]).then(([r, e]) => {
+      const fromRes: Movimiento[] = (r.reservations ?? [])
+        .filter((x) => x.status === "confirmed" || x.status === "completed")
+        .map((x) => ({
+          id: x.id, href: `/reservaciones/${x.id}`, title: x.reservation_property?.title ?? "Reserva",
+          guestName: x.guest?.full_name ?? "", dateKey: x.check_in,
+          dateLabel: `${format(parseISO(x.check_in), "d MMM", { locale: es })} – ${format(parseISO(x.check_out), "d MMM yyyy", { locale: es })}`,
+          total: Number(x.total_amount) || 0, net: resNet(x), status: x.status, kind: "alojamiento",
+        }));
+      const fromExp: Movimiento[] = (e.bookings ?? [])
+        .filter((x) => x.status === "confirmed" || x.status === "completed")
+        .map((x) => ({
+          id: x.id, href: `/experiencias/reservas/${x.id}`, title: x.experience?.title ?? "Experiencia",
+          guestName: x.guest?.full_name ?? "", dateKey: x.booking_date,
+          dateLabel: format(parseISO(x.booking_date), "d MMM yyyy", { locale: es }),
+          total: Number(x.total_amount) || 0, net: Number(x.host_net_payout) || 0, status: x.status, kind: "experiencia",
+        }));
+      setMovimientos([...fromRes, ...fromExp].sort((a, b) => (a.dateKey < b.dateKey ? 1 : -1)));
+    }).finally(() => setLoading(false));
   }, [isSignedIn, get]);
 
-  // Movimientos = reservas con dinero (confirmadas o completadas)
-  const movimientos = reservations
-    .filter((r) => r.status === "confirmed" || r.status === "completed")
-    .sort((a, b) => (a.check_in < b.check_in ? 1 : -1));
-
-  // Neto al anfitrión. Fallback para reservas viejas (sin host_net_payout):
-  // usa habitación + limpieza (base sin retención, modelo previo).
-  const net = (r: HostReservation) => {
-    const hn = Number(r.host_net_payout);
-    if (hn > 0) return hn;
-    const base = Number(r.subtotal ?? 0) + Number(r.cleaning_fee_snapshot ?? 0);
-    return base > 0 ? base : Number(r.total_amount) || 0;
-  };
-  const totalRecibido = movimientos.filter((r) => r.status === "completed").reduce((s, r) => s + net(r), 0);
-  const pendiente = movimientos.filter((r) => r.status === "confirmed").reduce((s, r) => s + net(r), 0);
-  const esteMes = movimientos.filter((r) => r.check_in.startsWith(thisMonth)).reduce((s, r) => s + net(r), 0);
+  const totalRecibido = movimientos.filter((r) => r.status === "completed").reduce((s, r) => s + r.net, 0);
+  const pendiente = movimientos.filter((r) => r.status === "confirmed").reduce((s, r) => s + r.net, 0);
+  const esteMes = movimientos.filter((r) => r.dateKey.startsWith(thisMonth)).reduce((s, r) => s + r.net, 0);
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
@@ -110,16 +135,16 @@ export default function IngresosPage() {
             {movimientos.map((r) => (
               <Link
                 key={r.id}
-                href={`/reservaciones/${r.id}`}
+                href={r.href}
                 className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-x-4 gap-y-1 px-5 py-4 items-center hover:bg-[var(--bg-subtle)] transition-colors"
               >
                 <div className="min-w-0">
                   <p className="text-body-sm font-semibold text-[var(--text-primary)] truncate">
-                    {r.reservation_property?.title}
+                    {r.kind === "experiencia" && <span className="text-caption font-medium text-[var(--color-primary)] mr-1">Experiencia ·</span>}
+                    {r.title}
                   </p>
                   <p className="text-caption text-[var(--text-tertiary)] truncate">
-                    {r.guest?.full_name} · {format(parseISO(r.check_in), "d MMM", { locale: es })}
-                    {" – "}{format(parseISO(r.check_out), "d MMM yyyy", { locale: es })}
+                    {r.guestName} · {r.dateLabel}
                     {" · "}
                     <span className={r.status === "completed" ? "text-[var(--color-primary)]" : "text-[var(--text-tertiary)]"}>
                       {r.status === "completed" ? "Pagado" : "Por pagarte"}
@@ -128,11 +153,11 @@ export default function IngresosPage() {
                 </div>
                 <span className="text-right sm:w-28 text-body-sm text-[var(--text-secondary)] row-start-1 col-start-2 sm:row-auto">
                   <span className="sm:hidden text-caption text-[var(--text-tertiary)]">Huésped: </span>
-                  <Price amount={r.total_amount} />
+                  <Price amount={r.total} />
                 </span>
                 <span className="text-right sm:w-28 text-body-sm font-semibold text-[var(--color-primary)] col-span-2 sm:col-span-1">
                   <span className="sm:hidden text-caption text-[var(--text-tertiary)] font-normal">Recibes: </span>
-                  <Price amount={net(r)} />
+                  <Price amount={r.net} />
                 </span>
                 <ChevronRight size={16} className="text-[var(--text-tertiary)] hidden sm:block" />
               </Link>

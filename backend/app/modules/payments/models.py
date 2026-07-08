@@ -13,6 +13,7 @@ from app.core.database import Base, TimestampMixin
 
 if __import__("typing").TYPE_CHECKING:
     from app.modules.reservations.models import Reservation
+    from app.modules.experiences.models import ExperienceBooking
 
 
 class Payment(Base, TimestampMixin):
@@ -31,10 +32,18 @@ class Payment(Base, TimestampMixin):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    reservation_id: Mapped[uuid.UUID] = mapped_column(
+    # Un pago referencia EXACTAMENTE uno de estos dos: una reserva de
+    # alojamiento o una reserva de experiencia (ambos nullable).
+    reservation_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("reservations.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
+        index=True,
+    )
+    experience_booking_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("experience_bookings.id", ondelete="RESTRICT"),
+        nullable=True,
         index=True,
     )
 
@@ -77,8 +86,11 @@ class Payment(Base, TimestampMixin):
     refund_reason: Mapped[Optional[str]] = mapped_column(Text)
 
     # Relaciones
-    reservation: Mapped["Reservation"] = relationship(
+    reservation: Mapped[Optional["Reservation"]] = relationship(
         "Reservation", back_populates="payments", lazy="selectin"
+    )
+    experience_booking: Mapped[Optional["ExperienceBooking"]] = relationship(
+        "ExperienceBooking", back_populates="payments", lazy="selectin"
     )
 
     def __repr__(self) -> str:

@@ -124,6 +124,89 @@ async def get_checkout(
     return CheckoutOut(**urls)
 
 
+# ── Pagos de experiencias ────────────────────────────────────────────────────
+
+@router.post("/experience-checkout/{booking_id}", response_model=CheckoutOut)
+@limiter.limit("3/minute")
+async def create_experience_checkout(
+    booking_id: uuid.UUID,
+    current_user: CurrentUser,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Inicia el pago de una reserva de experiencia confirmada."""
+    from app.modules.experiences import booking_service
+
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    booking = await booking_service.get_booking(db, booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    if booking.guest_id != user.id:
+        raise HTTPException(status_code=403, detail="Solo el huésped puede iniciar el pago")
+    if booking.status not in ("confirmed", "pending"):
+        raise HTTPException(status_code=400, detail=f"La reserva en estado '{booking.status}' no admite pagos")
+
+    existing = await payment_service.get_payment_by_experience_booking(db, booking_id)
+    if existing and existing.status == "approved":
+        raise HTTPException(status_code=400, detail="Esta experiencia ya fue pagada")
+
+    frontend = settings.FRONTEND_URL or settings.ALLOWED_ORIGINS[-1]
+    back_urls = {
+        "success": f"{frontend}/experiencias/reservas/{booking_id}?pago=ok",
+        "failure": f"{frontend}/experiencias/reservas/{booking_id}?pago=error",
+        "pending": f"{frontend}/experiencias/reservas/{booking_id}?pago=pendiente",
+    }
+    payment = await payment_service.create_checkout_experience(db, booking, back_urls)
+    await db.commit()
+    urls = await payment_service.get_checkout_urls(payment)
+    return CheckoutOut(**urls)
+
+
+@router.get("/experience-checkout/{booking_id}", response_model=CheckoutOut)
+async def get_experience_checkout(
+    booking_id: uuid.UUID, current_user: CurrentUser, db: AsyncSession = Depends(get_db),
+):
+    """Retorna el URL de pago de una reserva de experiencia (sin crear otro)."""
+    payment = await payment_service.get_payment_by_experience_booking(db, booking_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="No hay pago pendiente para esta reserva")
+    urls = await payment_service.get_checkout_urls(payment)
+    return CheckoutOut(**urls)
+
+
+@router.post("/experience/{booking_id}/sync", response_model=PaymentOut)
+async def sync_experience_payment(
+    booking_id: uuid.UUID, current_user: CurrentUser, db: AsyncSession = Depends(get_db),
+):
+    """Sincroniza el estado del pago de experiencia con MercadoPago."""
+    payment = await payment_service.get_payment_by_experience_booking(db, booking_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="No hay pago para esta reserva")
+    payment = await payment_service.sync_payment_status(db, payment)
+    await db.commit()
+    return payment
+
+
+@router.get("/experience/{booking_id}", response_model=PaymentOut)
+async def get_experience_payment(
+    booking_id: uuid.UUID, current_user: CurrentUser, db: AsyncSession = Depends(get_db),
+):
+    """Estado del pago de una reserva de experiencia."""
+    from app.modules.experiences import booking_service
+    booking = await booking_service.get_booking(db, booking_id)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    if current_user.id not in (booking.guest_id, booking.host_id):
+        raise HTTPException(status_code=403, detail="Sin acceso")
+    payment = await payment_service.get_payment_by_experience_booking(db, booking_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+    return payment
+
+
 @router.get("/admin/list", response_model=AdminPaymentListOut)
 async def list_payments_admin(
     admin_user=Depends(_require_admin),

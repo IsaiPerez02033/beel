@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Clock, Users, Star, Shield, Loader2, ChevronLeft, MessageCircle, X,
+  Clock, Users, Star, Shield, Loader2, ChevronLeft, MessageCircle, X, CalendarDays,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -31,6 +31,9 @@ export default function ExperienceDetailPage() {
   const [exp, setExp] = useState<Experience | null>(null);
   const [loading, setLoading] = useState(true);
   const [participants, setParticipants] = useState(1);
+  const [bookingDate, setBookingDate] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [bookErr, setBookErr] = useState("");
   const [showMsg, setShowMsg] = useState(false);
   const [msg, setMsg] = useState("");
   const [sending, setSending] = useState(false);
@@ -39,6 +42,28 @@ export default function ExperienceDetailPage() {
     if (!id) return;
     get<Experience>(`/experiences/${id}`).then(setExp).catch(() => {}).finally(() => setLoading(false));
   }, [id, get]);
+
+  useEffect(() => {
+    if (exp) setParticipants(exp.min_participants || 1);
+  }, [exp]);
+
+  async function createBooking() {
+    if (!exp) return;
+    if (!isSignedIn) { router.push(`/iniciar-sesion?callbackUrl=/experiencias/${id}`); return; }
+    if (!bookingDate) { setBookErr("Elige una fecha."); return; }
+    setBookErr("");
+    setCreating(true);
+    try {
+      const booking = await post<{ id: string }>("/experiences/bookings", {
+        experience_id: id, booking_date: bookingDate, participants,
+      });
+      router.push(`/experiencias/reservas/${booking.id}`);
+    } catch (e) {
+      setBookErr(e instanceof Error ? e.message : "No se pudo crear la reserva.");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   async function contactHost() {
     if (!isSignedIn) { router.push(`/iniciar-sesion?callbackUrl=/experiencias/${id}`); return; }
@@ -73,7 +98,7 @@ export default function ExperienceDetailPage() {
   }
 
   const total = Number(exp.price_per_person) * participants;
-  const isOwner = userId && (exp.host_id === userId || exp.host?.id === userId);
+  const isOwner = Boolean(userId && (exp.host_id === userId || exp.host?.id === userId));
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
@@ -150,7 +175,24 @@ export default function ExperienceDetailPage() {
               <p className="text-h2 font-semibold text-[var(--text-primary)]">
                 <Price amount={exp.price_per_person} /> <span className="text-body-sm font-normal text-[var(--text-tertiary)]">/ persona</span>
               </p>
-              <div className="flex items-center justify-between mt-4 py-3 border-y border-[var(--border-subtle)]">
+
+              {/* Fecha */}
+              <label className="block mt-4">
+                <span className="text-caption text-[var(--text-tertiary)] uppercase tracking-wide font-medium flex items-center gap-1.5">
+                  <CalendarDays size={13} /> Fecha
+                </span>
+                <input
+                  type="date"
+                  value={bookingDate}
+                  min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)}
+                  onChange={(e) => setBookingDate(e.target.value)}
+                  className="input w-full mt-1"
+                  style={{ fontSize: "16px" }}
+                  disabled={isOwner}
+                />
+              </label>
+
+              <div className="flex items-center justify-between mt-3 py-3 border-y border-[var(--border-subtle)]">
                 <span className="text-body-sm text-[var(--text-secondary)]">Participantes</span>
                 <div className="flex items-center gap-3">
                   <button onClick={() => setParticipants((p) => Math.max(exp.min_participants, p - 1))} className="w-7 h-7 rounded-full border border-[var(--border-default)] flex items-center justify-center">−</button>
@@ -158,21 +200,38 @@ export default function ExperienceDetailPage() {
                   <button onClick={() => setParticipants((p) => Math.min(exp.max_participants, p + 1))} className="w-7 h-7 rounded-full border border-[var(--border-default)] flex items-center justify-center">+</button>
                 </div>
               </div>
-              <div className="flex justify-between text-body font-semibold text-[var(--text-primary)] mt-4">
+              <div className="flex justify-between text-body-sm text-[var(--text-secondary)] mt-3">
+                <span><Price amount={exp.price_per_person} /> × {participants}</span>
+                <span><Price amount={total} /></span>
+              </div>
+              <div className="flex justify-between text-body font-semibold text-[var(--text-primary)] mt-2 pt-2 border-t border-[var(--border-subtle)]">
                 <span>Total</span><span><Price amount={total} /></span>
               </div>
+              <p className="text-[11px] text-[var(--text-tertiary)] mt-1">Impuestos y tarifa de servicio se calculan al confirmar.</p>
+
+              {bookErr && <p className="text-caption text-red-600 mt-2">{bookErr}</p>}
+
               {isOwner ? (
                 <p className="text-caption text-[var(--text-tertiary)] text-center mt-4">Esta es tu experiencia.</p>
               ) : (
-                <button
-                  onClick={() => { setShowMsg(true); setMsg(`Hola, me interesa tu experiencia "${exp.title}" para ${participants} persona(s).`); }}
-                  className="btn btn-primary w-full mt-4 flex items-center justify-center gap-2"
-                >
-                  <MessageCircle size={16} /> Reservar / consultar
-                </button>
+                <>
+                  <button
+                    onClick={createBooking}
+                    disabled={creating}
+                    className="btn btn-primary w-full mt-4 flex items-center justify-center gap-2 py-3"
+                  >
+                    {creating ? <Loader2 size={16} className="animate-spin" /> : (exp.instant_booking ? "Reservar y pagar" : "Solicitar reserva")}
+                  </button>
+                  <button
+                    onClick={() => { setShowMsg(true); setMsg(`Hola, tengo una duda sobre tu experiencia "${exp.title}".`); }}
+                    className="btn btn-outline w-full mt-2 flex items-center justify-center gap-2 text-body-sm"
+                  >
+                    <MessageCircle size={15} /> Escribir al anfitrión
+                  </button>
+                </>
               )}
               <p className="text-caption text-[var(--text-tertiary)] text-center mt-3">
-                Coordina fecha y detalles con el anfitrión por mensaje.
+                {exp.instant_booking ? "Confirmación inmediata." : "El anfitrión confirma antes del pago."}
               </p>
             </div>
           </div>
