@@ -14,9 +14,10 @@ import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   Home, Calendar, DollarSign, Star, Plus, ChevronRight,
-  Clock, CheckCircle, XCircle, AlertCircle, Settings, Trash2,
+  Clock, CheckCircle, XCircle, AlertCircle, Settings, Trash2, Sparkles, Users,
 } from "lucide-react";
-import type { Property } from "@/types";
+import { formatDuration } from "@/components/ExperienceCard";
+import type { Property, Experience } from "@/types";
 
 interface HostReservation {
   id: string;
@@ -51,7 +52,7 @@ const RESERVATION_STATUS: Record<string, { label: string; color: string; icon: R
   completed:       { label: "Completada", color: "badge-neutral", icon: <CheckCircle size={12} /> },
 };
 
-type Tab = "reservaciones" | "propiedades";
+type Tab = "reservaciones" | "propiedades" | "experiencias";
 
 export default function AnfitrionPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -61,6 +62,7 @@ export default function AnfitrionPage() {
   const [tab, setTab] = useState<Tab>("reservaciones");
   const [reservations, setReservations] = useState<HostReservation[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
   const [stats, setStats] = useState<HostStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -90,17 +92,21 @@ export default function AnfitrionPage() {
   async function fetchData() {
     setLoading(true);
     try {
-      // Independientes: si una falla, la otra igual carga.
-      const [resSettled, propSettled] = await Promise.allSettled([
+      // Independientes: si una falla, las demás igual cargan.
+      const [resSettled, propSettled, expSettled] = await Promise.allSettled([
         get<{ reservations: HostReservation[] }>("/reservations/host-requests"),
         get<{ properties: Property[] }>("/properties/host/my-listings"),
+        get<Experience[]>("/experiences/host/my-experiences"),
       ]);
       const reservas = resSettled.status === "fulfilled" ? resSettled.value.reservations : [];
       const props = propSettled.status === "fulfilled" ? propSettled.value.properties : [];
+      const exps = expSettled.status === "fulfilled" ? expSettled.value : [];
       if (resSettled.status === "rejected") console.error("reservas:", resSettled.reason);
       if (propSettled.status === "rejected") console.error("propiedades:", propSettled.reason);
+      if (expSettled.status === "rejected") console.error("experiencias:", expSettled.reason);
       setReservations(reservas);
       setProperties(props);
+      setExperiences(exps);
 
       // Calcular stats localmente
       const now = new Date();
@@ -151,6 +157,15 @@ export default function AnfitrionPage() {
       if (!String(e).toLowerCase().includes("encontrada")) throw e;
     }
     setProperties((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  async function handleDeleteExperience(id: string) {
+    try {
+      await del(`/experiences/${id}`);
+    } catch (e) {
+      if (!String(e).toLowerCase().includes("encontrada")) throw e;
+    }
+    setExperiences((prev) => prev.filter((x) => x.id !== id));
   }
 
   const pendingRes = reservations.filter((r) => r.status === "pending");
@@ -207,10 +222,16 @@ export default function AnfitrionPage() {
               <span className="hidden sm:inline">Configuración</span>
             </Link>
           </div>
-          <Link href="/p/nueva" className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
-            <Plus size={16} />
-            Nueva propiedad
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Link href="/p/nueva" className="btn btn-primary flex items-center justify-center gap-2 w-full sm:w-auto">
+              <Plus size={16} />
+              Nueva propiedad
+            </Link>
+            <Link href="/experiencias/nueva" className="btn btn-outline flex items-center justify-center gap-2 w-full sm:w-auto">
+              <Sparkles size={16} />
+              Nueva experiencia
+            </Link>
+          </div>
         </div>
 
         {/* Banner: falta CLABE */}
@@ -289,19 +310,19 @@ export default function AnfitrionPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 border-b border-[var(--border-subtle)]">
-          {(["reservaciones", "propiedades"] as Tab[]).map((t) => (
+        <div className="flex gap-1 mb-6 border-b border-[var(--border-subtle)] overflow-x-auto">
+          {(["reservaciones", "propiedades", "experiencias"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={cn(
-                "px-4 py-2.5 text-body-sm font-medium border-b-2 transition-colors -mb-px capitalize",
+                "px-4 py-2.5 text-body-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap",
                 tab === t
                   ? "border-[var(--color-primary)] text-[var(--color-primary)]"
                   : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               )}
             >
-              {t === "reservaciones" ? "Reservas" : "Mis propiedades"}
+              {t === "reservaciones" ? "Reservas" : t === "propiedades" ? "Mis propiedades" : "Experiencias"}
             </button>
           ))}
         </div>
@@ -326,8 +347,10 @@ export default function AnfitrionPage() {
             actionLoading={actionLoading}
             onAction={handleReservationAction}
           />
-        ) : (
+        ) : tab === "propiedades" ? (
           <PropertiesTab properties={properties} onDelete={handleDeleteProperty} />
+        ) : (
+          <ExperiencesTab experiences={experiences} onDelete={handleDeleteExperience} />
         )}
       </main>
     </div>
@@ -497,6 +520,133 @@ function ReservationRow({
         </div>
       )}
     </div>
+  );
+}
+
+const STATUS_EXP: Record<string, { label: string; color: string }> = {
+  active:         { label: "Activa",     color: "badge-verified" },
+  inactive:       { label: "Inactiva",   color: "badge-neutral" },
+  pending_review: { label: "En revisión", color: "badge-accent" },
+  suspended:      { label: "No aprobada", color: "text-red-600 bg-red-50" },
+  deleted:        { label: "Eliminada",  color: "badge-neutral" },
+};
+
+function ExperiencesTab({ experiences, onDelete }: { experiences: Experience[]; onDelete: (id: string) => Promise<void> }) {
+  const [confirmDel, setConfirmDel] = useState<{ id: string; title: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function doDelete() {
+    if (!confirmDel) return;
+    setDeleting(true);
+    try { await onDelete(confirmDel.id); setConfirmDel(null); }
+    catch (e) { console.error(e); }
+    finally { setDeleting(false); }
+  }
+
+  if (experiences.length === 0) {
+    return (
+      <div className="empty-state py-16">
+        <div className="text-5xl">✨</div>
+        <h2 className="text-h1 text-[var(--text-primary)]">Sin experiencias aún</h2>
+        <p className="text-body text-[var(--text-secondary)]">
+          Publica un tour, clase o actividad y compártela con los viajeros.
+        </p>
+        <Link href="/experiencias/nueva" className="btn btn-primary mt-2">
+          <Plus size={16} className="mr-1" />
+          Nueva experiencia
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <>
+    {confirmDel && (
+      <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => !deleting && setConfirmDel(null)}>
+        <div className="bg-[var(--bg-elevated)] rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+          <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1">¿Eliminar experiencia?</h3>
+          <p className="text-body-sm text-[var(--text-secondary)] mb-1 truncate">{confirmDel.title}</p>
+          <p className="text-body-sm text-[var(--text-secondary)] mb-5">
+            Esta acción la quitará de tu panel y de las búsquedas. No se puede deshacer.
+          </p>
+          <div className="flex gap-3 justify-end">
+            <button onClick={() => setConfirmDel(null)} disabled={deleting} className="btn btn-outline">Cancelar</button>
+            <button onClick={doDelete} disabled={deleting} className="btn bg-red-600 text-white hover:bg-red-700">
+              {deleting ? "Eliminando…" : "Eliminar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    <div className="space-y-3">
+      {experiences.map((x) => {
+        const photo = x.photos?.find((ph) => ph.is_primary) ?? x.photos?.[0];
+        const statusInfo = STATUS_EXP[x.status] ?? { label: x.status, color: "badge-neutral" };
+        return (
+          <div key={x.id} className="card p-4 flex gap-4">
+            <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[var(--color-primary-light)]">
+              {photo?.url && <Image src={photo.url} alt={x.title} fill className="object-cover" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-body font-medium text-[var(--text-primary)] line-clamp-1">{x.title}</p>
+                <span className={cn("badge flex-shrink-0", statusInfo.color)}>{statusInfo.label}</span>
+              </div>
+              <p className="text-body-sm text-[var(--text-secondary)] mt-0.5 flex items-center gap-2 flex-wrap">
+                <span>{x.city}</span>
+                <span className="flex items-center gap-1"><Clock size={12} /> {formatDuration(x.duration_minutes)}</span>
+                <span className="flex items-center gap-1"><Users size={12} /> hasta {x.max_participants}</span>
+              </p>
+
+              {x.status === "pending_review" && (
+                <div className="mt-2 flex items-start gap-2 rounded-lg bg-[var(--color-accent-light,#fef3c7)] px-3 py-2">
+                  <Clock size={14} className="text-[var(--color-accent,#d97706)] mt-0.5 flex-shrink-0" />
+                  <p className="text-caption text-[var(--text-secondary)]">
+                    <span className="font-medium text-[var(--text-primary)]">En revisión.</span>{" "}
+                    El equipo de Beel está revisando tu experiencia. Se publicará en cuanto se apruebe.
+                  </p>
+                </div>
+              )}
+              {x.status === "suspended" && (
+                <div className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2">
+                  <XCircle size={14} className="text-red-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-caption text-[var(--text-secondary)]">
+                    <span className="font-medium text-red-700">No aprobada.</span>{" "}
+                    Esta experiencia no cumplió la revisión.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-body-sm font-semibold text-[var(--text-primary)]">
+                    <Price amount={x.price_per_person} />/persona
+                  </span>
+                  {x.avg_rating ? (
+                    <span className="text-caption text-[var(--text-secondary)]">
+                      ★ {formatRating(x.avg_rating)} ({x.total_reviews})
+                    </span>
+                  ) : null}
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setConfirmDel({ id: x.id, title: x.title })}
+                    className="btn btn-ghost text-caption px-2 py-1 text-red-600 hover:bg-red-50"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                  <Link href={`/experiencias/${x.id}`} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+                    <ChevronRight size={16} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    </>
   );
 }
 
