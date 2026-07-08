@@ -160,6 +160,7 @@ export interface ExperienceBooking {
   cancellation_policy_snapshot: string;
   status: string;
   payment_status: string;
+  guest_reviewed_at?: string | null;
   rejection_reason?: string | null;
   host_message?: string | null;
   guest_message?: string | null;

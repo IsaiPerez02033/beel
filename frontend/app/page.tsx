@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import type { Property } from "@/types";
+import type { Property, Experience } from "@/types";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
+import ExperienceCard from "@/components/ExperienceCard";
 import ExploreTabs from "@/components/ExploreTabs";
 import { Suspense } from "react";
 import { Shield, Star, MessageCircle } from "lucide-react";
@@ -27,8 +29,26 @@ async function getFeaturedProperties(): Promise<Property[]> {
   }
 }
 
+// ── Fetch experiencias destacadas ─────────────────────────────────────────────
+async function getFeaturedExperiences(): Promise<Experience[]> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/experiences/search?status=active&per_page=4`,
+      { next: { revalidate: 120 } }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.experiences ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function HomePage() {
-  const properties = await getFeaturedProperties();
+  const [properties, experiences] = await Promise.all([
+    getFeaturedProperties(),
+    getFeaturedExperiences(),
+  ]);
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
@@ -139,6 +159,26 @@ export default async function HomePage() {
           )}
         </Suspense>
       </section>
+
+      {/* ── Experiencias destacadas ────────────────────────────────────────── */}
+      {experiences.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-h1 text-[var(--text-primary)]">Experiencias para vivir</h2>
+            <Link
+              href="/experiencias"
+              className="text-body-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium"
+            >
+              Ver todas →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {experiences.map((e) => (
+              <ExperienceCard key={e.id} experience={e} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Señales de confianza ───────────────────────────────────────────── */}
       <section className="py-14 px-4 mt-4" style={{

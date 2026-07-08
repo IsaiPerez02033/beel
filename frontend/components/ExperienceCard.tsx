@@ -3,12 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Star, Clock, Users, Utensils, Mountain, Landmark, Palette,
   Trees, Dumbbell, Heart, Moon, MapPin, Sparkles,
 } from "lucide-react";
 import { cn, formatRating } from "@/lib/utils";
 import Price from "@/components/Price";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { useAuth } from "@/hooks/useSafeAuth";
 import type { Experience, ExperienceCategory } from "@/types";
 
 const CATEGORY: Record<ExperienceCategory, { label: string; icon: React.ReactNode }> = {
@@ -33,8 +36,22 @@ export function formatDuration(min: number): string {
 
 export default function ExperienceCard({ experience }: { experience: Experience }) {
   const [imgError, setImgError] = useState(false);
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+  const { isExperienceFavorite, toggleExperienceFavorite } = useFavorites();
   const photo = experience.photos?.[0]?.url;
   const cat = CATEGORY[experience.category] ?? CATEGORY.otro;
+  const fav = isExperienceFavorite(experience.id);
+
+  function onHeartClick(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isSignedIn) {
+      router.push(`/iniciar-sesion?callbackUrl=/experiencias/${experience.id}`);
+      return;
+    }
+    toggleExperienceFavorite(experience.id);
+  }
 
   return (
     <Link href={`/experiencias/${experience.id}`} className="card group block">
@@ -60,6 +77,19 @@ export default function ExperienceCard({ experience }: { experience: Experience 
             {cat.label}
           </span>
         </div>
+        <button
+          onClick={onHeartClick}
+          aria-label={fav ? "Quitar de favoritos" : "Guardar en favoritos"}
+          className="absolute top-2.5 right-2.5 z-20 p-2 rounded-full transition-transform active:scale-90 hover:scale-110"
+        >
+          <Heart
+            size={22}
+            className={cn(
+              "drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition-colors",
+              fav ? "fill-[var(--color-accent)] text-[var(--color-accent)]" : "fill-black/25 text-white"
+            )}
+          />
+        </button>
       </div>
 
       <div className="p-3.5">

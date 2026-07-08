@@ -11,6 +11,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Price from "@/components/Price";
 import PropertyMap from "@/components/PropertyMap";
+import ExperienceReviews from "@/components/ExperienceReviews";
 import { formatDuration } from "@/components/ExperienceCard";
 import { useApi } from "@/hooks/useApi";
 import { useAuth } from "@/hooks/useSafeAuth";
@@ -167,6 +168,9 @@ export default function ExperienceDetailPage() {
                 <PropertyMap lat={Number(exp.latitude_approx)} lng={Number(exp.longitude_approx)} title={exp.title} />
               </div>
             )}
+
+            <div className="divider my-6" />
+            <ExperienceReviews experienceId={exp.id} />
           </div>
 
           {/* Reserva */}

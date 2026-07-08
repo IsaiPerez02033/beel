@@ -192,6 +192,7 @@ class ExperienceBookingOut(BaseModel):
     cancellation_policy_snapshot: str
     status: str
     payment_status: str
+    guest_reviewed_at: Optional[datetime] = None
     rejection_reason: Optional[str]
     cancellation_reason: Optional[str]
     host_message: Optional[str]
@@ -250,3 +251,46 @@ class ExperienceBookingRespondIn(BaseModel):
 
 class ExperienceBookingCancelIn(BaseModel):
     reason: Optional[str] = Field(None, max_length=500)
+
+
+# ── Reseñas de experiencia ──────────────────────────────────────────────────────
+
+class ExperienceReviewCreateIn(BaseModel):
+    booking_id: uuid.UUID
+    rating: int = Field(..., ge=1, le=5)
+    comment: Optional[str] = Field(None, max_length=2000)
+
+
+class ExperienceReviewResponseIn(BaseModel):
+    response: str = Field(..., min_length=1, max_length=1000)
+
+
+class ExperienceReviewOut(BaseModel):
+    id: uuid.UUID
+    experience_id: uuid.UUID
+    reviewer_id: uuid.UUID
+    rating: int
+    comment: Optional[str]
+    response_text: Optional[str]
+    response_at: Optional[datetime]
+    reviewer: Optional[dict] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+    @field_validator("reviewer", mode="before")
+    @classmethod
+    def _reviewer_to_dict(cls, v):
+        if v is None or isinstance(v, dict):
+            return v
+        return {
+            "id": str(getattr(v, "id", "")),
+            "full_name": getattr(v, "full_name", ""),
+            "avatar_url": getattr(v, "avatar_url", None),
+        }
+
+
+class ExperienceReviewListOut(BaseModel):
+    reviews: list[ExperienceReviewOut]
+    total: int
+    avg_rating: Optional[float] = None

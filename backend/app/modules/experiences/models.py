@@ -7,7 +7,7 @@ from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean, CheckConstraint, Date, DateTime, ForeignKey,
-    Numeric, SmallInteger, String, Text, Time, func,
+    Numeric, SmallInteger, String, Text, Time, UniqueConstraint, func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -239,3 +239,58 @@ class ExperienceBooking(Base, TimestampMixin):
 
     def __repr__(self) -> str:
         return f"<ExperienceBooking id={self.id} status={self.status} date={self.booking_date}>"
+
+
+class ExperienceReview(Base, TimestampMixin):
+    """Reseña de una experiencia dejada por un huésped tras vivirla."""
+    __tablename__ = "experience_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    experience_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("experiences.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    booking_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("experience_bookings.id", ondelete="RESTRICT"),
+        nullable=False, index=True,
+    )
+    reviewer_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False,
+    )
+    rating: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    comment: Mapped[Optional[str]] = mapped_column(Text)
+    response_text: Mapped[Optional[str]] = mapped_column(Text)
+    response_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
+    reviewer: Mapped["User"] = relationship("User", foreign_keys=[reviewer_id], lazy="selectin")
+
+    __table_args__ = (
+        UniqueConstraint("booking_id", name="uq_exp_review_per_booking"),
+        CheckConstraint("rating BETWEEN 1 AND 5", name="chk_exp_review_rating"),
+    )
+
+
+class ExperienceFavorite(Base):
+    """Experiencia guardada como favorita por un usuario."""
+    __tablename__ = "experience_favorites"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    experience_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("experiences.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "experience_id", name="uq_exp_favorite"),
+    )
