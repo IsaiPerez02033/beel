@@ -28,6 +28,40 @@ const SUGGESTIONS = [
   "Algo tranquilo y romántico en un pueblo mágico",
 ];
 
+// Helper Component for Word-by-Word Text Streaming
+function StreamingMessage({ content, onComplete }: { content: string; onComplete: () => void }) {
+  const [displayedText, setDisplayedText] = useState("");
+  const words = useMemo(() => content.split(" "), [content]);
+  const indexRef = useRef(0);
+
+  useEffect(() => {
+    if (words.length === 0) {
+      onComplete();
+      return;
+    }
+    const interval = setInterval(() => {
+      if (indexRef.current < words.length) {
+        setDisplayedText((prev) => {
+          const space = prev ? " " : "";
+          return prev + space + words[indexRef.current];
+        });
+        indexRef.current++;
+      } else {
+        clearInterval(interval);
+        onComplete();
+      }
+    }, 45); // 45ms per word feels natural and fluid
+
+    return () => clearInterval(interval);
+  }, [words, onComplete]);
+
+  return (
+    <div className="prose-concierge text-body-sm text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">
+      {displayedText}
+    </div>
+  );
+}
+
 export default function ConciergePage() {
   const router = useRouter();
   const { post } = useApi();
@@ -36,6 +70,7 @@ export default function ConciergePage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [completedStreaming, setCompletedStreaming] = useState<Record<number, boolean>>({});
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -123,62 +158,83 @@ export default function ConciergePage() {
 
             {/* Conversación */}
             <div className="space-y-6 flex-1">
-              {messages.map((m, i) => (
-                <div key={i}>
-                  {m.role === "user" ? (
-                    <div className="flex justify-end">
-                      <div className="max-w-[85%] bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-md px-4 py-2.5 text-body-sm">
-                        {m.content}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0">
-                        <Sparkles size={15} className="text-[var(--color-primary)]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="prose-concierge text-body-sm text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">
+              {messages.map((m, i) => {
+                const isLatestAssistant = m.role === "assistant" && i === messages.length - 1;
+                const isStreamComplete = completedStreaming[i] || !isLatestAssistant;
+
+                return (
+                  <div key={i}>
+                    {m.role === "user" ? (
+                      <div className="flex justify-end animate-slide-up-sequence">
+                        <div className="max-w-[85%] bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-md px-4 py-2.5 text-body-sm">
                           {m.content}
                         </div>
-
-                        {m.properties && m.properties.length > 0 && (
-                          <div className="mt-4">
-                            <p className="text-caption font-semibold text-[var(--text-tertiary)] mb-2 uppercase tracking-wide">
-                              Hospedajes recomendados
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {m.properties.map((p) => (
-                                <PropertyCard key={p.id} property={p} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {m.experiences && m.experiences.length > 0 && (
-                          <div className="mt-4">
-                            <p className="text-caption font-semibold text-[var(--text-tertiary)] mb-2 uppercase tracking-wide">
-                              Experiencias recomendadas
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {m.experiences.map((e) => (
-                                <ExperienceCard key={e.id} experience={e} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    ) : (
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0">
+                          <Sparkles size={15} className="text-[var(--color-primary)]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {isStreamComplete ? (
+                            <div className="prose-concierge text-body-sm text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed animate-fade-in">
+                              {m.content}
+                            </div>
+                          ) : (
+                            <StreamingMessage
+                              content={m.content}
+                              onComplete={() => {
+                                setCompletedStreaming((prev) => ({ ...prev, [i]: true }));
+                              }}
+                            />
+                          )}
+
+                          {isStreamComplete && m.properties && m.properties.length > 0 && (
+                            <div className="mt-4 animate-slide-up-sequence">
+                              <p className="text-caption font-semibold text-[var(--text-tertiary)] mb-2 uppercase tracking-wide">
+                                Hospedajes recomendados
+                              </p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {m.properties.map((p) => (
+                                  <PropertyCard key={p.id} property={p} />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {isStreamComplete && m.experiences && m.experiences.length > 0 && (
+                            <div className="mt-4 animate-slide-up-sequence">
+                              <p className="text-caption font-semibold text-[var(--text-tertiary)] mb-2 uppercase tracking-wide">
+                                Experiencias recomendadas
+                              </p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {m.experiences.map((e) => (
+                                  <ExperienceCard key={e.id} experience={e} />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
               {loading && (
-                <div className="flex gap-3">
+                <div className="flex gap-3 animate-fade-in">
                   <div className="w-8 h-8 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0">
                     <Sparkles size={15} className="text-[var(--color-primary)]" />
                   </div>
-                  <div className="flex items-center gap-2 text-body-sm text-[var(--text-tertiary)] pt-1">
-                    <Loader2 size={15} className="animate-spin" /> Armando tu plan…
+                  <div className="flex flex-col gap-1.5">
+                    <div className="bg-[var(--bg-subtle)] border border-[var(--border-subtle)] rounded-2xl rounded-tl-md py-2.5 px-4 shadow-sm flex items-center justify-center">
+                      <div className="typing-dots">
+                        <div className="typing-dot" />
+                        <div className="typing-dot" />
+                        <div className="typing-dot" />
+                      </div>
+                    </div>
+                    <span className="text-[11px] text-[var(--text-tertiary)] pl-1">Armando tu plan de viaje...</span>
                   </div>
                 </div>
               )}

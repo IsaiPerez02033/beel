@@ -78,7 +78,11 @@ function InteractiveStars({
           onMouseEnter={() => setHover(s)}
           onMouseLeave={() => setHover(0)}
           onClick={() => onChange(s)}
-          className="transition-transform hover:scale-110"
+          className={cn(
+            "transition-transform hover:scale-125 active:scale-95",
+            value >= s && "star-pop"
+          )}
+          style={value >= s ? { animationDelay: `${s * 60}ms` } : undefined}
         >
           <Star
             size={24}
@@ -334,7 +338,11 @@ export default function PropertyReviews({ propertyId }: { propertyId: string }) 
                         key={s}
                         type="button"
                         onClick={() => setVal(s)}
-                        className="p-0.5"
+                        className={cn(
+                          "p-0.5 transition-transform hover:scale-125 active:scale-95",
+                          val >= s && "star-pop"
+                        )}
+                        style={val >= s ? { animationDelay: `${s * 50}ms` } : undefined}
                       >
                         <Star
                           size={16}

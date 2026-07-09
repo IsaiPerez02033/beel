@@ -17,6 +17,15 @@ interface PropertyGalleryProps {
 
 export default function PropertyGallery({ photos, title }: PropertyGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   const touchStartY = useRef(0);
   const touchStartX = useRef(0);
 
@@ -107,7 +116,8 @@ export default function PropertyGallery({ photos, title }: PropertyGalleryProps)
               src={mainPhoto.url}
               alt={title}
               fill
-              className="object-cover group-hover:scale-[1.05] transition-transform duration-[800ms] ease-out"
+              className="object-cover parallax-img"
+              style={{ "--parallax-y": `${Math.min(scrollY * 0.12, 80)}px` } as React.CSSProperties}
               priority
             />
           )}

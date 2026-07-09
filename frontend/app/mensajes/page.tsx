@@ -815,6 +815,64 @@ export default function MensajesPage() {
                   </div>
                 </div>
 
+                {/* Timeline de la Reserva (Estilo Airbnb) */}
+                <div className="mt-2 p-4 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
+                  <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider mb-4">Progreso del viaje</p>
+                  <div className="relative pl-6 space-y-6">
+                    {/* Línea vertical conectora */}
+                    <div className="absolute left-2.5 top-1.5 bottom-1.5 w-0.5 bg-[var(--border-default)]" />
+
+                    {/* Paso 1: Solicitud recibida */}
+                    <div className="relative">
+                      <div className="absolute -left-[21px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white bg-emerald-500 shadow-sm flex items-center justify-center" />
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--text-primary)]">Solicitud enviada</p>
+                        <p className="text-[10px] text-[var(--text-tertiary)]">Petición registrada con éxito</p>
+                      </div>
+                    </div>
+
+                    {/* Paso 2: Aprobada/Confirmada */}
+                    <div className="relative">
+                      <div className={cn(
+                        "absolute -left-[21px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm",
+                        (reservationDetails.status === "confirmed" || reservationDetails.status === "completed")
+                          ? "bg-emerald-500"
+                          : (reservationDetails.status === "cancelled" || reservationDetails.status === "rejected")
+                          ? "bg-rose-500"
+                          : "bg-[var(--border-default)]"
+                      )} />
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--text-primary)]">
+                          {reservationDetails.status === "cancelled" || reservationDetails.status === "rejected" ? "Cancelada / Rechazada" : "Aprobación del anfitrión"}
+                        </p>
+                        <p className="text-[10px] text-[var(--text-tertiary)]">
+                          {reservationDetails.status === "confirmed" || reservationDetails.status === "completed"
+                            ? "El anfitrión aprobó tu estancia"
+                            : reservationDetails.status === "cancelled" || reservationDetails.status === "rejected"
+                            ? "Reserva declinada o cancelada"
+                            : "Esperando respuesta del anfitrión"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Paso 3: Completada */}
+                    {reservationDetails.status !== "cancelled" && reservationDetails.status !== "rejected" && (
+                      <div className="relative">
+                        <div className={cn(
+                          "absolute -left-[21px] top-1 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm",
+                          reservationDetails.status === "completed" ? "bg-emerald-500" : "bg-[var(--border-default)]"
+                        )} />
+                        <div>
+                          <p className="text-xs font-semibold text-[var(--text-primary)]">Viaje completado</p>
+                          <p className="text-[10px] text-[var(--text-tertiary)]">
+                            {reservationDetails.status === "completed" ? "¡Gracias por hospedarte!" : "Check-out y fin del viaje"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Desglose de Pago (solo visible si el usuario logueado es el HUESPED para privacidad de datos) */}
                 {isLocalUserGuest && (
                   <>

@@ -15,7 +15,7 @@ import ExperienceReviews from "@/components/ExperienceReviews";
 import { formatDuration } from "@/components/ExperienceCard";
 import { useApi } from "@/hooks/useApi";
 import { useAuth } from "@/hooks/useSafeAuth";
-import { formatRating } from "@/lib/utils";
+import { cn, formatRating } from "@/lib/utils";
 import type { Experience } from "@/types";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -30,6 +30,16 @@ export default function ExperienceDetailPage() {
   const { get, post } = useApi();
   const { isSignedIn, userId } = useAuth();
   const [exp, setExp] = useState<Experience | null>(null);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [participants, setParticipants] = useState(1);
   const [bookingDate, setBookingDate] = useState("");
@@ -113,8 +123,15 @@ export default function ExperienceDetailPage() {
         {exp.photos?.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-2xl overflow-hidden mb-6">
             {exp.photos.slice(0, 4).map((p, i) => (
-              <div key={p.id} className={`relative ${i === 0 ? "sm:col-span-2 aspect-[16/9]" : "aspect-[4/3]"}`}>
-                <Image src={p.url} alt={exp.title} fill className="object-cover" sizes="(max-width:640px) 100vw, 50vw" />
+              <div key={p.id} className={cn("relative overflow-hidden group", i === 0 ? "sm:col-span-2 aspect-[16/9] parallax-container" : "aspect-[4/3] rounded-2xl")}>
+                <Image 
+                  src={p.url} 
+                  alt={exp.title} 
+                  fill 
+                  className={cn("object-cover", i === 0 ? "parallax-img" : "group-hover:scale-[1.03] transition-transform duration-500 ease-out")} 
+                  style={i === 0 ? ({ "--parallax-y": `${Math.min(scrollY * 0.12, 80)}px` } as React.CSSProperties) : undefined}
+                  sizes="(max-width:640px) 100vw, 50vw" 
+                />
               </div>
             ))}
           </div>
