@@ -71,7 +71,7 @@ export default function FavoritosPage() {
             {visible.length > 0 && (
               <section>
                 <h2 className="text-h2 text-[var(--text-primary)] mb-4">Hospedajes</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 reveal-grid">
                   {visible.map((p) => <PropertyCard key={p.id} property={p} />)}
                 </div>
               </section>
@@ -79,7 +79,7 @@ export default function FavoritosPage() {
             {visibleExp.length > 0 && (
               <section>
                 <h2 className="text-h2 text-[var(--text-primary)] mb-4">Experiencias</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 reveal-grid">
                   {visibleExp.map((e) => <ExperienceCard key={e.id} experience={e} />)}
                 </div>
               </section>

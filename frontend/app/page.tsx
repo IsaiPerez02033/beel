@@ -74,7 +74,7 @@ export default async function HomePage() {
 
         <Suspense fallback={<PropertyGridSkeleton />}>
           {properties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
               {properties.map((property, idx) => (
                 <PropertyCard key={property.id} property={property} priority={idx < 4} />
               ))}
@@ -97,7 +97,7 @@ export default async function HomePage() {
               Ver todas →
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
             {experiences.map((e, idx) => (
               <ExperienceCard key={e.id} experience={e} priority={idx < 4} />
             ))}
@@ -106,37 +106,70 @@ export default async function HomePage() {
       )}
 
       {/* ── Señales de confianza ───────────────────────────────────────────── */}
-      <section className="py-14 px-4 mt-4" style={{
+      <section className="py-20 px-4 mt-4" style={{
         background: "linear-gradient(180deg, var(--bg-base) 0%, var(--color-arena) 100%)"
       }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-h1 font-bold text-[var(--text-primary)] mb-2">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-display font-display font-semibold text-[var(--text-primary)] mb-2">
               ¿Por qué Beel?
             </h2>
-            <p className="text-body-sm text-[var(--text-tertiary)]">
+            <p className="text-body text-[var(--text-tertiary)]">
               Diseñado para México. Sin corporativo. Sin algoritmos.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
             <TrustItem
-              icon={<Shield size={26} />}
+              icon={<Shield size={24} />}
               accent="primary"
               title="Anfitriones verificados"
               description="Cada anfitrión pasa por verificación de identidad antes de publicar."
             />
             <TrustItem
-              icon={<Star size={26} />}
+              icon={<Star size={24} />}
               accent="accent"
               title="Reseñas 100% reales"
               description="Solo huéspedes que completaron su estancia pueden opinar."
             />
             <TrustItem
-              icon={<MessageCircle size={26} />}
+              icon={<MessageCircle size={24} />}
               accent="primary"
               title="Soporte en español"
               description="Atención humana por chat y correo, siempre en tu idioma."
             />
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA de cierre — banda de marca ─────────────────────────────────── */}
+      <section className="relative overflow-hidden" style={{ background: "var(--color-primary)" }}>
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(120% 110% at 50% -25%, rgba(255,255,255,0.16), transparent 55%)" }}
+        />
+        <div className="relative max-w-3xl mx-auto px-4 py-16 sm:py-20 text-center">
+          <h2
+            className="font-display font-semibold text-white mb-3"
+            style={{ fontSize: "clamp(1.75rem, 1.2rem + 2vw, 2.75rem)", letterSpacing: "-0.02em", textWrap: "balance" }}
+          >
+            Tu espacio también puede ser el hogar de alguien
+          </h2>
+          <p className="text-body-lg text-white/85 max-w-lg mx-auto mb-8">
+            Publica en minutos, recibe huéspedes verificados y quédate con el 100% de lo que ganas.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/ser-anfitrion"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-white text-[var(--color-primary)] font-semibold shadow-lg hover:scale-[1.03] active:scale-95 transition-transform"
+            >
+              Publicar mi espacio
+            </Link>
+            <Link
+              href="/buscar"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-white/40 text-white font-medium hover:bg-white/10 transition-colors"
+            >
+              Explorar hospedajes
+            </Link>
           </div>
         </div>
       </section>
@@ -159,21 +192,20 @@ function TrustItem({
   const color = accent === "primary" ? "var(--color-primary)" : "var(--color-accent)";
   const bg = accent === "primary" ? "var(--color-primary-light)" : "var(--color-accent-light)";
   return (
-    <div className="bg-[var(--bg-elevated)] rounded-2xl p-6 border border-[var(--border-subtle)] hover:shadow-md transition-shadow duration-200"
-      style={{ borderTop: `3px solid ${color}` }}>
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+    <div className="text-center md:text-left">
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 mx-auto md:mx-0"
         style={{ background: bg, color }}>
         {icon}
       </div>
-      <h3 className="text-h3 font-semibold text-[var(--text-primary)] mb-1.5">{title}</h3>
-      <p className="text-body-sm text-[var(--text-secondary)] leading-relaxed">{description}</p>
+      <h3 className="text-h2 font-semibold text-[var(--text-primary)] mb-1.5">{title}</h3>
+      <p className="text-body-sm text-[var(--text-secondary)] leading-relaxed max-w-xs mx-auto md:mx-0">{description}</p>
     </div>
   );
 }
 
 function PropertyGridSkeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
       {Array.from({ length: 8 }).map((_, i) => (
         <PropertyCardSkeleton key={i} />
       ))}
