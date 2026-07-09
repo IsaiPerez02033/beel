@@ -101,7 +101,7 @@ export default function PropertyCard({
       onClick={handleNavigation}
       href={`/p/${property.id}`}
       className={cn(
-        "card group block glow-card",
+        "card group block glow-card active:scale-[0.98] active:opacity-95 transition-all duration-150",
         highlighted && "ring-2 ring-[var(--color-primary)]"
       )}
     >

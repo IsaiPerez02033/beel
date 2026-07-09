@@ -40,6 +40,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  // Sincronizar el color de la barra de estado (theme-color) dinámicamente
+  useEffect(() => {
+    const color = theme === "dark" ? "#1A1A18" : "#FFFFFF";
+    
+    // Primero intentamos actualizar cualquier tag sin media query
+    let meta = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "theme-color");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", color);
+
+    // Opcionalmente actualizamos también los de media query para sincronizar el estado manual
+    const mediaMetas = document.querySelectorAll('meta[name="theme-color"][media]');
+    mediaMetas.forEach((m) => {
+      m.setAttribute("content", color);
+    });
+  }, [theme]);
+
   const applyTheme = (t: Theme) => {
     const root = document.documentElement;
     if (t === "dark") root.classList.add("dark");

@@ -84,7 +84,7 @@ export default function ExperienceCard({ experience, priority = false }: Experie
       onMouseMove={handleMouseMove}
       onClick={handleNavigation}
       href={`/experiencias/${experience.id}`}
-      className="card group block glow-card"
+      className="card group block glow-card active:scale-[0.98] active:opacity-95 transition-all duration-150"
     >
       <div className="card-photo">
         {photo && !imgError ? (

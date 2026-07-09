@@ -51,9 +51,14 @@ export default function DateRangePicker({
   const [selecting, setSelecting] = useState<"from" | "to">("from");
   const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -204,24 +209,35 @@ export default function DateRangePicker({
 
       {mounted && open && createPortal(
         <>
-          {/* Backdrop invisible — cierra al hacer click fuera */}
+          {/* Backdrop — oscuro y difuminado en móvil, invisible en desktop */}
           <div
             style={{ position: "fixed", inset: 0, zIndex: 9998 }}
+            className={cn(
+              isMobile ? "bg-black/50 backdrop-blur-xs transition-opacity duration-300 animate-fade-in" : ""
+            )}
             onClick={() => { if (!justOpenedRef.current) setOpen(false); }}
           />
 
-          {/* Popover — position:fixed, por encima del backdrop */}
+          {/* Popover / Bottom Sheet — position:fixed, por encima del backdrop */}
           <div
             ref={popoverRef}
             style={{
               position: "fixed",
-              top: popoverPos.top,
-              left: popoverPos.left,
+              top: isMobile ? undefined : popoverPos.top,
+              left: isMobile ? undefined : popoverPos.left,
               zIndex: 9999,
-              borderTop: "3px solid var(--color-primary)",
+              borderTop: isMobile ? undefined : "3px solid var(--color-primary)",
             }}
-            className="bg-[var(--bg-elevated)] rounded-2xl shadow-2xl border border-[var(--border-subtle)] p-4 select-none w-[320px]"
+            className={cn(
+              "bg-[var(--bg-elevated)] p-4 select-none w-full sm:w-[320px] shadow-2xl border-[var(--border-subtle)] transition-all",
+              isMobile 
+                ? "bottom-0 left-0 right-0 rounded-t-[32px] border-t pb-8 animate-slide-up"
+                : "rounded-2xl border"
+            )}
           >
+            {isMobile && (
+              <div className="w-12 h-1 bg-[var(--border-subtle)] rounded-full mx-auto mb-4" />
+            )}
             <p className="text-caption text-[var(--text-secondary)] text-center mb-3 font-medium">
               {selecting === "from" ? "¿Cuándo llegas?" : "¿Cuándo sales?"}
             </p>

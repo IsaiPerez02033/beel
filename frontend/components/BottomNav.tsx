@@ -83,7 +83,7 @@ export default function BottomNav() {
               key={tab.label}
               href={href}
               className={cn(
-                "flex flex-col items-center gap-1.5 flex-1 py-1 transition-colors",
+                "flex flex-col items-center gap-1.5 flex-1 py-1 transition-all duration-150 active:scale-[0.93] active:opacity-85",
                 active ? "text-[var(--color-primary)]" : "text-[var(--text-tertiary)]"
               )}
             >
