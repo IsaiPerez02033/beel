@@ -16,11 +16,13 @@ interface PropertyCardProps {
   property: Property;
   /** Para destacar en mapa (cuando el pin está activo) */
   highlighted?: boolean;
+  priority?: boolean;
 }
 
 export default function PropertyCard({
   property,
   highlighted = false,
+  priority = false,
 }: PropertyCardProps) {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [imgError, setImgError] = useState(false);
@@ -113,6 +115,7 @@ export default function PropertyCard({
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06] view-transition-img"
             style={{ viewTransitionName: `prop-img-${property.id}` } as React.CSSProperties}
+            priority={priority}
             onError={() => setImgError(true)}
           />
         ) : (

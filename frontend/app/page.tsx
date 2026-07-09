@@ -56,7 +56,7 @@ export default async function HomePage() {
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section
-        className="relative pt-14 pb-12 px-4 overflow-hidden"
+        className="relative pt-14 pb-12 px-4 overflow-hidden aurora-bg"
         style={{
           background: "var(--hero-gradient)",
         }}
@@ -158,8 +158,8 @@ export default async function HomePage() {
         <Suspense fallback={<PropertyGridSkeleton />}>
           {properties.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {properties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+              {properties.map((property, idx) => (
+                <PropertyCard key={property.id} property={property} priority={idx < 4} />
               ))}
             </div>
           ) : (
@@ -181,8 +181,8 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {experiences.map((e) => (
-              <ExperienceCard key={e.id} experience={e} />
+            {experiences.map((e, idx) => (
+              <ExperienceCard key={e.id} experience={e} priority={idx < 4} />
             ))}
           </div>
         </section>

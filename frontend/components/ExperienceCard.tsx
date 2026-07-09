@@ -34,7 +34,12 @@ export function formatDuration(min: number): string {
   return m ? `${h} h ${m} min` : `${h} h`;
 }
 
-export default function ExperienceCard({ experience }: { experience: Experience }) {
+interface ExperienceCardProps {
+  experience: Experience;
+  priority?: boolean;
+}
+
+export default function ExperienceCard({ experience, priority = false }: ExperienceCardProps) {
   const [imgError, setImgError] = useState(false);
   const router = useRouter();
   const cardRef = useRef<HTMLAnchorElement>(null);
@@ -90,6 +95,7 @@ export default function ExperienceCard({ experience }: { experience: Experience 
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06] view-transition-img"
             style={{ viewTransitionName: `exp-img-${experience.id}` } as React.CSSProperties}
+            priority={priority}
             onError={() => setImgError(true)}
           />
         ) : (
