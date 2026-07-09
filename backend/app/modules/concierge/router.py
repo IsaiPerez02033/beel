@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser
@@ -24,5 +24,11 @@ async def chat(
     db: AsyncSession = Depends(get_db),
 ):
     """Conversa con el Concierge de Beel. Requiere sesión (controla el gasto)."""
-    result = await service.chat(db, [m.model_dump() for m in body.messages])
-    return ConciergeChatOut(**result)
+    try:
+        result = await service.chat(db, [m.model_dump() for m in body.messages])
+        return ConciergeChatOut(**result)
+    except HTTPException:
+        raise
+    except Exception as e:  # DEBUG TEMPORAL: exponer la causa real para diagnosticar
+        logger.exception("Concierge error")
+        raise HTTPException(status_code=500, detail=f"Concierge: {type(e).__name__}: {str(e)[:300]}")
