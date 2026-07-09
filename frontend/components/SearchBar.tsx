@@ -149,6 +149,7 @@ export default function SearchBar({ compact = false, initialValues = {} }: Searc
             onChange={(e) => setDestino(e.target.value)}
             placeholder="¿A dónde vas?"
             className="text-body-sm text-[var(--text-primary)] bg-transparent outline-none w-28 placeholder:text-[var(--text-tertiary)]"
+            style={{ border: "none", outline: "none", background: "transparent", boxShadow: "none" }}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             onFocus={() => suggestions.length && setShowSug(true)}
             onBlur={() => setTimeout(() => setShowSug(false), 150)}
@@ -192,6 +193,7 @@ export default function SearchBar({ compact = false, initialValues = {} }: Searc
             onChange={(e) => setDestino(e.target.value)}
             placeholder="Destino o ciudad"
             className="search-bar-value bg-transparent outline-none w-full sm:text-left text-center"
+            style={{ border: "none", outline: "none", background: "transparent", boxShadow: "none" }}
             onFocus={() => { setActiveField("destino"); if (suggestions.length) setShowSug(true); }}
             onBlur={() => { setActiveField(null); setTimeout(() => setShowSug(false), 150); }}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
