@@ -78,7 +78,9 @@ export default function ConciergePage() {
   }, [isLoaded, isSignedIn, router]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 0 || loading) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, loading]);
 
   // Consolidar alojamientos y experiencias para el mapa
@@ -157,7 +159,7 @@ export default function ConciergePage() {
             )}
 
             {/* Conversación */}
-            <div className="space-y-6 flex-1">
+            <div className="space-y-6">
               {messages.map((m, i) => {
                 const isLatestAssistant = m.role === "assistant" && i === messages.length - 1;
                 const isStreamComplete = completedStreaming[i] || !isLatestAssistant;
