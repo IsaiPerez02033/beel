@@ -5,6 +5,7 @@ import { MapPin, Home } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
+import ScrollReveal from "@/components/ScrollReveal";
 import EmptyIllustration from "@/components/EmptyIllustration";
 import SearchFilters from "@/components/SearchFilters";
 import type { Property, SearchParams } from "@/types";
@@ -107,7 +108,9 @@ export default async function BuscarPage({ searchParams }: PageProps) {
         {properties.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
             {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <ScrollReveal key={property.id}>
+                <PropertyCard property={property} />
+              </ScrollReveal>
             ))}
           </div>
         ) : params.destino ? (

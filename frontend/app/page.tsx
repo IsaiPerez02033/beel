@@ -7,6 +7,7 @@ import HeroSection from "@/components/HeroSection";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
 import ExperienceCard from "@/components/ExperienceCard";
 import ExploreTabs from "@/components/ExploreTabs";
+import ScrollReveal from "@/components/ScrollReveal";
 import { Suspense } from "react";
 import { Shield, Star, MessageCircle, Sparkles } from "lucide-react";
 
@@ -76,7 +77,9 @@ export default async function HomePage() {
           {properties.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
               {properties.map((property, idx) => (
-                <PropertyCard key={property.id} property={property} priority={idx < 4} />
+                <ScrollReveal key={property.id}>
+                  <PropertyCard property={property} priority={idx < 4} />
+                </ScrollReveal>
               ))}
             </div>
           ) : (
@@ -99,7 +102,9 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
             {experiences.map((e, idx) => (
-              <ExperienceCard key={e.id} experience={e} priority={idx < 4} />
+              <ScrollReveal key={e.id}>
+                <ExperienceCard experience={e} priority={idx < 4} />
+              </ScrollReveal>
             ))}
           </div>
         </section>
