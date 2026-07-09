@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     MERCADOPAGO_ACCESS_TOKEN: Optional[str] = None
     MERCADOPAGO_PUBLIC_KEY: Optional[str] = None
     MERCADOPAGO_WEBHOOK_SECRET: Optional[str] = None
-    PLATFORM_FEE_PERCENTAGE: float = 6.0  # Tarifa de servicio al huesped: ~4% cubre MercadoPago, ~2% Beel
+    PLATFORM_FEE_PERCENTAGE: float = 10.0  # Tarifa de servicio al huesped. ~4% se va en MercadoPago; el resto (~4-5% neto tras IVA) es el margen de Beel. Sigue por debajo de Airbnb (~14%).
 
     # ── Impuestos del hospedaje (modelo Airbnb: IVA sumado al huesped) ────────
     LODGING_IVA_PERCENTAGE: float = 16.0      # IVA del hospedaje, se suma al huesped
