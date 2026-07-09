@@ -81,16 +81,16 @@ const config: Config = {
       fontSize: {
         // Escala tipográfica de Beel
         // [tamaño, { lineHeight, letterSpacing? }]
-        "display":   ["28px", { lineHeight: "1.2",  fontWeight: "500" }],
-        "h1":        ["22px", { lineHeight: "1.3",  fontWeight: "500" }],
-        "h2":        ["17px", { lineHeight: "1.35", fontWeight: "500" }],
-        "h3":        ["15px", { lineHeight: "1.4",  fontWeight: "500" }],
-        "body-lg":   ["15px", { lineHeight: "1.6" }],
-        "body":      ["14px", { lineHeight: "1.6" }],
-        "body-sm":   ["13px", { lineHeight: "1.5" }],
-        "caption":   ["12px", { lineHeight: "1.5" }],
-        "caption-sm":["11px", { lineHeight: "1.4" }],
-        "micro":     ["10px", { lineHeight: "1.4" }],
+        "display":   ["2rem",      { lineHeight: "1.15", fontWeight: "500" }],
+        "h1":        ["1.6875rem", { lineHeight: "1.2",  fontWeight: "500" }],
+        "h2":        ["1.3125rem", { lineHeight: "1.3",  fontWeight: "500" }],
+        "h3":        ["1.125rem",  { lineHeight: "1.4",  fontWeight: "500" }],
+        "body-lg":   ["1.0625rem", { lineHeight: "1.6" }],
+        "body":      ["0.9375rem", { lineHeight: "1.6" }],
+        "body-sm":   ["0.8125rem", { lineHeight: "1.5" }],
+        "caption":   ["0.75rem",   { lineHeight: "1.5" }],
+        "caption-sm":["0.6875rem", { lineHeight: "1.4" }],
+        "micro":     ["0.625rem",  { lineHeight: "1.4" }],
       },
 
       // ── Espaciado (base 4px — documentado) ───────────────────────────────

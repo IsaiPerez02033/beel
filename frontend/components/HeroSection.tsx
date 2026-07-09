@@ -94,8 +94,8 @@ export default function HeroSection() {
 
       <div className="max-w-4xl mx-auto text-center relative">
         <h1
-          className="font-bold text-[var(--text-primary)] mb-3 leading-tight animate-fade-in"
-          style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 4vw, 40px)", letterSpacing: "-0.02em" }}
+          className="font-bold text-[var(--text-primary)] mb-3 leading-[1.08] animate-fade-in"
+          style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-hero)", letterSpacing: "-0.025em", textWrap: "balance" }}
         >
           Tu próxima escapada en{" "}
           <span className="relative inline-block">
