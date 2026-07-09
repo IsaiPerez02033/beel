@@ -143,23 +143,61 @@ export default function RegistroPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">Nombre completo</label>
-              <input type="text" className="input w-full" placeholder="Tu nombre" value={fullName} onChange={(e) => setFullName(e.target.value)} required autoComplete="name" style={{ fontSize: "16px" }} />
+            <div className="floating-field">
+              <input
+                type="text"
+                placeholder=" "
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                autoComplete="name"
+                style={{ fontSize: "16px" }}
+              />
+              <label>Nombre completo</label>
             </div>
-            <div>
-              <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">Correo electrónico</label>
-              <input type="email" className="input w-full" placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" style={{ fontSize: "16px" }} />
+            <div className="floating-field">
+              <input
+                type="email"
+                placeholder=" "
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                style={{ fontSize: "16px" }}
+              />
+              <label>Correo electrónico</label>
             </div>
-            <div>
-              <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">Contraseña</label>
-              <input type="password" className="input w-full" placeholder="Mínimo 8 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="new-password" style={{ fontSize: "16px" }} />
+            <div className="floating-field">
+              <input
+                type="password"
+                placeholder=" "
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                autoComplete="new-password"
+                style={{ fontSize: "16px" }}
+              />
+              <label>Contraseña (mínimo 8 caracteres)</label>
             </div>
-            <div>
-              <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">Confirmar contraseña</label>
-              <input type="password" className="input w-full" placeholder="Repite tu contraseña" value={confirm} onChange={(e) => setConfirm(e.target.value)} required autoComplete="new-password" style={{ fontSize: "16px" }} />
+            <div className="floating-field">
+              <input
+                type="password"
+                placeholder=" "
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                minLength={8}
+                autoComplete="new-password"
+                style={{ fontSize: "16px" }}
+              />
+              <label>Confirmar contraseña</label>
             </div>
-            <button type="submit" disabled={loading} className="btn btn-primary w-full flex items-center justify-center gap-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold shadow-md"
+            >
               {loading ? <><Loader2 size={16} className="animate-spin" /> Creando cuenta…</> : "Crear cuenta"}
             </button>
           </form>

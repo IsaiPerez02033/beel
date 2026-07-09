@@ -869,3 +869,52 @@ input, textarea, select {
 .group:hover .parallax-img {
   transform: translateY(var(--parallax-y, 0px)) scale(1.10) !important;
 }
+
+/* ── Floating Labels ── */
+.floating-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.floating-field input {
+  padding: 20px 12px 6px 12px !important;
+  height: 52px !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--border-strong) !important;
+  background: var(--bg-elevated) !important;
+  outline: none !important;
+  font-size: var(--text-body) !important;
+  color: var(--text-primary) !important;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+.floating-field label {
+  position: absolute;
+  left: 12px;
+  top: 15px;
+  font-size: var(--text-body-sm);
+  color: var(--text-tertiary);
+  pointer-events: none;
+  transition: transform var(--transition-normal), font-size var(--transition-normal), color var(--transition-normal);
+  transform-origin: left top;
+}
+
+/* Cuando enfoca o tiene texto, el label sube y se hace pequeño */
+.floating-field input:focus ~ label,
+.floating-field input:not(:placeholder-shown) ~ label {
+  transform: translateY(-8px) scale(0.8) !important;
+  color: var(--color-primary) !important;
+}
+
+.floating-field input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--color-primary-light) !important;
+}
+
+/* Validación interactiva nativa (:user-invalid) */
+.floating-field input:user-invalid {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 0 2px var(--color-error-light) !important;
+}
+.floating-field input:user-invalid ~ label {
+  color: var(--color-error) !important;
+}

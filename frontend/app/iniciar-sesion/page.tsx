@@ -120,15 +120,35 @@ export default function IniciarSesionPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">Correo electrónico</label>
-              <input type="email" className="input w-full" placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" style={{ fontSize: "16px" }} />
+            <div className="floating-field">
+              <input
+                type="email"
+                placeholder=" "
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                style={{ fontSize: "16px" }}
+              />
+              <label>Correo electrónico</label>
             </div>
-            <div>
-              <label className="block text-body-sm font-medium text-[var(--text-primary)] mb-1.5">Contraseña</label>
-              <input type="password" className="input w-full" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" style={{ fontSize: "16px" }} />
+            <div className="floating-field">
+              <input
+                type="password"
+                placeholder=" "
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                style={{ fontSize: "16px" }}
+              />
+              <label>Contraseña</label>
             </div>
-            <button type="submit" disabled={loading} className="btn btn-primary w-full flex items-center justify-center gap-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold shadow-md"
+            >
               {loading ? <><Loader2 size={16} className="animate-spin" /> Entrando…</> : "Iniciar sesión"}
             </button>
           </form>

@@ -130,7 +130,8 @@ export default function ExperienceDetailPage() {
                   fill 
                   className={cn("object-cover", i === 0 ? "parallax-img" : "group-hover:scale-[1.03] transition-transform duration-500 ease-out")} 
                   style={i === 0 ? ({ "--parallax-y": `${Math.min(scrollY * 0.12, 80)}px` } as React.CSSProperties) : undefined}
-                  sizes="(max-width:640px) 100vw, 50vw" 
+                  sizes="(max-width:640px) 100vw, 50vw"
+                  priority={i === 0}
                 />
               </div>
             ))}

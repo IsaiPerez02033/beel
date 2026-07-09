@@ -152,6 +152,9 @@ export default function MensajesPage() {
   const [loadingReservation, setLoadingReservation] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [hasNewMessages, setHasNewMessages] = useState(false);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
@@ -255,10 +258,35 @@ export default function MensajesPage() {
     },
   });
 
+  const handleScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+    setIsNearBottom(nearBottom);
+    if (nearBottom) {
+      setHasNewMessages(false);
+    }
+  };
+
   // Auto-scroll al fondo al recibir mensajes
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, otherTyping]);
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 250;
+    
+    if (nearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      setHasNewMessages(false);
+    } else {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.sender_id === localUserId) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        setHasNewMessages(false);
+      } else {
+        setHasNewMessages(true);
+      }
+    }
+  }, [messages, otherTyping, localUserId]);
 
   // Limpiar indicador "escribiendo" al cambiar de conversación
   useEffect(() => {
@@ -587,7 +615,11 @@ export default function MensajesPage() {
               </div>
 
               {/* Contenedor de Mensajes */}
-              <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 bg-[var(--bg-elevated)]">
+              <div 
+                ref={messagesContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 bg-[var(--bg-elevated)] relative"
+              >
                 {renderMessages()}
                 {otherTyping && (
                   <div className="flex items-center gap-1.5 mt-2 ml-1">
@@ -599,6 +631,17 @@ export default function MensajesPage() {
                   </div>
                 )}
                 <div ref={messagesEndRef} />
+                {hasNewMessages && (
+                  <button
+                    onClick={() => {
+                      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                      setHasNewMessages(false);
+                    }}
+                    className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-4 py-2 rounded-full bg-[var(--color-primary)] text-white font-medium text-body-sm shadow-lg hover:scale-105 active:scale-95 transition-transform animate-bounce"
+                  >
+                    <span>Nuevos mensajes ↓</span>
+                  </button>
+                )}
               </div>
 
               {/* Barra de reply */}

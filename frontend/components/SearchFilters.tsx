@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TIPOS = [
@@ -18,6 +18,50 @@ export default function SearchFilters() {
   const tipoActual = searchParams.get("tipo");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  // Estados locales para los filtros del popover
+  const [localMascotas, setLocalMascotas] = useState(false);
+  const [localReservaInmediata, setLocalReservaInmediata] = useState(false);
+  const [count, setCount] = useState<number | null>(null);
+  const [loadingCount, setLoadingCount] = useState(false);
+
+  // Sincronizar estados locales cuando se abre el popover
+  useEffect(() => {
+    if (filtersOpen) {
+      setLocalMascotas(searchParams.get("mascotas") === "true");
+      setLocalReservaInmediata(searchParams.get("reserva_inmediata") === "true");
+    }
+  }, [filtersOpen, searchParams]);
+
+  // Consulta dinámica en segundo plano con Debounce (250ms)
+  useEffect(() => {
+    if (!filtersOpen) return;
+    setLoadingCount(true);
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const query = new URLSearchParams(searchParams.toString());
+        if (localMascotas) query.set("mascotas", "true"); else query.delete("mascotas");
+        if (localReservaInmediata) query.set("instant_booking", "true"); else query.delete("reserva_inmediata");
+        query.set("status", "active");
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || ""}/api/v1/properties/search?${query.toString()}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setCount(data.total ?? 0);
+        } else {
+          setCount(null);
+        }
+      } catch {
+        setCount(null);
+      } finally {
+        setLoadingCount(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(delayDebounce);
+  }, [localMascotas, localReservaInmediata, filtersOpen, searchParams]);
+
   function setTipo(tipo: string) {
     const params = new URLSearchParams(searchParams.toString());
     if (params.get("tipo") === tipo) {
@@ -28,14 +72,12 @@ export default function SearchFilters() {
     router.push(`/buscar?${params.toString()}`);
   }
 
-  function updateFilter(key: string, value: string) {
+  function applyFilters() {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
+    if (localMascotas) params.set("mascotas", "true"); else params.delete("mascotas");
+    if (localReservaInmediata) params.set("reserva_inmediata", "true"); else params.delete("reserva_inmediata");
     router.push(`/buscar?${params.toString()}`);
+    setFiltersOpen(false);
   }
 
   return (
@@ -68,35 +110,53 @@ export default function SearchFilters() {
       </button>
 
       {filtersOpen && (
-        <div className="absolute top-full mt-2 left-0 right-0 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl p-4 shadow-lg z-[var(--z-dropdown)]">
+        <div className="absolute top-full mt-2 left-0 right-0 md:left-auto md:w-72 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl p-4 shadow-lg z-[var(--z-dropdown)]">
           <div className="flex items-center justify-between mb-3">
             <span className="text-body font-semibold text-[var(--text-primary)]">Filtros</span>
             <button
               onClick={() => setFiltersOpen(false)}
               className="p-1 rounded hover:bg-[var(--bg-subtle)]"
+              aria-label="Cerrar"
             >
               <X size={16} />
             </button>
           </div>
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-body-sm text-[var(--text-secondary)] cursor-pointer">
+          <div className="space-y-4">
+            <label className="flex items-center gap-2 text-body-sm text-[var(--text-secondary)] cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={searchParams.get("mascotas") === "true"}
-                onChange={(e) => updateFilter("mascotas", e.target.checked ? "true" : "")}
-                className="rounded"
+                checked={localMascotas}
+                onChange={(e) => setLocalMascotas(e.target.checked)}
+                className="rounded text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
               />
               Admite mascotas
             </label>
-            <label className="flex items-center gap-2 text-body-sm text-[var(--text-secondary)] cursor-pointer">
+            <label className="flex items-center gap-2 text-body-sm text-[var(--text-secondary)] cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={searchParams.get("reserva_inmediata") === "true"}
-                onChange={(e) => updateFilter("reserva_inmediata", e.target.checked ? "true" : "")}
-                className="rounded"
+                checked={localReservaInmediata}
+                onChange={(e) => setLocalReservaInmediata(e.target.checked)}
+                className="rounded text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
               />
               Reserva inmediata
             </label>
+
+            <button
+              onClick={applyFilters}
+              disabled={loadingCount}
+              className="w-full btn btn-primary py-2 text-body-sm flex items-center justify-center gap-2 mt-2 transition-all disabled:opacity-60"
+            >
+              {loadingCount ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Calculando...</span>
+                </>
+              ) : (
+                <span>
+                  {count !== null ? `Ver ${count} alojamientos` : "Aplicar filtros"}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       )}
