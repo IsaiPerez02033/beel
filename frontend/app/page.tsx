@@ -8,7 +8,7 @@ import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
 import ExperienceCard from "@/components/ExperienceCard";
 import ExploreTabs from "@/components/ExploreTabs";
 import { Suspense } from "react";
-import { Shield, Star, MessageCircle } from "lucide-react";
+import { Shield, Star, MessageCircle, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Beel — Hospedajes únicos en México",
@@ -129,6 +129,14 @@ export default async function HomePage() {
           </p>
 
           <SearchBar />
+
+          <Link
+            href="/concierge"
+            className="inline-flex items-center gap-2 mt-5 px-4 py-2 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-default)] text-body-sm font-medium text-[var(--text-primary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors shadow-sm"
+          >
+            <Sparkles size={15} className="text-[var(--color-primary)]" />
+            ¿No sabes a dónde ir? Planéalo con el Concierge IA
+          </Link>
         </div>
       </section>
 

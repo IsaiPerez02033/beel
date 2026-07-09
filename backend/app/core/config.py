@@ -89,6 +89,10 @@ class Settings(BaseSettings):
     IVA_RETENTION_WITH_RFC: float = 8.0       # % IVA si registro RFC (50% del IVA)
     IVA_RETENTION_WITHOUT_RFC: float = 16.0   # % IVA sin RFC (100%)
 
+    # ── Concierge (IA) ────────────────────────────────────────────────────────
+    ANTHROPIC_API_KEY: Optional[str] = None
+    CONCIERGE_MODEL: str = "claude-haiku-4-5"  # barato, buen español, tool use nativo
+
     # ── Stripe ───────────────────────────────────────────────────────────────
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_PUBLISHABLE_KEY: Optional[str] = None

@@ -39,6 +39,7 @@ from app.modules.experiences.social_router import (
     favorites_router as experience_favorites_router,
     reviews_router as experience_reviews_router,
 )
+from app.modules.concierge.router import router as concierge_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -150,6 +151,7 @@ app.include_router(favorites_router, prefix=f"{API_PREFIX}/favorites", tags=["fa
 app.include_router(experiences_router, prefix=f"{API_PREFIX}/experiences", tags=["experiences"])
 app.include_router(experience_favorites_router, prefix=f"{API_PREFIX}/experience-favorites", tags=["experiences"])
 app.include_router(experience_reviews_router, prefix=f"{API_PREFIX}/experience-reviews", tags=["experiences"])
+app.include_router(concierge_router, prefix=f"{API_PREFIX}/concierge", tags=["concierge"])
 
 
 # ── Root ────────────────────────────────────────────────────────────────────────
