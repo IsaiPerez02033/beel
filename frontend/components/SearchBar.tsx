@@ -16,6 +16,7 @@ interface SearchBarProps {
     checkOut?: string;
     huespedes?: number;
   };
+  onSearchSuccess?: () => void;
 }
 
 interface GeoSuggestion {
@@ -26,7 +27,7 @@ interface GeoSuggestion {
   lng: number;
 }
 
-export default function SearchBar({ compact = false, initialValues = {} }: SearchBarProps) {
+export default function SearchBar({ compact = false, initialValues = {}, onSearchSuccess }: SearchBarProps) {
   const router = useRouter();
   const destinoInputRef = useRef<HTMLInputElement>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -100,6 +101,7 @@ export default function SearchBar({ compact = false, initialValues = {} }: Searc
     if (checkOut) params.set("check_out", checkOut);
     if (huespedes > 1) params.set("huespedes", String(huespedes));
     router.push(`/buscar?${params.toString()}`);
+    if (onSearchSuccess) onSearchSuccess();
   }
 
   const dropdown =

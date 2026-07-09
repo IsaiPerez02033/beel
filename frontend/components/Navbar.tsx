@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useSafeAuth";
 import dynamic from "next/dynamic";
+import SearchBar from "./SearchBar";
 
 // NavbarAuth y NavbarAuthMobile se cargan SOLO en el cliente (ssr: false).
 // Esto elimina cualquier error de auth durante SSR o hidratación.
@@ -29,6 +30,12 @@ export default function Navbar({ transparent = false }: NavbarProps) {
   const isHostArea = pathname.startsWith("/anfitrion") || pathname.startsWith("/p/nueva") || pathname.includes("/editar");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isSignedIn } = useAuth();
+  const [searchExpanded, setSearchExpanded] = useState(false);
+
+  // Cerrar el buscador expandido si la ruta cambia
+  useEffect(() => {
+    setSearchExpanded(false);
+  }, [pathname]);
 
   // En la home, la barra compacta del navbar aparece SOLO al scrollear
   // (cuando la barra grande del hero ya salió de vista). En otras páginas
@@ -41,13 +48,24 @@ export default function Navbar({ transparent = false }: NavbarProps) {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome]);
+
+  // Cerrar con Escape
+  useEffect(() => {
+    if (!searchExpanded) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchExpanded(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [searchExpanded]);
+
   const showSearch = !isHome || scrolled;
 
   return (
     <header
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-300",
-        transparent && isHome
+        transparent && isHome && !searchExpanded
           ? "bg-transparent"
           : "navbar-glass border-b border-[var(--border-subtle)]"
       )}
@@ -79,11 +97,11 @@ export default function Navbar({ transparent = false }: NavbarProps) {
 
         {/* Barra de búsqueda — centrada (oculta en el área de anfitrión) */}
         <div className="hidden md:flex items-center justify-center gap-1 flex-shrink-0">
-          {!isHostArea && (
-            <Link
-              href="/buscar"
+          {!isHostArea && !searchExpanded && (
+            <button
+              onClick={() => setSearchExpanded(true)}
               className={cn(
-                "group flex items-center rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-all duration-300 py-1.5 pl-2 pr-1.5",
+                "group flex items-center rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-all duration-300 py-1.5 pl-2 pr-1.5 bg-[var(--bg-elevated)]/80 backdrop-blur-sm",
                 showSearch
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 -translate-y-2 pointer-events-none"
@@ -103,7 +121,18 @@ export default function Navbar({ transparent = false }: NavbarProps) {
               <span className="ml-1 w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Search size={15} strokeWidth={2.5} />
               </span>
-            </Link>
+            </button>
+          )}
+
+          {!isHostArea && searchExpanded && (
+            <div className="hidden md:flex items-center gap-6 animate-fade-in">
+              <span className="text-body-sm font-semibold text-[var(--text-primary)] border-b-2 border-[var(--text-primary)] pb-1 cursor-pointer">
+                Alojamientos
+              </span>
+              <span className="text-body-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] pb-1 cursor-pointer transition-colors">
+                Experiencias
+              </span>
+            </div>
           )}
         </div>
 
@@ -127,11 +156,28 @@ export default function Navbar({ transparent = false }: NavbarProps) {
         </div>
       </nav>
 
+      {/* Buscador expandido (segunda fila) */}
+      {searchExpanded && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-5 pt-2 z-50 relative animate-slide-down">
+          <div className="w-full max-w-3xl mx-auto">
+            <SearchBar onSearchSuccess={() => setSearchExpanded(false)} />
+          </div>
+        </div>
+      )}
+
       {/* Menú móvil */}
       {mobileOpen && (
         <div className="md:hidden border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-4 py-4">
           <NavbarAuthMobile onClose={() => setMobileOpen(false)} />
         </div>
+      )}
+
+      {/* Backdrop transparente tipo Airbnb */}
+      {searchExpanded && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-fade-in"
+          onClick={() => setSearchExpanded(false)}
+        />
       )}
     </header>
   );
