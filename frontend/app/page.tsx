@@ -106,7 +106,7 @@ export default async function HomePage() {
       )}
 
       <section className="py-24 px-4 mt-0" style={{
-        background: "linear-gradient(180deg, var(--bg-base) 0%, var(--color-arena) 100%)"
+        background: "linear-gradient(180deg, var(--bg-base) 0%, var(--bg-subtle) 100%)"
       }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -140,33 +140,31 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden" style={{
-        background: "linear-gradient(180deg, var(--color-arena) 0%, var(--color-primary) 120px, var(--color-primary) 100%)"
-      }}>
+      <section className="relative overflow-hidden bg-[var(--bg-subtle)] border-t border-[var(--border-subtle)]">
         <div
           className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(120% 110% at 50% -25%, rgba(255,255,255,0.16), transparent 55%)" }}
+          style={{ background: "radial-gradient(circle at 50% 50%, rgba(20,122,92,0.12) 0%, transparent 65%)" }}
         />
         <div className="relative max-w-3xl mx-auto px-4 py-16 sm:py-20 text-center">
           <h2
-            className="font-display font-semibold text-white mb-3"
+            className="font-display font-semibold text-[var(--text-primary)] mb-3"
             style={{ fontSize: "clamp(1.75rem, 1.2rem + 2vw, 2.75rem)", letterSpacing: "-0.02em", textWrap: "balance" }}
           >
             Tu espacio también puede ser el hogar de alguien
           </h2>
-          <p className="text-body-lg text-white/85 max-w-lg mx-auto mb-8">
+          <p className="text-body-lg text-[var(--text-secondary)] max-w-lg mx-auto mb-8">
             Publica en minutos, recibe huéspedes verificados y quédate con el 100% de lo que ganas.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/ser-anfitrion"
-              className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-white text-[var(--color-primary)] font-semibold shadow-lg hover:scale-[1.03] active:scale-95 transition-transform"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-[var(--color-primary)] text-white font-semibold shadow-md hover:bg-[var(--color-primary-dark)] hover:scale-[1.03] active:scale-95 transition-all"
             >
               Publicar mi espacio
             </Link>
             <Link
               href="/buscar"
-              className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-white/40 text-white font-medium hover:bg-white/10 transition-colors"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-[var(--border-default)] text-[var(--text-primary)] font-medium hover:bg-[var(--bg-subtle)] transition-colors"
             >
               Explorar hospedajes
             </Link>
