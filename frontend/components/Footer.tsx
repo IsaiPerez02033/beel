@@ -39,7 +39,7 @@ interface FooterProps {
 export default function Footer({ className }: FooterProps) {
   const year = new Date().getFullYear();
   return (
-    <footer className={cn("bg-[var(--bg-subtle)] border-t border-[var(--border-subtle)] mt-16", className)}>
+    <footer className={cn("bg-[var(--bg-subtle)] border-t border-[var(--border-subtle)] mt-16 hidden md:block", className)}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Columnas */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">

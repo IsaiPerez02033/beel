@@ -110,6 +110,9 @@ export default function CuentaPage() {
           <MenuRow href="/anfitrion/configuracion?seccion=perfil" icon={<UserIcon size={18} />} label="Información personal" />
           <MenuRow href="/anfitrion/configuracion?seccion=seguridad" icon={<Settings size={18} />} label="Configuración y seguridad" />
           <MenuRow href="/ayuda" icon={<HelpCircle size={18} />} label="Centro de ayuda" />
+          <MenuRow href="/como-funciona" icon={<Briefcase size={18} />} label="Cómo funciona Beel" />
+          <MenuRow href="/terminos" icon={<ShieldCheck size={18} />} label="Términos de servicio" />
+          <MenuRow href="/privacidad" icon={<ShieldCheck size={18} />} label="Aviso de privacidad" />
           {isAdmin && (
             <MenuRow href="/admin" icon={<BadgeCheck size={18} />} label="Panel de administrador" highlight />
           )}
