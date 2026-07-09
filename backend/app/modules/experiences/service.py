@@ -143,9 +143,14 @@ async def set_moderation_status(
     return await get_experience(db, exp.id)
 
 
-async def list_pending(db: AsyncSession) -> list[Experience]:
+async def list_pending(db: AsyncSession, status_filter: str = "pending_review") -> list[Experience]:
+    order = (
+        Experience.created_at.asc()
+        if status_filter == "pending_review"
+        else Experience.created_at.desc()
+    )
     result = await db.execute(
-        _base_query().where(Experience.status == "pending_review").order_by(Experience.created_at.asc())
+        _base_query().where(Experience.status == status_filter).order_by(order)
     )
     return list(result.scalars().all())
 

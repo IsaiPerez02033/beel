@@ -163,10 +163,16 @@ export default function AdminPage() {
               <span className="hidden sm:inline">Actualizar</span>
             </button>
           </div>
-          <Link href="/admin/propiedades" className="btn btn-primary flex items-center gap-2 mt-3 w-full sm:w-auto justify-center sm:justify-start">
-            <ShieldCheck size={15} />
-            Moderar propiedades
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-2 mt-3">
+            <Link href="/admin/propiedades" className="btn btn-primary flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
+              <ShieldCheck size={15} />
+              Moderar propiedades
+            </Link>
+            <Link href="/admin/experiencias" className="btn btn-outline flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
+              <ShieldCheck size={15} />
+              Moderar experiencias
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}

@@ -36,8 +36,14 @@ async def _require_admin(current_user: CurrentUser, db: AsyncSession = Depends(g
 # ── Admin ──────────────────────────────────────────────────────────────────────
 
 @router.get("/admin/pending", response_model=list[ExperienceCardOut])
-async def admin_pending(admin_user=Depends(_require_admin), db: AsyncSession = Depends(get_db)):
-    return await service.list_pending(db)
+async def admin_pending(
+    status_filter: str = "pending_review",
+    admin_user=Depends(_require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    if status_filter not in ("pending_review", "active", "suspended"):
+        status_filter = "pending_review"
+    return await service.list_pending(db, status_filter)
 
 
 @router.post("/{experience_id}/approve", response_model=ExperienceOut)
