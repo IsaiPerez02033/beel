@@ -178,15 +178,15 @@ export default function ConciergePage() {
             rows={1}
             placeholder="Escribe tu viaje ideal…"
             className="flex-1 resize-none bg-transparent outline-none px-2 py-2 text-body-sm max-h-32"
-            style={{ fontSize: "16px" }}
+            style={{ border: "none", outline: "none", background: "transparent", boxShadow: "none", fontSize: "16px" }}
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="btn btn-primary w-10 h-10 flex items-center justify-center flex-shrink-0 disabled:opacity-40 p-0"
+            className="flex-shrink-0 w-10 h-10 rounded-xl bg-[var(--color-accent)] text-[#2C2C2A] flex items-center justify-center hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 shadow-sm"
             aria-label="Enviar"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} className="-mr-[1px] -mt-[1px]" strokeWidth={2.5} />}
           </button>
         </form>
         <p className="text-center text-micro text-[var(--text-tertiary)] mt-2">

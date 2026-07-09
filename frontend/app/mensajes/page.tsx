@@ -700,7 +700,7 @@ export default function MensajesPage() {
                     }}
                     placeholder="Escribe un mensaje..."
                     rows={1}
-                    style={{ fontSize: "16px" }} // Evita zoom en iOS (mínimo 16px)
+                    style={{ border: "none", outline: "none", background: "transparent", boxShadow: "none", fontSize: "16px" }}
                     className="w-full resize-none outline-none border-none placeholder-neutral-400 bg-transparent text-[var(--text-primary)] py-0.5 max-h-[120px] focus:ring-0 leading-relaxed"
                     disabled={sending}
                   />
