@@ -681,7 +681,7 @@ export default function MensajesPage() {
 
               {/* Caja de Input */}
               <div className="px-3 sm:px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex-shrink-0 safe-area-bottom">
-                <div className="relative border border-[var(--border-subtle)] focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] rounded-3xl py-2 pl-4 pr-2 transition-all bg-[var(--bg-subtle)] max-w-3xl mx-auto flex items-end gap-2 shadow-sm">
+                <div className="relative border border-[var(--border-subtle)] focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] rounded-3xl py-2 pl-4 pr-2 transition-all bg-[var(--bg-subtle)] max-w-3xl mx-auto flex items-center gap-2 shadow-sm">
                   <textarea
                     value={input}
                     onChange={(e) => {
@@ -701,7 +701,7 @@ export default function MensajesPage() {
                     placeholder="Escribe un mensaje..."
                     rows={1}
                     style={{ border: "none", outline: "none", background: "transparent", boxShadow: "none", fontSize: "16px" }}
-                    className="w-full resize-none outline-none border-none placeholder-neutral-400 bg-transparent text-[var(--text-primary)] py-0.5 max-h-[120px] focus:ring-0 leading-relaxed"
+                    className="w-full resize-none outline-none border-none placeholder-neutral-400 bg-transparent text-[var(--text-primary)] py-1 max-h-[120px] focus:ring-0 leading-relaxed"
                     disabled={sending}
                   />
                   <button
