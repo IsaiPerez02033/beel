@@ -29,6 +29,9 @@ async def chat(
         return ConciergeChatOut(**result)
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:  # DEBUG TEMPORAL: exponer la causa real
         logger.exception("Concierge error")
-        raise HTTPException(status_code=502, detail="El Concierge no está disponible en este momento. Intenta de nuevo.")
+        import traceback
+        tb = traceback.format_exc().splitlines()
+        where = tb[-2] if len(tb) >= 2 else ""
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)[:200]} @ {where[-160:]}")
