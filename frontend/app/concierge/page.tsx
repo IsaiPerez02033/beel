@@ -69,7 +69,7 @@ export default function ConciergePage() {
   }
 
   return (
-    <div className="h-[100dvh] bg-[var(--bg-base)] flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-[var(--bg-base)] flex flex-col overflow-hidden aurora-bg">
       <Navbar />
 
       {/* Área de conversación (único scroll) */}
