@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CurrencySwitcher from "@/components/CurrencySwitcher";
+import { cn } from "@/lib/utils";
 
 const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -31,10 +32,14 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
   },
 ];
 
-export default function Footer() {
+interface FooterProps {
+  className?: string;
+}
+
+export default function Footer({ className }: FooterProps) {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-[var(--bg-subtle)] border-t border-[var(--border-subtle)] mt-16">
+    <footer className={cn("bg-[var(--bg-subtle)] border-t border-[var(--border-subtle)] mt-16", className)}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Columnas */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8">

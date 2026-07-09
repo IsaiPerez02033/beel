@@ -172,7 +172,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <Footer />
+      <Footer className="mt-0" />
     </div>
   );
 }
