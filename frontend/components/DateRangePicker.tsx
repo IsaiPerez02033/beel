@@ -186,13 +186,13 @@ export default function DateRangePicker({
               )}
             >
               <span className="search-bar-label">Salida</span>
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-center gap-2 relative w-full">
                 <span className={cn("search-bar-value", checkOut && "text-[var(--text-primary)] font-medium")}>
                   {fmtDisplay(checkOut) ?? "Añadir fecha"}
                 </span>
                 {(checkIn || checkOut) && (
                   <button type="button" onClick={(e) => { e.stopPropagation(); clear(); }}
-                    className="text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors flex-shrink-0">
+                    className="absolute right-0 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors flex-shrink-0">
                     <X size={12} />
                   </button>
                 )}
