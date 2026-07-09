@@ -159,7 +159,7 @@ export default function PropertyGallery({ photos, title, propertyId }: PropertyG
         {photos.length > 1 && (
           <button
             onClick={() => openLightbox(0)}
-            className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 text-[var(--text-primary)] text-body-sm font-medium shadow-md hover:scale-[1.03] active:scale-95 transition-transform"
+            className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 text-[#2C2C2A] text-body-sm font-medium shadow-md hover:scale-[1.03] active:scale-95 transition-transform"
           >
             <LayoutGrid size={15} /> Ver todas las fotos ({photos.length})
           </button>
