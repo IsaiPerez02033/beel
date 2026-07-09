@@ -25,6 +25,14 @@ export default function HeroSection() {
         }}
       />
 
+      {/* Desvanecimiento inferior suave hacia el color de fondo base (var(--bg-base)) */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+        style={{
+          background: "linear-gradient(to top, var(--bg-base) 0%, transparent 100%)",
+        }}
+      />
+
       {/* Contenido */}
       <div className="relative max-w-4xl mx-auto text-center px-4 pt-24 pb-20 sm:pt-32 sm:pb-24">
         <h1

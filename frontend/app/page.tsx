@@ -105,8 +105,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Señales de confianza ───────────────────────────────────────────── */}
-      <section className="py-20 px-4 mt-4" style={{
+      <section className="py-24 px-4 mt-0" style={{
         background: "linear-gradient(180deg, var(--bg-base) 0%, var(--color-arena) 100%)"
       }}>
         <div className="max-w-5xl mx-auto">
@@ -141,8 +140,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA de cierre — banda de marca ─────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: "var(--color-primary)" }}>
+      <section className="relative overflow-hidden" style={{
+        background: "linear-gradient(180deg, var(--color-arena) 0%, var(--color-primary) 120px, var(--color-primary) 100%)"
+      }}>
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(120% 110% at 50% -25%, rgba(255,255,255,0.16), transparent 55%)" }}
