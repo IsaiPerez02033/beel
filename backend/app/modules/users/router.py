@@ -36,9 +36,12 @@ async def register(
     db: AsyncSession = Depends(get_db),
 ):
     """Registro con email y contraseña."""
+    from datetime import datetime, timezone
     user = await service.create_user_credentials(
         db, data.email, data.password, data.full_name
     )
+    # El schema ya exige accepts_terms=True; dejamos constancia del momento.
+    user.terms_accepted_at = datetime.now(timezone.utc)
     await db.commit()
     return {"id": str(user.id), "email": user.email, "full_name": user.full_name}
 
@@ -116,6 +119,22 @@ async def get_me(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado. Asegúrate de completar el registro.",
         )
+    return user
+
+
+@router.post("/me/accept-terms", response_model=UserMeOut)
+async def accept_terms(
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Registra la aceptación de Términos y Condiciones (p. ej. usuarios de Google)."""
+    from datetime import datetime, timezone
+    user = await service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not user.terms_accepted_at:
+        user.terms_accepted_at = datetime.now(timezone.utc)
+        await db.commit()
     return user
 
 

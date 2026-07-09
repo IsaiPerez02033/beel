@@ -30,6 +30,7 @@ export default function RegistroPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [notice] = useState(
     motivo === "nuevo"
@@ -39,6 +40,7 @@ export default function RegistroPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!acceptedTerms) { setError("Debes aceptar los Términos y Condiciones para crear tu cuenta."); return; }
     if (password !== confirm) { setError("Las contraseñas no coinciden"); return; }
     if (password.length < 8) { setError("La contraseña debe tener al menos 8 caracteres"); return; }
 
@@ -52,7 +54,7 @@ export default function RegistroPage() {
       res = await fetch(`${API}/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, full_name: fullName }),
+        body: JSON.stringify({ email, password, full_name: fullName, accepts_terms: acceptedTerms }),
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -110,12 +112,28 @@ export default function RegistroPage() {
         </div>
 
         <div className="card p-6">
+          <label className="flex items-start gap-2.5 mb-5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-[var(--color-primary)] flex-shrink-0"
+            />
+            <span className="text-caption text-[var(--text-secondary)] leading-snug">
+              Acepto los{" "}
+              <Link href="/terminos" target="_blank" className="text-[var(--color-primary)] underline hover:no-underline">Términos y Condiciones</Link>{" "}
+              y el{" "}
+              <Link href="/privacidad" target="_blank" className="text-[var(--color-primary)] underline hover:no-underline">Aviso de Privacidad</Link>.
+            </span>
+          </label>
+
           {HAS_GOOGLE && (
             <>
-              <form action={signInWithGoogle.bind(null, redirectUrl)}>
+              <form action={signInWithGoogle.bind(null, redirectUrl)} onSubmit={(e) => { if (!acceptedTerms) { e.preventDefault(); setError("Debes aceptar los Términos y Condiciones para continuar."); } }}>
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-3 border border-[var(--border-default)] rounded-xl px-4 py-3 text-body-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors mb-4"
+                  disabled={!acceptedTerms}
+                  className="w-full flex items-center justify-center gap-3 border border-[var(--border-default)] rounded-xl px-4 py-3 text-body-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors mb-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 >
                   <svg width="18" height="18" viewBox="0 0 48 48">
                     <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -195,8 +213,8 @@ export default function RegistroPage() {
             </div>
             <button
               type="submit"
-              disabled={loading}
-              className="btn btn-primary w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold shadow-md"
+              disabled={loading || !acceptedTerms}
+              className="btn btn-primary w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? <><Loader2 size={16} className="animate-spin" /> Creando cuenta…</> : "Crear cuenta"}
             </button>

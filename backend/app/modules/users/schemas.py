@@ -87,6 +87,7 @@ class UserMeOut(BaseModel):
     is_identity_verified: bool
     identity_status: str = "none"
     is_active: bool
+    terms_accepted_at: Optional[datetime] = None
     preferred_language: str
     host_since: Optional[datetime]
     total_listings: int
@@ -150,6 +151,14 @@ class UserRegisterIn(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2)
+    accepts_terms: bool = False
+
+    @field_validator("accepts_terms")
+    @classmethod
+    def must_accept(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("Debes aceptar los Términos y Condiciones para crear tu cuenta")
+        return v
 
 
 class UserLoginIn(BaseModel):
