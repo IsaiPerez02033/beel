@@ -158,13 +158,13 @@ export default async function HomePage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/ser-anfitrion"
-              className="btn btn-primary rounded-full px-6 py-3 hover:scale-[1.03] active:scale-95 transition-all text-white font-semibold shadow-md"
+              className="btn btn-primary rounded-full px-6 py-3 hover:scale-[1.03] active:scale-95 transition-all text-white font-semibold shadow-md w-full max-w-[260px] sm:w-auto mx-auto sm:mx-0 justify-center"
             >
               Publicar mi espacio
             </Link>
             <Link
               href="/buscar"
-              className="btn btn-outline rounded-full px-6 py-3 hover:scale-[1.03] active:scale-95 transition-all text-[var(--text-primary)] font-medium"
+              className="btn btn-outline rounded-full px-6 py-3 hover:scale-[1.03] active:scale-95 transition-all text-[var(--text-primary)] font-medium w-full max-w-[260px] sm:w-auto mx-auto sm:mx-0 justify-center"
             >
               Explorar hospedajes
             </Link>
