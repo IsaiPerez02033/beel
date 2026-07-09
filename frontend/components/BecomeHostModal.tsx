@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useApi } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,11 @@ export default function BecomeHostModal({ open, onClose }: Props) {
   const [loading, setLoading] = useState(true);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [identityVerified, setIdentityVerified] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Teléfono
   const [phone, setPhone] = useState("+52 ");
@@ -51,7 +57,7 @@ export default function BecomeHostModal({ open, onClose }: Props) {
       .finally(() => setLoading(false));
   }, [open, get]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const bothDone = phoneVerified && identityVerified;
 
@@ -105,7 +111,7 @@ export default function BecomeHostModal({ open, onClose }: Props) {
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
@@ -258,6 +264,7 @@ export default function BecomeHostModal({ open, onClose }: Props) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
