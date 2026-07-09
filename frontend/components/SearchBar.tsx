@@ -174,7 +174,7 @@ export default function SearchBar({ compact = false, initialValues = {} }: Searc
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className={cn("w-full max-w-3xl mx-auto", !compact && activeField !== null && "relative z-[48]")}>
       <div className="search-bar rounded-2xl">
         <div
           ref={anchorRef}
@@ -229,6 +229,11 @@ export default function SearchBar({ compact = false, initialValues = {} }: Searc
         <Search size={16} />
         Buscar
       </button>
+
+      {mounted && !compact && activeField !== null && createPortal(
+        <div className="search-backdrop-overlay" onMouseDown={() => setActiveField(null)} />,
+        document.body
+      )}
 
       {dropdown}
     </div>

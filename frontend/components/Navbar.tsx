@@ -46,10 +46,10 @@ export default function Navbar({ transparent = false }: NavbarProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-colors duration-200",
+        "sticky top-0 z-50 w-full transition-all duration-300",
         transparent && isHome
           ? "bg-transparent"
-          : "bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)]"
+          : "navbar-glass border-b border-[var(--border-subtle)]"
       )}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center gap-4">
