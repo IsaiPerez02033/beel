@@ -47,6 +47,9 @@ Reglas:
 - Si no hay resultados para un destino o filtro, dilo con claridad y sugiere una
   alternativa cercana o ajustar el presupuesto.
 - Sé conciso: ve al plan, sin relleno.
+- Escribe en TEXTO PLANO. No uses Markdown: nada de asteriscos (**), almohadillas
+  (#) ni guiones para listas. Si necesitas una lista, usa viñetas con "•" o
+  números (1., 2.). Para un itinerario, separa los días en párrafos.
 """
 
 TOOLS = [
