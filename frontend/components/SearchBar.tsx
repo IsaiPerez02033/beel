@@ -192,7 +192,7 @@ export default function SearchBar({ compact = false, initialValues = {} }: Searc
             value={destino}
             onChange={(e) => setDestino(e.target.value)}
             placeholder="Destino o ciudad"
-            className="search-bar-value bg-transparent outline-none w-full sm:text-left text-center"
+            className="search-bar-value bg-transparent outline-none w-full text-center"
             style={{ border: "none", outline: "none", background: "transparent", boxShadow: "none" }}
             onFocus={() => { setActiveField("destino"); if (suggestions.length) setShowSug(true); }}
             onBlur={() => { setActiveField(null); setTimeout(() => setShowSug(false), 150); }}
