@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
 
 interface Photo {
   id: string;
@@ -96,7 +96,7 @@ export default function PropertyGallery({ photos, title, propertyId }: PropertyG
 
   if (!photos || photos.length === 0) {
     return (
-      <div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-[400px] mb-8 bg-[var(--color-primary-light)]" />
+      <div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-[420px] sm:h-[460px] lg:h-[520px] mb-8 bg-[var(--color-primary-light)]" />
     );
   }
 
@@ -106,7 +106,7 @@ export default function PropertyGallery({ photos, title, propertyId }: PropertyG
   return (
     <>
       {/* Grid de Galería */}
-      <div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-[400px] mb-8">
+      <div className="relative grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-[420px] sm:h-[460px] lg:h-[520px] mb-8">
         {/* Foto principal */}
         <div
           onClick={() => openLightbox(0)}
@@ -154,6 +154,16 @@ export default function PropertyGallery({ photos, title, propertyId }: PropertyG
             className="bg-[var(--color-primary-light)] col-span-1 row-span-1 opacity-50"
           />
         ))}
+
+        {/* Ver todas las fotos (estilo Airbnb) */}
+        {photos.length > 1 && (
+          <button
+            onClick={() => openLightbox(0)}
+            className="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 text-[var(--text-primary)] text-body-sm font-medium shadow-md hover:scale-[1.03] active:scale-95 transition-transform"
+          >
+            <LayoutGrid size={15} /> Ver todas las fotos ({photos.length})
+          </button>
+        )}
       </div>
 
       {/* Lightbox / Modal de expansión */}
