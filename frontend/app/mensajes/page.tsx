@@ -153,6 +153,9 @@ export default function MensajesPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  // Control de scroll: distinguir "abrí la conversación" de "llegó mensaje nuevo".
+  const scrollConvRef = useRef<string | null>(null);
+  const prevMsgCountRef = useRef(0);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -268,27 +271,44 @@ export default function MensajesPage() {
     }
   };
 
-  // Auto-scroll al fondo al recibir mensajes
+  // Auto-scroll: al abrir/cargar la conversación salta al fondo SIN marcar
+  // "nuevos"; solo marca "nuevos" cuando llega un mensaje de verdad (crece el
+  // conteo) estando la conversación ya abierta.
   useEffect(() => {
     const el = messagesContainerRef.current;
-    if (!el) return;
+    if (!el || messages.length === 0) return;
+
+    // Al (re)abrir la conversación: salto instantáneo al fondo, SIN banner.
+    if (scrollConvRef.current !== activeConvId) {
+      scrollConvRef.current = activeConvId;
+      prevMsgCountRef.current = messages.length;
+      messagesEndRef.current?.scrollIntoView({ block: "end" });
+      setHasNewMessages(false);
+      return;
+    }
+
+    const prevCount = prevMsgCountRef.current;
+    prevMsgCountRef.current = messages.length;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 250;
-    
-    if (nearBottom) {
+
+    // No creció el conteo (p. ej. cambió "escribiendo…"): solo mantener pegado
+    // al fondo si ya estabas ahí; nunca marcar "nuevos".
+    if (messages.length <= prevCount) {
+      if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
+    // Llegó un mensaje nuevo de verdad.
+    const lastMessage = messages[messages.length - 1];
+    if (nearBottom || (lastMessage && lastMessage.sender_id === localUserId)) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       setHasNewMessages(false);
     } else {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.sender_id === localUserId) {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        setHasNewMessages(false);
-      } else {
-        setHasNewMessages(true);
-      }
+      setHasNewMessages(true);
     }
-  }, [messages, otherTyping, localUserId]);
+  }, [messages, otherTyping, localUserId, activeConvId]);
 
-  // Limpiar indicador "escribiendo" al cambiar de conversación
+  // Limpiar indicador "escribiendo" al cambiar de conversación.
   useEffect(() => {
     setOtherTyping(false);
     typingSentRef.current = false;
