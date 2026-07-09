@@ -106,7 +106,7 @@ export default async function BuscarPage({ searchParams }: PageProps) {
 
         {/* Grid */}
         {properties.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {properties.map((property) => (
               <ScrollReveal key={property.id}>
                 <PropertyCard property={property} />

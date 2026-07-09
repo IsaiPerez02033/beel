@@ -75,7 +75,7 @@ export default async function HomePage() {
 
         <Suspense fallback={<PropertyGridSkeleton />}>
           {properties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {properties.map((property, idx) => (
                 <ScrollReveal key={property.id}>
                   <PropertyCard property={property} priority={idx < 4} />
@@ -100,7 +100,7 @@ export default async function HomePage() {
               Ver todas →
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 reveal-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {experiences.map((e, idx) => (
               <ScrollReveal key={e.id}>
                 <ExperienceCard experience={e} priority={idx < 4} />

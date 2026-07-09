@@ -42,10 +42,10 @@ export default function ScrollReveal({ children }: ScrollRevealProps) {
   return (
     <div
       ref={ref}
-      className={`transition-all duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] transform ${
+      className={`transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
         visible
           ? "opacity-100 translate-y-0 scale-100"
-          : "opacity-0 translate-y-8 scale-[0.98] pointer-events-none"
+          : "opacity-0 translate-y-16 scale-[0.97] pointer-events-none"
       }`}
     >
       {children}
