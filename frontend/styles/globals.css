@@ -998,3 +998,17 @@ input, textarea, select {
 .view-transition-img {
   contain: layout;
 }
+
+/* Hero cinematográfico — zoom lento tipo Ken Burns sobre la foto de fondo */
+@keyframes hero-kenburns {
+  from { transform: scale(1); }
+  to   { transform: scale(1.09); }
+}
+.hero-kenburns {
+  animation: hero-kenburns 26s ease-out both;
+  transform-origin: 50% 40%;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-kenburns { animation: none; transform: none; }
+}
