@@ -918,3 +918,77 @@ input, textarea, select {
 .floating-field input:user-invalid ~ label {
   color: var(--color-error) !important;
 }
+
+/* ── Glow Card Effect ── */
+.glow-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  transition: background 300ms ease;
+  overflow: hidden;
+}
+/* El borde iluminado que sigue al cursor */
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0px;
+  border-radius: inherit;
+  padding: 1.5px; /* grosor del borde */
+  background: radial-gradient(
+    180px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+    rgba(16, 185, 129, 0.4),
+    transparent 80%
+  );
+  -webkit-mask: 
+     linear-gradient(#fff 0 0) content-box, 
+     linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.glow-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Aurora Mesh Background ── */
+.aurora-bg {
+  position: relative;
+  overflow: hidden;
+}
+.aurora-bg::before,
+.aurora-bg::after {
+  content: "";
+  position: absolute;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.12;
+  z-index: 0;
+  pointer-events: none;
+  animation: aurora-float 22s infinite alternate ease-in-out;
+}
+.aurora-bg::before {
+  background: var(--color-primary);
+  left: -15vw;
+  top: -15vw;
+}
+.aurora-bg::after {
+  background: var(--color-accent);
+  right: -15vw;
+  bottom: -15vw;
+  animation-delay: -11s;
+}
+@keyframes aurora-float {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(8vw, 6vw) scale(1.15); }
+  100% { transform: translate(-4vw, 12vw) scale(0.9); }
+}
+
+/* Enable view transitions helper class */
+.view-transition-img {
+  contain: layout;
+}

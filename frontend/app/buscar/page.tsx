@@ -71,7 +71,7 @@ export default async function BuscarPage({ searchParams }: PageProps) {
     : "Todos los hospedajes";
 
   return (
-    <div className="min-h-screen bg-[var(--bg-base)]">
+    <div className="min-h-screen bg-[var(--bg-base)] aurora-bg">
       <Navbar />
 
       {/* Search bar compacta */}

@@ -111,7 +111,7 @@ export default async function PropertyPage({ params, searchParams }: PageProps) 
         </div>
 
         {/* Galería Interactiva */}
-        <PropertyGallery photos={property.photos} title={property.title} />
+        <PropertyGallery photos={property.photos} title={property.title} propertyId={property.id} />
 
         {/* Layout principal: info izq + widget der */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -37,6 +37,26 @@ export function formatDuration(min: number): string {
 export default function ExperienceCard({ experience }: { experience: Experience }) {
   const [imgError, setImgError] = useState(false);
   const router = useRouter();
+  const cardRef = useRef<HTMLAnchorElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty("--mouse-x", `${x}px`);
+    card.style.setProperty("--mouse-y", `${y}px`);
+  };
+
+  const handleNavigation = (e: React.MouseEvent) => {
+    if ((document as any).startViewTransition) {
+      e.preventDefault();
+      (document as any).startViewTransition(() => {
+        router.push(`/experiencias/${experience.id}`);
+      });
+    }
+  };
   const { isSignedIn } = useAuth();
   const { isExperienceFavorite, toggleExperienceFavorite } = useFavorites();
   const photo = experience.photos?.[0]?.url;
@@ -54,7 +74,13 @@ export default function ExperienceCard({ experience }: { experience: Experience 
   }
 
   return (
-    <Link href={`/experiencias/${experience.id}`} className="card group block">
+    <Link
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onClick={handleNavigation}
+      href={`/experiencias/${experience.id}`}
+      className="card group block glow-card"
+    >
       <div className="card-photo">
         {photo && !imgError ? (
           <Image
@@ -62,7 +88,8 @@ export default function ExperienceCard({ experience }: { experience: Experience 
             alt={experience.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06]"
+            className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06] view-transition-img"
+            style={{ viewTransitionName: `exp-img-${experience.id}` } as React.CSSProperties}
             onError={() => setImgError(true)}
           />
         ) : (

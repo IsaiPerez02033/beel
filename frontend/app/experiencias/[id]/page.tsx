@@ -128,8 +128,11 @@ export default function ExperienceDetailPage() {
                   src={p.url} 
                   alt={exp.title} 
                   fill 
-                  className={cn("object-cover", i === 0 ? "parallax-img" : "group-hover:scale-[1.03] transition-transform duration-500 ease-out")} 
-                  style={i === 0 ? ({ "--parallax-y": `${Math.min(scrollY * 0.12, 80)}px` } as React.CSSProperties) : undefined}
+                  className={cn("object-cover", i === 0 ? "parallax-img view-transition-img" : "group-hover:scale-[1.03] transition-transform duration-500 ease-out")} 
+                  style={i === 0 ? ({ 
+                    "--parallax-y": `${Math.min(scrollY * 0.12, 80)}px`,
+                    viewTransitionName: `exp-img-${exp.id}`
+                  } as React.CSSProperties) : undefined}
                   sizes="(max-width:640px) 100vw, 50vw"
                   priority={i === 0}
                 />

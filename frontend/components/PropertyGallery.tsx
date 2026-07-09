@@ -13,9 +13,10 @@ interface Photo {
 interface PropertyGalleryProps {
   photos: Photo[];
   title: string;
+  propertyId?: string;
 }
 
-export default function PropertyGallery({ photos, title }: PropertyGalleryProps) {
+export default function PropertyGallery({ photos, title, propertyId }: PropertyGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [scrollY, setScrollY] = useState(0);
 
@@ -116,8 +117,11 @@ export default function PropertyGallery({ photos, title }: PropertyGalleryProps)
               src={mainPhoto.url}
               alt={title}
               fill
-              className="object-cover parallax-img"
-              style={{ "--parallax-y": `${Math.min(scrollY * 0.12, 80)}px` } as React.CSSProperties}
+              className="object-cover parallax-img view-transition-img"
+              style={{ 
+                "--parallax-y": `${Math.min(scrollY * 0.12, 80)}px`,
+                viewTransitionName: propertyId ? `prop-img-${propertyId}` : undefined
+              } as React.CSSProperties}
               priority
             />
           )}

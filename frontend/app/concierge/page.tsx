@@ -117,7 +117,7 @@ export default function ConciergePage() {
   }
 
   return (
-    <div className="h-screen bg-[var(--bg-base)] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[var(--bg-base)] flex flex-col overflow-hidden aurora-bg">
       <Navbar />
 
       {/* Contenedor principal dividido */}
