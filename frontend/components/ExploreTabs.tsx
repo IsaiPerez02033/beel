@@ -15,10 +15,10 @@ export default function ExploreTabs({ active }: { active: "alojamientos" | "expe
           key={t.key}
           href={t.href}
           className={cn(
-            "flex items-center gap-2 px-5 py-2.5 rounded-full text-body-sm font-medium transition-colors border",
+            "flex items-center gap-2 px-5 py-2.5 rounded-full text-body-sm font-medium transition-all duration-300 border hover:scale-[1.02] active:scale-95",
             active === t.key
-              ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)]"
-              : "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
+              ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm"
+              : "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]"
           )}
         >
           {t.icon}

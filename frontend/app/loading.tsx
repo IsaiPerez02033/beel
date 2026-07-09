@@ -5,7 +5,7 @@ export default function Loading() {
         <div className="skeleton h-8 w-48 mb-6" />
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="card animate-pulse">
+            <div key={i} className="card">
               <div className="skeleton h-48 w-full rounded-t-lg" />
               <div className="p-4 space-y-2">
                 <div className="skeleton h-4 w-3/4" />

@@ -88,7 +88,7 @@ export default function PropertyCard({
             alt={property.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06]"
             onError={() => setImgError(true)}
           />
         ) : (
@@ -235,7 +235,7 @@ export default function PropertyCard({
 /** Skeleton mientras carga */
 export function PropertyCardSkeleton() {
   return (
-    <div className="card animate-pulse">
+    <div className="card">
       <div className="card-photo skeleton" />
       <div className="p-3 flex flex-col gap-2">
         <div className="skeleton h-4 w-3/4 rounded" />
