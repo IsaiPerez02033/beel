@@ -142,7 +142,7 @@ export default function PropertyCard({
             size={22}
             className={cn(
               "drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition-colors",
-              fav ? "fill-[var(--color-accent)] text-[var(--color-accent)]" : "fill-black/25 text-white"
+              fav ? "fill-[var(--color-accent)] text-[var(--color-accent)] animate-heart-pop" : "fill-black/25 text-white"
             )}
           />
         </button>

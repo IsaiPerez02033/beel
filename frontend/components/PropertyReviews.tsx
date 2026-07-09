@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
@@ -119,6 +119,40 @@ export default function PropertyReviews({ propertyId }: { propertyId: string }) 
 
   const PER_PAGE = 5;
 
+  const subRatingsAverages = useMemo(() => {
+    if (reviews.length === 0) return null;
+    let cleanSum = 0, cleanCount = 0;
+    let commSum = 0, commCount = 0;
+    let locSum = 0, locCount = 0;
+    let valSum = 0, valCount = 0;
+
+    reviews.forEach((r) => {
+      if (r.cleanliness_rating) {
+        cleanSum += r.cleanliness_rating;
+        cleanCount++;
+      }
+      if (r.communication_rating) {
+        commSum += r.communication_rating;
+        commCount++;
+      }
+      if (r.location_rating) {
+        locSum += r.location_rating;
+        locCount++;
+      }
+      if (r.value_rating) {
+        valSum += r.value_rating;
+        valCount++;
+      }
+    });
+
+    return {
+      cleanliness: cleanCount > 0 ? cleanSum / cleanCount : null,
+      communication: commCount > 0 ? commSum / commCount : null,
+      location: locCount > 0 ? locSum / locCount : null,
+      value: valCount > 0 ? valSum / valCount : null,
+    };
+  }, [reviews]);
+
   useEffect(() => {
     fetchReviews(1, true);
   }, [propertyId]);
@@ -232,6 +266,37 @@ export default function PropertyReviews({ propertyId }: { propertyId: string }) 
           </button>
         )}
       </div>
+
+      {/* Resumen de sub-calificaciones (Estilo Airbnb) */}
+      {!showForm && subRatingsAverages && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-8 p-6 bg-[var(--bg-subtle)] rounded-2xl border border-[var(--border-subtle)]">
+          {[
+            { label: "Limpieza", value: subRatingsAverages.cleanliness },
+            { label: "Comunicación", value: subRatingsAverages.communication },
+            { label: "Ubicación", value: subRatingsAverages.location },
+            { label: "Valor / Calidad", value: subRatingsAverages.value },
+          ].map(({ label, value }) => {
+            if (value === null) return null;
+            const pct = (value / 5) * 100;
+            return (
+              <div key={label} className="flex items-center justify-between gap-4">
+                <span className="text-body-sm text-[var(--text-primary)] font-medium min-w-[100px]">{label}</span>
+                <div className="flex-grow flex items-center gap-3">
+                  <div className="flex-1 h-2 bg-[var(--border-default)] rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-[var(--color-primary)] rounded-full transition-all duration-500 ease-out" 
+                      style={{ width: `${pct}%` }} 
+                    />
+                  </div>
+                  <span className="text-body-sm font-semibold text-[var(--text-primary)] w-[24px] text-right">
+                    {value.toFixed(1)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Formulario de reseña */}
       {showForm && eligibleReservation && (

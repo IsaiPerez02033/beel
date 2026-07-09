@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -17,6 +17,21 @@ interface PropertyGalleryProps {
 
 export default function PropertyGallery({ photos, title }: PropertyGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const touchStartY = useRef(0);
+  const touchStartX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diffY = e.changedTouches[0].clientY - touchStartY.current;
+    const diffX = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(diffY) > 120 && Math.abs(diffY) > Math.abs(diffX)) {
+      closeLightbox();
+    }
+  };
 
   const openLightbox = (index: number) => {
     if (index >= 0 && index < photos.length) {
@@ -92,7 +107,7 @@ export default function PropertyGallery({ photos, title }: PropertyGalleryProps)
               src={mainPhoto.url}
               alt={title}
               fill
-              className="object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out"
+              className="object-cover group-hover:scale-[1.05] transition-transform duration-[800ms] ease-out"
               priority
             />
           )}
@@ -111,7 +126,7 @@ export default function PropertyGallery({ photos, title }: PropertyGalleryProps)
                 src={photo.url}
                 alt={`${title} — foto ${i + 2}`}
                 fill
-                className="object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out"
+                className="object-cover group-hover:scale-[1.05] transition-transform duration-[800ms] ease-out"
               />
             )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
@@ -131,6 +146,8 @@ export default function PropertyGallery({ photos, title }: PropertyGalleryProps)
       {selectedIndex !== null && (
         <div
           onClick={closeLightbox}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           className="fixed inset-0 z-[150] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md transition-opacity duration-300 ease-in-out p-4"
         >
           {/* Header del Lightbox */}
