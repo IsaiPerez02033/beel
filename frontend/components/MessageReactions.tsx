@@ -22,6 +22,7 @@ interface Props {
   compact?: boolean;
   // showOnlyBadges: solo muestra las reacciones existentes con contador
   showOnlyBadges?: boolean;
+  memberNames?: Record<string, string>;
 }
 
 export default function MessageReactions({
@@ -32,6 +33,7 @@ export default function MessageReactions({
   onReact,
   compact,
   showOnlyBadges,
+  memberNames,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -53,25 +55,35 @@ export default function MessageReactions({
     setPickerOpen(false);
   }
 
-  // Modo: solo badges de reacciones existentes (debajo de la burbuja)
   if (showOnlyBadges) {
     return (
       <div className="flex items-center gap-1 flex-wrap">
         {reactions.map((r) => {
           const hasReacted = r.user_ids.includes(currentUserId);
+          const names = r.user_ids
+            .map((id) => memberNames?.[id] || "Usuario")
+            .join(", ");
           return (
             <button
               key={r.emoji}
               onClick={() => onReact(messageId, r.emoji, hasReacted)}
               className={cn(
-                "flex items-center gap-0.5 px-2 py-0.5 rounded-full text-sm border transition-all active:scale-95",
+                "relative group flex items-center gap-0.5 px-2 py-0.5 rounded-full text-sm border transition-all active:scale-95",
                 hasReacted
-                  ? "bg-[var(--color-primary-light)] border-[var(--color-primary)]"
-                  : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)]"
+                  ? "bg-[var(--color-primary-light)] border-[var(--color-primary)] text-[var(--color-primary)]"
+                  : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)] text-[var(--text-secondary)]"
               )}
             >
               <span>{r.emoji}</span>
-              <span className="text-[11px] font-medium text-[var(--text-secondary)]">{r.count}</span>
+              <span className="text-[11px] font-medium">{r.count}</span>
+
+              {/* Tooltip */}
+              {names && (
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block bg-black/80 dark:bg-black/90 text-white text-[11px] rounded-lg py-1 px-2.5 whitespace-nowrap z-[100] shadow-md border border-white/10 pointer-events-none">
+                  {names}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/80 dark:border-t-black/90" />
+                </div>
+              )}
             </button>
           );
         })}
@@ -125,12 +137,15 @@ export default function MessageReactions({
     <div className={cn("hidden sm:flex items-center gap-1 flex-wrap mt-1", isMine ? "justify-end" : "justify-start")}>
       {reactions.map((r) => {
         const hasReacted = r.user_ids.includes(currentUserId);
+        const names = r.user_ids
+          .map((id) => memberNames?.[id] || "Usuario")
+          .join(", ");
         return (
           <button
             key={r.emoji}
             onClick={() => onReact(messageId, r.emoji, hasReacted)}
             className={cn(
-              "flex items-center gap-0.5 px-2 py-0.5 rounded-full text-sm border transition-all active:scale-95",
+              "relative group flex items-center gap-0.5 px-2 py-0.5 rounded-full text-sm border transition-all active:scale-95",
               hasReacted
                 ? "bg-[var(--color-primary-light)] border-[var(--color-primary)] text-[var(--color-primary)]"
                 : "bg-[var(--bg-elevated)] border-[var(--border-subtle)] hover:border-[var(--border-default)] text-[var(--text-secondary)]"
@@ -138,6 +153,14 @@ export default function MessageReactions({
           >
             <span>{r.emoji}</span>
             <span className="text-[11px] font-medium">{r.count}</span>
+
+            {/* Tooltip */}
+            {names && (
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block bg-black/80 dark:bg-black/90 text-white text-[11px] rounded-lg py-1 px-2.5 whitespace-nowrap z-[100] shadow-md border border-white/10 pointer-events-none">
+                {names}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/80 dark:border-t-black/90" />
+              </div>
+            )}
           </button>
         );
       })}

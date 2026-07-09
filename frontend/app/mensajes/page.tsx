@@ -430,6 +430,13 @@ export default function MensajesPage() {
   // Renderizador agrupado de mensajes por fecha
   const renderMessages = () => {
     let lastDateStr = "";
+    const memberNames: Record<string, string> = {};
+    if (localUserId) memberNames[localUserId] = "Tú";
+    if (activeConv) {
+      memberNames[activeConv.guest.id] = activeConv.guest.id === localUserId ? "Tú" : activeConv.guest.full_name;
+      memberNames[activeConv.host.id] = activeConv.host.id === localUserId ? "Tú" : activeConv.host.full_name;
+    }
+
     return messages.map((msg) => {
       const msgDate = parseISO(msg.created_at);
       const dateStr = isToday(msgDate)
@@ -471,6 +478,7 @@ export default function MensajesPage() {
               currentUserId={localUserId}
               conversationId={activeConvId!}
               onReact={handleReaction}
+              memberNames={memberNames}
             />
           )}
         </div>
@@ -1007,6 +1015,7 @@ function SwipeableMessage({
   currentUserId,
   conversationId,
   onReact,
+  memberNames,
 }: {
   msg: Message;
   isMine: boolean;
@@ -1017,6 +1026,7 @@ function SwipeableMessage({
   currentUserId: string;
   conversationId: string;
   onReact: (messageId: string, emoji: string, hasReacted: boolean) => void;
+  memberNames: Record<string, string>;
 }) {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -1132,6 +1142,7 @@ function SwipeableMessage({
                   currentUserId={currentUserId}
                   isMine={isMine}
                   onReact={onReact}
+                  memberNames={memberNames}
                   compact
                 />
               )}
@@ -1151,6 +1162,7 @@ function SwipeableMessage({
                   currentUserId={currentUserId}
                   isMine={isMine}
                   onReact={onReact}
+                  memberNames={memberNames}
                   compact
                 />
               )}
@@ -1167,6 +1179,7 @@ function SwipeableMessage({
                 currentUserId={currentUserId}
                 isMine={isMine}
                 onReact={onReact}
+                memberNames={memberNames}
                 showOnlyBadges
               />
             </div>
