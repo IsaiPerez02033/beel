@@ -180,45 +180,6 @@ async def health_check():
     }
 
 
-
-# ── Debug Database ────────────────────────────────────────────────────────────
-@app.get(f"{API_PREFIX}/db-debug", tags=["debug"])
-async def db_debug():
-    from app.core.database import AsyncSessionLocal
-    from sqlalchemy import select
-    from app.modules.messaging.models import Conversation, Message
-    import traceback
-    
-    if not AsyncSessionLocal:
-        return {"status": "error", "message": "AsyncSessionLocal is None"}
-        
-    try:
-        async with AsyncSessionLocal() as db:
-            conv_id = "c41c90e0-5581-4547-b52d-77cb6138cb15"
-            stmt = select(Message).where(Message.conversation_id == conv_id)
-            msgs = (await db.execute(stmt)).scalars().all()
-            
-            msg_list = [
-                {
-                    "id": str(m.id),
-                    "sender_id": str(m.sender_id),
-                    "type": m.message_type,
-                    "content": m.content,
-                    "created_at": str(m.created_at) if m.created_at else None,
-                    "deleted_by_sender": m.deleted_by_sender,
-                }
-                for m in msgs
-            ]
-            
-            return {
-                "status": "ok",
-                "count": len(msgs),
-                "messages": msg_list,
-            }
-    except Exception as e:
-        return {"status": "error", "error": str(e), "traceback": traceback.format_exc()}
-
-
 # ── Global exception handler ──────────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
