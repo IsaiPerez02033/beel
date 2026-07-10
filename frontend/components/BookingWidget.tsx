@@ -88,9 +88,9 @@ export default function BookingWidget({
   // el "+" concatena (ej. 2 + "0.00" = "20.00").
   const subtotal = nights * Number(property.price_per_night);
   const cleaningFee = Number(property.cleaning_fee ?? 0);
-  // Tarifa de servicio (6%) e IVA del hospedaje (16%). Deben coincidir con
+  // Tarifa de servicio (10%) e IVA del hospedaje (16%). Deben coincidir con
   // PLATFORM_FEE_PERCENTAGE y LODGING_IVA_PERCENTAGE del backend.
-  const SERVICE_FEE_PCT = 0.06;
+  const SERVICE_FEE_PCT = 0.10;
   const LODGING_IVA_PCT = 0.16;
   const serviceFee = Math.round(subtotal * SERVICE_FEE_PCT * 100) / 100;
   const lodgingIva = Math.round((subtotal + cleaningFee) * LODGING_IVA_PCT * 100) / 100;
