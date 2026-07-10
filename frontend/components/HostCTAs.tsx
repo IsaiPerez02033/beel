@@ -59,11 +59,11 @@ export default function HostCTAs({ variant = "hero" }: { variant?: "hero" | "sin
           {signedIn ? "Publicar mi propiedad" : "Empezar gratis"}
         </button>
       ) : (
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button onClick={handlePublish} className="btn btn-primary text-body px-8 py-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-fit mx-auto">
+          <button onClick={handlePublish} className="btn btn-primary text-body px-8 py-3 justify-center whitespace-nowrap">
             Publicar mi propiedad
           </button>
-          <button onClick={handlePanel} className="btn btn-outline text-body px-8 py-3">
+          <button onClick={handlePanel} className="btn btn-outline text-body px-8 py-3 justify-center whitespace-nowrap">
             {signedIn ? "Ir a mi panel" : "Ya tengo cuenta"}
           </button>
         </div>
