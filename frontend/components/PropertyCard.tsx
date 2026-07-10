@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -79,6 +79,11 @@ export default function PropertyCard({
   const currentPhoto = photos[photoIndex];
   const photoUrl = currentPhoto?.url ?? "";
 
+  const [imageLoaded, setImageLoaded] = useState(false);
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [photoUrl]);
+
   const locationLabel = [property.neighborhood, property.city]
     .filter(Boolean)
     .join(", ");
@@ -113,9 +118,13 @@ export default function PropertyCard({
             alt={property.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06] view-transition-img"
+            className={cn(
+              "object-cover transition-all duration-[600ms] ease-out group-hover:scale-[1.06] view-transition-img",
+              imageLoaded ? "opacity-100" : "opacity-0"
+            )}
             style={{ viewTransitionName: `prop-img-${property.id}` } as React.CSSProperties}
             priority={priority}
+            onLoad={() => setImageLoaded(true)}
             onError={() => setImgError(true)}
           />
         ) : (

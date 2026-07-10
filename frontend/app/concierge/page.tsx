@@ -107,12 +107,12 @@ export default function ConciergePage() {
               <div key={i}>
                 {m.role === "user" ? (
                   <div className="flex justify-end">
-                    <div className="max-w-[85%] bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-md px-4 py-2.5 text-body-sm">
+                    <div className="max-w-[85%] bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-md px-4 py-2.5 text-body-sm animate-concierge-bubble">
                       {m.content}
                     </div>
                   </div>
                 ) : (
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 animate-concierge-bubble">
                     <div className="w-8 h-8 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0">
                       <Sparkles size={15} className="text-[var(--color-primary)]" />
                     </div>

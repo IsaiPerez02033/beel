@@ -81,7 +81,7 @@ export default function SearchFilters() {
   }
 
   return (
-    <div className="relative flex items-center gap-2 overflow-x-auto scrollbar-hide">
+    <div className="relative flex items-center gap-2 overflow-x-auto scrollbar-hide scroll-mask-fade px-3 py-1">
       {TIPOS.map((t) => (
         <button
           key={t.value}

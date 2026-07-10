@@ -9,7 +9,7 @@ export default function ExploreTabs({ active }: { active: "alojamientos" | "expe
     { key: "experiencias", label: "Experiencias", href: "/experiencias", icon: <Sparkles size={16} /> },
   ];
   return (
-    <div className="flex justify-center gap-2 mb-6">
+    <div className="flex justify-center gap-2 mb-6 scroll-mask-fade">
       {tabs.map((t) => (
         <Link
           key={t.key}

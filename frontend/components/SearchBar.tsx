@@ -278,14 +278,14 @@ export default function SearchBar({ compact = false, initialValues = {}, onSearc
             </div>
 
             <button onClick={handleSearch} aria-label="Buscar"
-              className="hidden sm:flex flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] text-white items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm animate-fade-in">
+              className="hidden sm:flex flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] text-white items-center justify-center hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm animate-fade-in btn-specular">
               <Search size={16} />
             </button>
           </div>
         </div>
 
         <button onClick={handleSearch}
-          className="sm:hidden mt-3 w-full h-12 rounded-2xl bg-[var(--color-primary)] text-white flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm font-medium">
+          className="sm:hidden mt-3 w-full h-12 rounded-2xl bg-[var(--color-primary)] text-white flex items-center justify-center gap-2 hover:bg-[var(--color-primary-dark)] transition-colors shadow-sm font-medium btn-specular">
           <Search size={16} />
           Buscar
         </button>
@@ -500,7 +500,7 @@ export default function SearchBar({ compact = false, initialValues = {}, onSearc
             <button
               type="button"
               onClick={() => { setMobileSearchOpen(false); handleSearch(); }}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-semibold text-body-sm shadow-md active:scale-[0.97] transition-all"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white font-semibold text-body-sm shadow-md active:scale-[0.97] transition-all btn-specular"
             >
               <Search size={16} />
               Buscar

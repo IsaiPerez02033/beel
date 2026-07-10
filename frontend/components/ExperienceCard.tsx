@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -65,6 +65,10 @@ export default function ExperienceCard({ experience, priority = false }: Experie
   const { isSignedIn } = useAuth();
   const { isExperienceFavorite, toggleExperienceFavorite } = useFavorites();
   const photo = experience.photos?.[0]?.url;
+  const [imageLoaded, setImageLoaded] = useState(false);
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [photo]);
   const cat = CATEGORY[experience.category] ?? CATEGORY.otro;
   const fav = isExperienceFavorite(experience.id);
 
@@ -93,9 +97,13 @@ export default function ExperienceCard({ experience, priority = false }: Experie
             alt={experience.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06] view-transition-img"
+            className={cn(
+              "object-cover transition-all duration-[600ms] ease-out group-hover:scale-[1.06] view-transition-img",
+              imageLoaded ? "opacity-100" : "opacity-0"
+            )}
             style={{ viewTransitionName: `exp-img-${experience.id}` } as React.CSSProperties}
             priority={priority}
+            onLoad={() => setImageLoaded(true)}
             onError={() => setImgError(true)}
           />
         ) : (

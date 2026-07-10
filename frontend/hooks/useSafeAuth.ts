@@ -31,7 +31,7 @@ export function useAuth() {
       } catch {
         return null;
       }
-    }, [session, status]);
+    }, [session?.user?.id, status]);
 
     return {
       isSignedIn: !!session?.user,
