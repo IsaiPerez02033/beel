@@ -98,3 +98,28 @@ async def mark_all_read(db: AsyncSession, user_id: uuid.UUID) -> int:
     result = await db.execute(stmt)
     await db.flush()
     return result.rowcount
+
+
+async def mark_message_notifications_read(
+    db: AsyncSession, user_id: uuid.UUID, conversation_id: uuid.UUID
+) -> int:
+    """Marca como leídas las notificaciones de 'nuevo mensaje' de una conversación.
+
+    El badge de la app cuenta notificaciones sin leer; al abrir/leer un chat hay
+    que limpiar sus notificaciones para que el contador baje. Filtra por el
+    conversation_id guardado en la columna JSONB `data`.
+    """
+    now = datetime.now(timezone.utc)
+    stmt = (
+        update(Notification)
+        .where(and_(
+            Notification.user_id == user_id,
+            Notification.type == "new_message",
+            Notification.is_read.is_(False),
+            Notification.data["conversation_id"].astext == str(conversation_id),
+        ))
+        .values(is_read=True, read_at=now)
+    )
+    result = await db.execute(stmt)
+    await db.flush()
+    return result.rowcount or 0

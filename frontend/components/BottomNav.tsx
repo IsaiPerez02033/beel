@@ -48,9 +48,19 @@ export default function BottomNav() {
 
   useEffect(() => {
     if (!isSignedIn) { setUnread(0); setIsAdmin(false); return; }
-    get<{ unread_count: number }>("/notifications?limit=1")
-      .then((r) => setUnread(r.unread_count ?? 0))
-      .catch(() => {});
+    const refresh = () =>
+      get<{ unread_count: number }>("/notifications?limit=1")
+        .then((r) => setUnread(r.unread_count ?? 0))
+        .catch(() => {});
+    refresh();
+    // Refrescar cuando el chat marca notificaciones como leídas, y con un sondeo
+    // suave para reflejar mensajes nuevos sin recargar la app.
+    window.addEventListener("beel:badges", refresh);
+    const poll = setInterval(refresh, 20000);
+    return () => {
+      window.removeEventListener("beel:badges", refresh);
+      clearInterval(poll);
+    };
   }, [isSignedIn, get, pathname]);
 
   useEffect(() => {

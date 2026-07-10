@@ -160,6 +160,9 @@ export default function MensajesPage() {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  // Ref a la función que recarga los mensajes (para llamarla desde el WS sin
+  // recrear el handler en cada render).
+  const reloadMessagesRef = useRef<(() => void) | null>(null);
 
   const activeConv = conversations.find(
     (c) => c.id === activeConvId || c.reservation_id === activeConvId
@@ -199,23 +202,61 @@ export default function MensajesPage() {
       .finally(() => setLoading(false));
   }, [isSignedIn, get]);
 
-  // Cargar mensajes al seleccionar conversación
-  useEffect(() => {
+  // Recarga los mensajes de la conversación activa. El GET también marca como
+  // leídos en el backend (mensajes y sus notificaciones), así que tras llamarlo
+  // avisamos para que el badge global se refresque.
+  const reloadMessages = useCallback(() => {
     if (!activeConvId) return;
     get<{ messages: Message[] }>(`/messaging/${activeConvId}/messages`)
       .then((d) => {
         setMessages(d.messages);
-        
-        // Si no tenemos esta conversación en la lista lateral, recargar la lista
-        const exists = conversations.some(c => c.id === activeConvId || c.reservation_id === activeConvId);
-        if (!exists) {
-          get<{ conversations: Conversation[] }>("/messaging")
-            .then((res) => setConversations(res.conversations))
-            .catch(console.error);
+        // Limpiar el no-leído local de esta conversación en la lista lateral.
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === activeConvId || c.reservation_id === activeConvId
+              ? { ...c, unread_count_guest: 0, unread_count_host: 0 }
+              : c
+          )
+        );
+        // Refrescar el badge de notificaciones (campana / tab Mensajes).
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("beel:badges"));
         }
       })
       .catch(console.error);
-  }, [activeConvId, get, conversations]);
+  }, [activeConvId, get]);
+
+  reloadMessagesRef.current = reloadMessages;
+
+  // Cargar mensajes al seleccionar conversación
+  useEffect(() => {
+    if (!activeConvId) return;
+    reloadMessages();
+    // Si no tenemos esta conversación en la lista lateral, recargar la lista.
+    const exists = conversations.some(c => c.id === activeConvId || c.reservation_id === activeConvId);
+    if (!exists) {
+      get<{ conversations: Conversation[] }>("/messaging")
+        .then((res) => setConversations(res.conversations))
+        .catch(console.error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConvId]);
+
+  // Fallback de tiempo real: recargar al volver el foco / visibilidad y con un
+  // sondeo suave, por si el WebSocket perdió mensajes mientras estuvo caído.
+  useEffect(() => {
+    if (!activeConvId) return;
+    const onFocus = () => reloadMessages();
+    const onVisible = () => { if (document.visibilityState === "visible") reloadMessages(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    const poll = setInterval(reloadMessages, 8000);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(poll);
+    };
+  }, [activeConvId, reloadMessages]);
 
   // Cargar detalles de la reservación correspondiente al chat activo
   useEffect(() => {
@@ -255,9 +296,16 @@ export default function MensajesPage() {
             message_type: data.message_type ?? "text",
             created_at: data.created_at,
             sender: { id: data.sender_id, full_name: data.sender_name },
+            reply_to: data.reply_to ?? undefined,
+            reply_to_id: data.reply_to?.id,
           },
         ];
       });
+    },
+    onConnected: () => {
+      // Al (re)conectar el WS pueden haberse perdido mensajes mientras estuvo
+      // caído (p. ej. la app estuvo en segundo plano). Recargamos para recuperar.
+      reloadMessagesRef.current?.();
     },
   });
 
@@ -350,8 +398,16 @@ export default function MensajesPage() {
         body: text,
         ...(replyId ? { reply_to_id: replyId } : {}),
       });
+      // El broadcast del WS puede haber insertado este mismo mensaje antes de que
+      // el POST resuelva, pero SIN el detalle completo (reply_to, reacciones). Si
+      // ya existe, lo reemplazamos por la versión completa del POST.
       setMessages((prev) => {
-        if (prev.some((m) => m.id === msg.id)) return prev;
+        const idx = prev.findIndex((m) => m.id === msg.id);
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = msg;
+          return copy;
+        }
         return [...prev, msg];
       });
     } catch (e) {

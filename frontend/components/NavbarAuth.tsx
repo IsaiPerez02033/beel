@@ -335,7 +335,12 @@ function NotificationsDropdown() {
 
     fetchNotifs();
     const interval = setInterval(fetchNotifs, 45000);
-    return () => clearInterval(interval);
+    // Refrescar cuando el chat marca notificaciones de mensajes como leídas.
+    window.addEventListener("beel:badges", fetchNotifs);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("beel:badges", fetchNotifs);
+    };
   }, [isSignedIn, get]);
 
   async function handleMarkAllRead() {

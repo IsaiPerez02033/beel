@@ -329,7 +329,26 @@ async def send_message(
     except Exception as e:
         logger.error("Error al crear notificación de nuevo mensaje: %s", e)
 
-    # Broadcast SSE
+    # Resolver el mensaje al que se responde (una sola vez) para incluir su
+    # preview tanto en el broadcast en tiempo real como en la respuesta HTTP.
+    parent = None
+    reply_payload = None
+    if msg.reply_to_id:
+        rr = await db.execute(
+            select(Message).options(selectinload(Message.sender))
+            .where(Message.id == msg.reply_to_id)
+        )
+        parent = rr.scalar_one_or_none()
+        if parent:
+            reply_payload = {
+                "id": str(parent.id),
+                "sender_id": str(parent.sender_id),
+                "content": parent.content,
+                "sender_name": getattr(parent.sender, "full_name", None),
+            }
+
+    # Broadcast en tiempo real (incluye reply_to para que el receptor vea a qué
+    # mensaje se está respondiendo sin recargar el chat).
     await _broadcast(
         conversation.id,
         {
@@ -340,6 +359,7 @@ async def send_message(
             "body": msg.content,
             "message_type": msg.message_type,
             "created_at": (msg.created_at or datetime.now(timezone.utc)).isoformat(),
+            "reply_to": reply_payload,
         },
     )
 
@@ -351,16 +371,8 @@ async def send_message(
         select(Message).options(selectinload(Message.sender)).where(Message.id == msg.id)
     )
     saved = result.scalar_one()
-
-    # Resolver reply_to manualmente (mismo motivo que en get_messages)
-    if saved.reply_to_id:
-        rr = await db.execute(
-            select(Message).options(selectinload(Message.sender))
-            .where(Message.id == saved.reply_to_id)
-        )
-        parent = rr.scalar_one_or_none()
-        if parent:
-            saved.__dict__["reply_to"] = parent
+    if parent:
+        saved.__dict__["reply_to"] = parent
 
     return saved
 
@@ -394,6 +406,15 @@ async def mark_read(
         conversation.unread_count_host = 0
 
     await db.flush()
+
+    # Limpiar las notificaciones "new_message" de esta conversación para que el
+    # badge global (que cuenta notificaciones sin leer) baje al leer el chat.
+    try:
+        from app.modules.notifications.service import mark_message_notifications_read
+        await mark_message_notifications_read(db, reader.id, conversation.id)
+    except Exception as e:
+        logger.error("Error al marcar notificaciones de mensajes leídas: %s", e)
+
     return count
 
 
