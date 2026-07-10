@@ -104,6 +104,12 @@ export default function SearchBar({ compact = false, initialValues = {}, onSearc
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [destino]);
 
+  // Al cerrar el modal movil, ocultar el dropdown de escritorio para que no
+  // quede flotando sobre el hero con las sugerencias que se cargaron dentro.
+  useEffect(() => {
+    if (!mobileSearchOpen) setShowSug(false);
+  }, [mobileSearchOpen]);
+
   function pickSuggestion(s: GeoSuggestion) {
     justSelectedRef.current = true;
     setDestino(s.city || s.label);
