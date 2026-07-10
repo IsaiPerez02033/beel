@@ -101,7 +101,7 @@ export default function Navbar({ transparent = false }: NavbarProps) {
             <button
               onClick={() => setSearchExpanded(true)}
               className={cn(
-                "group flex items-center rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-all duration-300 py-1.5 pl-2 pr-1.5 bg-[var(--bg-elevated)]/80 backdrop-blur-sm",
+                "group flex items-center rounded-full border border-[var(--border-default)] shadow-sm hover:shadow-md transition-all duration-300 py-1.5 pl-2 pr-1.5 bg-[var(--bg-elevated)]",
                 showSearch
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 -translate-y-2 pointer-events-none"

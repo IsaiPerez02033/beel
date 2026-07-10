@@ -200,8 +200,8 @@ export default function PropertyCard({
               Reserva ya
             </span>
           )}
-          <span className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold backdrop-blur-md"
-            style={{ background: "rgba(255,255,255,0.85)", color: "var(--color-tierra)" }}>
+          <span className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold"
+            style={{ background: "rgba(255,255,255,0.92)", color: "var(--color-tierra)" }}>
             {typeConfig.icon}
             {typeConfig.label}
           </span>
@@ -209,8 +209,7 @@ export default function PropertyCard({
 
         {/* Host chip — glassmorphism */}
         <div className="host-chip" style={{
-          background: "rgba(255,255,255,0.82)",
-          backdropFilter: "blur(8px)",
+          background: "rgba(255,255,255,0.94)",
           borderBottom: "2px solid var(--color-accent)",
           borderRadius: "8px",
         }}>

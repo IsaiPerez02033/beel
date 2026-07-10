@@ -112,8 +112,8 @@ export default function ExperienceCard({ experience, priority = false }: Experie
           </div>
         )}
         <div className="absolute top-2.5 left-2.5 z-10">
-          <span className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold backdrop-blur-md"
-            style={{ background: "rgba(255,255,255,0.85)", color: "var(--color-tierra)" }}>
+          <span className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold"
+            style={{ background: "rgba(255,255,255,0.92)", color: "var(--color-tierra)" }}>
             {cat.icon}
             {cat.label}
           </span>

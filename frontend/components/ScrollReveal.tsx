@@ -42,10 +42,11 @@ export default function ScrollReveal({ children }: ScrollRevealProps) {
   return (
     <div
       ref={ref}
-      className={`transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
+      style={{ willChange: visible ? "auto" : "transform, opacity" }}
+      className={`transition-[transform,opacity] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
         visible
-          ? "opacity-100 translate-y-0 scale-100"
-          : "opacity-0 translate-y-16 scale-[0.97] pointer-events-none"
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 translate-y-8 pointer-events-none"
       }`}
     >
       {children}
