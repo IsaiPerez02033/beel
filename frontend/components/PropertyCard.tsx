@@ -80,8 +80,16 @@ export default function PropertyCard({
   const photoUrl = currentPhoto?.url ?? "";
 
   const [imageLoaded, setImageLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
   useEffect(() => {
-    setImageLoaded(false);
+    // Al re-montar (ej. volver de otra pestaña) la imagen puede estar en caché
+    // del navegador y el evento onLoad no vuelve a dispararse: la marcamos como
+    // cargada si el <img> ya está completo. Si no, onLoad la revelará.
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setImageLoaded(true);
+    } else {
+      setImageLoaded(false);
+    }
   }, [photoUrl]);
 
   const locationLabel = [property.neighborhood, property.city]
@@ -114,6 +122,7 @@ export default function PropertyCard({
       <div className="card-photo">
         {photoUrl && !imgError ? (
           <Image
+            ref={imgRef}
             src={photoUrl}
             alt={property.title}
             fill
