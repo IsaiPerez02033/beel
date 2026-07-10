@@ -123,7 +123,7 @@ export default function SearchBar({ compact = false, initialValues = {}, onSearc
   }
 
   const dropdown =
-    mounted && showSug && pos && (loadingSug || suggestions.length > 0)
+    mounted && !mobileSearchOpen && showSug && pos && (loadingSug || suggestions.length > 0)
       ? createPortal(
           <div
             style={{ position: "absolute", top: pos.top, left: pos.left, width: Math.max(pos.width, 260), zIndex: 9999 }}
