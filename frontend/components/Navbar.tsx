@@ -77,10 +77,10 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           <Link href="/" className="flex-shrink-0 flex items-center">
             {/* Logo según tema (negro en claro, blanco en oscuro) */}
             <Image
-              src="/beel_logo_black_white.png"
+              src="/beel_logo_black_t.png"
               alt="Beel"
-              width={110}
-              height={42}
+              width={120}
+              height={50}
               className="h-10 w-auto block dark:hidden"
               priority
             />
