@@ -145,6 +145,17 @@ export default function MensajesPage() {
   const typingSentRef = useRef(false);
   const typingStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
+  // Visor de fotos a pantalla completa (tipo WhatsApp)
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!lightboxUrl) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightboxUrl(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxUrl]);
+
   // Filtros y búsqueda
   const [searchQuery, setSearchQuery] = useState("");
   const [filterUnread, setFilterUnread] = useState(false);
@@ -588,6 +599,7 @@ export default function MensajesPage() {
               conversationId={activeConvId!}
               onReact={handleReaction}
               memberNames={memberNames}
+              onOpenImage={setLightboxUrl}
             />
           )}
         </div>
@@ -1134,6 +1146,31 @@ export default function MensajesPage() {
           </>
         )}
       </div>
+
+      {/* Visor de foto a pantalla completa (tipo WhatsApp/Instagram) */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center animate-fade-in"
+          onClick={() => setLightboxUrl(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            aria-label="Cerrar"
+            className="absolute top-4 right-4 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+          >
+            <X size={22} />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightboxUrl}
+            alt="Foto"
+            className="max-w-[92vw] max-h-[88vh] object-contain rounded-lg select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -1151,6 +1188,7 @@ function SwipeableMessage({
   conversationId,
   onReact,
   memberNames,
+  onOpenImage,
 }: {
   msg: Message;
   isMine: boolean;
@@ -1162,6 +1200,7 @@ function SwipeableMessage({
   conversationId: string;
   onReact: (messageId: string, emoji: string, hasReacted: boolean) => void;
   memberNames: Record<string, string>;
+  onOpenImage: (url: string) => void;
 }) {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -1268,11 +1307,10 @@ function SwipeableMessage({
             )}
 
             {msg.message_type === "image" ? (
-              <a
-                href={msg.metadata?.image_url ?? msg.content ?? msg.body}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block -mx-1"
+              <button
+                type="button"
+                onClick={() => onOpenImage(msg.metadata?.image_url ?? msg.content ?? msg.body ?? "")}
+                className="block -mx-1 cursor-zoom-in"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -1281,7 +1319,7 @@ function SwipeableMessage({
                   loading="lazy"
                   className="rounded-xl max-w-[240px] max-h-[300px] object-cover"
                 />
-              </a>
+              </button>
             ) : (
               <p className="whitespace-pre-wrap">{msg.content ?? msg.body}</p>
             )}
@@ -1367,7 +1405,12 @@ function ConversationItem({
 }) {
   const other = conv.guest_id === currentUserId ? conv.host : conv.guest;
   const initial = other ? other.full_name.charAt(0).toUpperCase() : "?";
-  const preview = conv.last_message_preview ?? "Sin mensajes aún";
+  // Los mensajes de foto guardan la URL como contenido; si la vista previa es
+  // una URL, mostrar algo amigable en lugar del enlace crudo.
+  const rawPreview = conv.last_message_preview;
+  const preview = !rawPreview
+    ? "Sin mensajes aún"
+    : /^https?:\/\//.test(rawPreview) ? "📷 Foto" : rawPreview;
   const ts = conv.last_message_at
     ? format(parseISO(conv.last_message_at), "d MMM", { locale: es })
     : "";
