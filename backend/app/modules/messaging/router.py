@@ -5,7 +5,7 @@ import uuid
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -108,6 +108,66 @@ async def send_message(
     _assert_participant(conv, user.id)
 
     msg = await service.send_message(db, conv, user, data)
+    return msg
+
+
+@router.post("/{conversation_id}/photos", response_model=MessageOut, status_code=201)
+@limiter.limit("10/minute")
+async def send_photo(
+    request: Request,
+    conversation_id: uuid.UUID,
+    current_user: CurrentUser,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Sube una foto y la envía como mensaje en la conversación.
+
+    Acepta JPEG, PNG o WebP (máx. según MAX_PHOTO_SIZE_BYTES). El mensaje se
+    crea con message_type='image', content=URL pública y metadata con la clave
+    de almacenamiento, y se difunde por WebSocket como cualquier mensaje.
+    """
+    from app.core.storage import upload_photo as storage_upload, s3_configured, ALLOWED_CONTENT_TYPES
+
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    conv = await service.get_conversation(db, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    _assert_participant(conv, user.id)
+
+    if not s3_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="El almacenamiento de fotos no está configurado. Contacta al administrador.",
+        )
+
+    content_type = file.content_type or ""
+    if content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Formato no válido. Usa JPEG, PNG o WebP.")
+
+    file_bytes = await file.read()
+    try:
+        url, storage_key = await storage_upload(
+            file_bytes=file_bytes,
+            content_type=content_type,
+            prefix=f"messages/{conversation_id}",
+        )
+    except (ValueError, RuntimeError) as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    msg = await service.send_message(
+        db,
+        conv,
+        user,
+        MessageCreateIn(
+            body=url,
+            message_type="image",
+            metadata={"image_url": url, "storage_key": storage_key},
+        ),
+    )
+    logger.info("Foto enviada como mensaje %s en conv %s", msg.id, conversation_id)
     return msg
 
 

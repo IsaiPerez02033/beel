@@ -296,7 +296,8 @@ async def send_message(
     db.add(msg)
 
     # Actualizar preview y timestamp en la conversación
-    preview = (data.body or "")[:80]
+    # (para imágenes el content es la URL: mostramos un preview amigable)
+    preview = "📷 Foto" if data.message_type == "image" else (data.body or "")[:80]
     conversation.last_message_at = datetime.now(timezone.utc)
     conversation.last_message_preview = preview
 
@@ -360,6 +361,7 @@ async def send_message(
             "message_type": msg.message_type,
             "created_at": (msg.created_at or datetime.now(timezone.utc)).isoformat(),
             "reply_to": reply_payload,
+            "metadata": msg.metadata_,
         },
     )
 

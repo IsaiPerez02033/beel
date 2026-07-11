@@ -148,7 +148,7 @@ class ConversationListOut(BaseModel):
 
 class MessageCreateIn(BaseModel):
     body: str = Field(..., min_length=1, max_length=4000)
-    message_type: str = Field(default="text", pattern="^(text|system)$")
+    message_type: str = Field(default="text", pattern="^(text|system|image)$")
     metadata: Optional[dict] = None
     reply_to_id: Optional[uuid.UUID] = None
 

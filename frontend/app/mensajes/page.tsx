@@ -24,6 +24,8 @@ import {
   CreditCard,
   ExternalLink,
   CornerUpLeft,
+  Paperclip,
+  Loader2,
 } from "lucide-react";
 import MessageReactions from "@/components/MessageReactions";
 import ReportButton from "@/components/ReportButton";
@@ -74,6 +76,7 @@ interface Message {
   reactions?: Reaction[];
   reply_to_id?: string;
   reply_to?: ReplyPreview;
+  metadata?: { image_url?: string; storage_key?: string } | null;
 }
 
 interface PropertyPhoto {
@@ -123,7 +126,7 @@ interface ReservationDetails {
 }
 
 export default function MensajesPage() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { get, post, del } = useApi();
@@ -160,6 +163,10 @@ export default function MensajesPage() {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  // Envío de fotos en el chat
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // Ref a la función que recarga los mensajes (para llamarla desde el WS sin
   // recrear el handler en cada render).
   const reloadMessagesRef = useRef<(() => void) | null>(null);
@@ -298,6 +305,7 @@ export default function MensajesPage() {
             sender: { id: data.sender_id, full_name: data.sender_name },
             reply_to: data.reply_to ?? undefined,
             reply_to_id: data.reply_to?.id,
+            metadata: data.metadata ?? undefined,
           },
         ];
       });
@@ -416,6 +424,51 @@ export default function MensajesPage() {
       if (replyId) setReplyingTo(replyingTo);
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handlePhotoUpload(file: File) {
+    if (!activeConvId || uploadingPhoto) return;
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setPhotoError("Formato no válido. Usa JPEG, PNG o WebP.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setPhotoError("La imagen no debe superar 10 MB.");
+      return;
+    }
+    setPhotoError("");
+    setUploadingPhoto(true);
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/backend/messaging/${activeConvId}/photos`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Error al subir la foto" }));
+        throw new Error(err.detail ?? `HTTP ${res.status}`);
+      }
+      const msg: Message = await res.json();
+      // El WS puede haberlo insertado ya (sin metadata completa): reemplazar por id.
+      setMessages((prev) => {
+        const idx = prev.findIndex((m) => m.id === msg.id);
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = msg;
+          return copy;
+        }
+        return [...prev, msg];
+      });
+    } catch (e) {
+      setPhotoError(e instanceof Error ? e.message : "No se pudo enviar la foto.");
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
@@ -735,7 +788,9 @@ export default function MensajesPage() {
                     <p className="text-[11px] font-semibold text-[var(--color-primary)] truncate">
                       {replyingTo.sender_id === localUserId ? "Tú" : (replyingTo.sender?.full_name ?? "Usuario")}
                     </p>
-                    <p className="text-xs text-[var(--text-tertiary)] truncate">{replyingTo.content ?? replyingTo.body}</p>
+                    <p className="text-xs text-[var(--text-tertiary)] truncate">
+                      {replyingTo.message_type === "image" ? "📷 Foto" : (replyingTo.content ?? replyingTo.body)}
+                    </p>
                   </div>
                   <button onClick={() => setReplyingTo(null)} className="flex-shrink-0 p-2 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] active:scale-95">
                     <X size={16} />
@@ -745,7 +800,31 @@ export default function MensajesPage() {
 
               {/* Caja de Input */}
               <div className="px-3 sm:px-5 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex-shrink-0 safe-area-bottom">
-                <div className="relative border border-[var(--border-subtle)] focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] rounded-3xl py-2 pl-4 pr-2 transition-all bg-[var(--bg-subtle)] max-w-3xl mx-auto flex items-center gap-2 shadow-sm">
+                {photoError && (
+                  <p className="text-caption text-red-500 text-center mb-2">{photoError}</p>
+                )}
+                <div className="relative border border-[var(--border-subtle)] focus-within:border-[var(--color-primary)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] rounded-3xl py-2 pl-2 pr-2 transition-all bg-[var(--bg-subtle)] max-w-3xl mx-auto flex items-center gap-1 shadow-sm">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handlePhotoUpload(f);
+                    }}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingPhoto || sending}
+                    aria-label="Enviar foto"
+                    title="Enviar foto"
+                    className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--color-primary)] hover:bg-[var(--bg-elevated)] active:scale-95 transition-all disabled:opacity-40"
+                  >
+                    {uploadingPhoto
+                      ? <Loader2 size={18} className="animate-spin text-[var(--color-primary)]" />
+                      : <Paperclip size={18} />}
+                  </button>
                   <textarea
                     value={input}
                     onChange={(e) => {
@@ -1182,11 +1261,30 @@ function SwipeableMessage({
                 )}
               >
                 <p className="font-semibold truncate">{msg.reply_to.sender_name ?? "Usuario"}</p>
-                <p className="truncate opacity-80">{msg.reply_to.content}</p>
+                <p className="truncate opacity-80">
+                  {msg.reply_to.content?.startsWith("http") ? "📷 Foto" : msg.reply_to.content}
+                </p>
               </button>
             )}
 
-            <p className="whitespace-pre-wrap">{msg.content ?? msg.body}</p>
+            {msg.message_type === "image" ? (
+              <a
+                href={msg.metadata?.image_url ?? msg.content ?? msg.body}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block -mx-1"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={msg.metadata?.image_url ?? msg.content ?? msg.body}
+                  alt="Foto"
+                  loading="lazy"
+                  className="rounded-xl max-w-[240px] max-h-[300px] object-cover"
+                />
+              </a>
+            ) : (
+              <p className="whitespace-pre-wrap">{msg.content ?? msg.body}</p>
+            )}
 
             {/* Timestamp + botón de reacción en móvil (inline dentro de burbuja) */}
             <div className={cn("flex items-center gap-2 mt-1.5", isMine ? "justify-end" : "justify-between")}>
