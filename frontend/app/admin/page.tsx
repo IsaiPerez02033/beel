@@ -301,21 +301,35 @@ function BroadcastCard() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [type, setType] = useState<"announcement" | "promo">("announcement");
+  const [audience, setAudience] = useState<"all" | "guests" | "hosts">("all");
+  const [url, setUrl] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState("");
 
   async function send() {
     if (!title.trim() || !body.trim() || sending) return;
+    if (url.trim() && !url.trim().startsWith("/")) {
+      setResult("❌ El link debe ser una ruta interna que empiece con / (ej. /buscar)");
+      return;
+    }
     setSending(true);
     setResult("");
     try {
       const res = await post<{ sent: number; total_users: number }>(
         "/notifications/admin/broadcast",
-        { title: title.trim(), body: body.trim() }
+        {
+          title: title.trim(),
+          body: body.trim(),
+          type,
+          audience,
+          url: url.trim() || null,
+        }
       );
       setResult(`✅ Enviado a ${res.sent} de ${res.total_users} usuarios.`);
       setTitle("");
       setBody("");
+      setUrl("");
     } catch (e) {
       setResult(`❌ ${e instanceof Error ? e.message : "Error al enviar"}`);
     } finally {
@@ -347,6 +361,32 @@ function BroadcastCard() {
             value={body}
             maxLength={500}
             onChange={(e) => setBody(e.target.value)}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              className="input"
+              value={type}
+              onChange={(e) => setType(e.target.value as "announcement" | "promo")}
+            >
+              <option value="announcement">📣 Aviso</option>
+              <option value="promo">🏷️ Promoción</option>
+            </select>
+            <select
+              className="input"
+              value={audience}
+              onChange={(e) => setAudience(e.target.value as "all" | "guests" | "hosts")}
+            >
+              <option value="all">Todos los usuarios</option>
+              <option value="guests">Solo huéspedes</option>
+              <option value="hosts">Solo anfitriones</option>
+            </select>
+          </div>
+          <input
+            className="input"
+            placeholder="Link interno opcional (ej. /buscar?destino=Cancún)"
+            value={url}
+            maxLength={300}
+            onChange={(e) => setUrl(e.target.value)}
           />
           <div className="flex items-center gap-3">
             <button

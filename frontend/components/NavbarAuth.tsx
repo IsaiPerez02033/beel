@@ -310,6 +310,7 @@ interface NotificationItem {
     reservation_id?: string;
     property_id?: string;
     conversation_id?: string;
+    url?: string;
   };
 }
 
@@ -367,7 +368,9 @@ function NotificationsDropdown() {
         .catch(() => {});
     }
 
-    if (notif.data?.reservation_id) {
+    if (notif.data?.url?.startsWith("/")) {
+      router.push(notif.data.url);
+    } else if (notif.data?.reservation_id) {
       router.push(`/reservaciones/${notif.data.reservation_id}`);
     } else if (notif.data?.conversation_id) {
       router.push(`/mensajes?conv=${notif.data.conversation_id}`);

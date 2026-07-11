@@ -44,3 +44,9 @@ class PushUnsubscribeIn(BaseModel):
 class BroadcastIn(BaseModel):
     title: str = Field(..., min_length=1, max_length=120)
     body: str = Field(..., min_length=1, max_length=500)
+    # "announcement" = aviso general, "promo" = promoción
+    type: str = Field("announcement", pattern=r"^(announcement|promo)$")
+    # Ruta interna a abrir al tocar la notificación (ej. /buscar?destino=Cancun)
+    url: Optional[str] = Field(None, max_length=300, pattern=r"^/")
+    # Segmento destino: todos, solo huéspedes o solo anfitriones
+    audience: str = Field("all", pattern=r"^(all|guests|hosts)$")

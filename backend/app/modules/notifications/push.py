@@ -24,6 +24,13 @@ def _url_for(type_: str, data: Optional[dict]) -> str:
     data = data or {}
     if type_ == "new_message" and data.get("conversation_id"):
         return f"/mensajes?conv={data['conversation_id']}"
+    if type_ == "payment_reminder" and data.get("reservation_id"):
+        # La página de la reserva recupera sola la URL de checkout de MP
+        return f"/reservaciones/{data['reservation_id']}"
+    if type_ in ("announcement", "promo"):
+        # Solo rutas internas; nunca abrir dominios externos desde un push
+        url = data.get("url") or "/"
+        return url if url.startswith("/") else "/"
     if type_.startswith("reservation") or type_.startswith("booking"):
         return "/viajes"
     if type_.startswith("payment"):

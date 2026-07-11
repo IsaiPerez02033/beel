@@ -73,7 +73,12 @@ async def admin_broadcast(
     if not me or me.role != "admin":
         raise HTTPException(status_code=403, detail="Solo administradores de Beel")
 
-    result = await db.execute(select(User.id).where(User.is_active.is_(True)))
+    query = select(User.id).where(User.is_active.is_(True))
+    if data.audience == "hosts":
+        query = query.where(User.role.in_(["host", "admin"]))
+    elif data.audience == "guests":
+        query = query.where(User.role == "guest")
+    result = await db.execute(query)
     user_ids = [row[0] for row in result.all()]
 
     count = 0
@@ -82,10 +87,10 @@ async def admin_broadcast(
             await service.create_notification(
                 db,
                 user_id=uid,
-                type="announcement",
+                type=data.type,
                 title=data.title,
                 body=data.body,
-                data=None,
+                data={"url": data.url} if data.url else None,
             )
             count += 1
         except Exception:  # noqa: BLE001

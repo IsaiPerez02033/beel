@@ -63,6 +63,7 @@ if settings.SENTRY_DSN:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 Iniciando Beel API v%s (%s)", settings.APP_VERSION, settings.ENVIRONMENT)
+    jobs_task = None
 
     if settings.DEMO_MODE:
         logger.info("🎭 MODO DEMO: sin servicios externos")
@@ -80,8 +81,17 @@ async def lifespan(app: FastAPI):
         else:
             logger.info("⚠️ Sin Redis — cache deshabilitado")
 
+    # Trabajos periódicos (recordatorios de pago abandonado, etc.)
+    if not settings.DEMO_MODE and settings.has_database:
+        import asyncio
+        from app.modules.notifications.jobs import notification_jobs_loop
+        jobs_task = asyncio.create_task(notification_jobs_loop())
+        logger.info("⏰ Trabajos periódicos de notificaciones activados")
+
     yield
     logger.info("🛑 Apagando Beel API")
+    if jobs_task:
+        jobs_task.cancel()
     if settings.has_database:
         await dispose_engine()
 
