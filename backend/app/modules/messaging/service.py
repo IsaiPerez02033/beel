@@ -324,7 +324,7 @@ async def send_message(
                 user_id=recipient_id,
                 type="new_message",
                 title=f"Nuevo mensaje de {sender.full_name}",
-                body=preview,
+                body="Te envió una foto 📷" if data.message_type == "image" else preview,
                 data={"conversation_id": str(conversation.id)},
             )
     except Exception as e:
