@@ -8,6 +8,7 @@ import SplashWrapper from "@/components/SplashWrapper";
 import DemoBanner from "@/components/DemoBanner";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import InstallPrompt from "@/components/InstallPrompt";
+import PushPrompt from "@/components/PushPrompt";
 import BottomNav from "@/components/BottomNav";
 import TermsGate from "@/components/TermsGate";
 import "@/styles/globals.css";
@@ -101,6 +102,7 @@ export default function RootLayout({
             <body>
               <ServiceWorkerRegister />
               <InstallPrompt />
+              <PushPrompt />
               <DemoBanner />
               <SplashWrapper>{children}</SplashWrapper>
               <BottomNav />

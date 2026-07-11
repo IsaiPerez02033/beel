@@ -35,6 +35,15 @@ async def create_notification(
     db.add(notif)
     await db.flush()
     logger.info("Notificación creada: %s para usuario %s (tipo: %s)", notif.id, user_id, type)
+
+    # Web Push best-effort a los dispositivos del usuario (PWA instalada).
+    # Nunca debe romper la transacción del evento que originó la notificación.
+    try:
+        from app.modules.notifications.push import send_push_to_user
+        await send_push_to_user(db, user_id, title=title, body=body, type_=type, data=data)
+    except Exception as e:  # noqa: BLE001
+        logger.warning("Web push falló para usuario %s: %s", user_id, e)
+
     return notif
 
 

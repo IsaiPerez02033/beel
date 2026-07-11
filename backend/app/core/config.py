@@ -89,6 +89,10 @@ class Settings(BaseSettings):
     IVA_RETENTION_WITH_RFC: float = 8.0       # % IVA si registro RFC (50% del IVA)
     IVA_RETENTION_WITHOUT_RFC: float = 16.0   # % IVA sin RFC (100%)
 
+    # ── Web Push (notificaciones a PWA instalada) ────────────────────────────
+    VAPID_PRIVATE_KEY: Optional[str] = None   # Clave privada VAPID (base64url). Si falta, el push es no-op.
+    VAPID_CLAIMS_EMAIL: str = "mailto:soporte@beel-mx.com"
+
     # ── Concierge (IA) ────────────────────────────────────────────────────────
     ANTHROPIC_API_KEY: Optional[str] = None
     CONCIERGE_MODEL: str = "claude-haiku-4-5"  # barato, buen español, tool use nativo

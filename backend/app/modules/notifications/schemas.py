@@ -22,3 +22,20 @@ class NotificationListOut(BaseModel):
     notifications: list[NotificationOut]
     total: int
     unread_count: int
+
+
+# ── Web Push ──────────────────────────────────────────────────────────────────
+
+class PushKeysIn(BaseModel):
+    p256dh: str
+    auth: str
+
+
+class PushSubscribeIn(BaseModel):
+    """Cuerpo de PushSubscription.toJSON() del navegador."""
+    endpoint: str
+    keys: PushKeysIn
+
+
+class PushUnsubscribeIn(BaseModel):
+    endpoint: str

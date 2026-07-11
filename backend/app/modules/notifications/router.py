@@ -1,12 +1,19 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser
 from app.core.database import get_db
 from app.modules.notifications import service
-from app.modules.notifications.schemas import NotificationListOut, NotificationOut
+from app.modules.notifications.models import PushSubscription
+from app.modules.notifications.schemas import (
+    NotificationListOut,
+    NotificationOut,
+    PushSubscribeIn,
+    PushUnsubscribeIn,
+)
 
 router = APIRouter()
 
@@ -48,4 +55,54 @@ async def mark_all_read(
     count = await service.mark_all_read(db, current_user.id)
     await db.commit()
     return {"marked_read": count}
+
+
+# ── Web Push ──────────────────────────────────────────────────────────────────
+
+@router.post("/push-subscribe", status_code=201)
+async def push_subscribe(
+    request: Request,
+    data: PushSubscribeIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Registra (o reasigna) la suscripción Web Push del dispositivo."""
+    result = await db.execute(
+        select(PushSubscription).where(PushSubscription.endpoint == data.endpoint)
+    )
+    sub = result.scalar_one_or_none()
+    ua = (request.headers.get("user-agent") or "")[:255]
+    if sub:
+        sub.user_id = current_user.id
+        sub.p256dh = data.keys.p256dh
+        sub.auth = data.keys.auth
+        sub.user_agent = ua
+    else:
+        sub = PushSubscription(
+            user_id=current_user.id,
+            endpoint=data.endpoint,
+            p256dh=data.keys.p256dh,
+            auth=data.keys.auth,
+            user_agent=ua,
+        )
+        db.add(sub)
+    await db.commit()
+    return {"subscribed": True}
+
+
+@router.delete("/push-subscribe")
+async def push_unsubscribe(
+    data: PushUnsubscribeIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Elimina la suscripción Web Push del dispositivo (solo la propia)."""
+    result = await db.execute(
+        delete(PushSubscription).where(
+            PushSubscription.endpoint == data.endpoint,
+            PushSubscription.user_id == current_user.id,
+        )
+    )
+    await db.commit()
+    return {"unsubscribed": bool(result.rowcount)}
 
