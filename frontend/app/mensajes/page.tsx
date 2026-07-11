@@ -772,7 +772,7 @@ export default function MensajesPage() {
                 {renderMessages()}
                 {otherTyping && (
                   <div className="flex items-center gap-1.5 mt-2 ml-1">
-                    <span className="flex gap-1 bg-[var(--bg-subtle)] border border-[var(--border-subtle)]/50 rounded-2xl rounded-tl-none px-3 py-2.5">
+                    <span className="flex gap-1 bg-[var(--bg-subtle)] rounded-2xl rounded-tl-none px-3 py-2.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-tertiary)] animate-bounce" style={{ animationDelay: "0ms" }} />
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-tertiary)] animate-bounce" style={{ animationDelay: "150ms" }} />
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-tertiary)] animate-bounce" style={{ animationDelay: "300ms" }} />
@@ -1285,7 +1285,7 @@ function SwipeableMessage({
               "px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm",
               isMine
                 ? "bg-[var(--color-primary)] text-white rounded-tr-none"
-                : "bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-tl-none border border-[var(--border-subtle)]/50"
+                : "bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-tl-none"
             )}
           >
             {/* Cita del mensaje respondido */}
