@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class NotificationOut(BaseModel):
@@ -39,3 +39,8 @@ class PushSubscribeIn(BaseModel):
 
 class PushUnsubscribeIn(BaseModel):
     endpoint: str
+
+
+class BroadcastIn(BaseModel):
+    title: str = Field(..., min_length=1, max_length=120)
+    body: str = Field(..., min_length=1, max_length=500)

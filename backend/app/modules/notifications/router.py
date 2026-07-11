@@ -9,6 +9,7 @@ from app.core.database import get_db
 from app.modules.notifications import service
 from app.modules.notifications.models import PushSubscription
 from app.modules.notifications.schemas import (
+    BroadcastIn,
     NotificationListOut,
     NotificationOut,
     PushSubscribeIn,
@@ -55,6 +56,42 @@ async def mark_all_read(
     count = await service.mark_all_read(db, current_user.id)
     await db.commit()
     return {"marked_read": count}
+
+
+# ── Admin: difusión de avisos ─────────────────────────────────────────────────
+
+@router.post("/admin/broadcast")
+async def admin_broadcast(
+    data: BroadcastIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Envía un aviso (in-app + web push) a todos los usuarios activos. Solo admin."""
+    from app.modules.users.models import User
+
+    me = (await db.execute(select(User).where(User.id == current_user.id))).scalar_one_or_none()
+    if not me or me.role != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores de Beel")
+
+    result = await db.execute(select(User.id).where(User.is_active.is_(True)))
+    user_ids = [row[0] for row in result.all()]
+
+    count = 0
+    for uid in user_ids:
+        try:
+            await service.create_notification(
+                db,
+                user_id=uid,
+                type="announcement",
+                title=data.title,
+                body=data.body,
+                data=None,
+            )
+            count += 1
+        except Exception:  # noqa: BLE001
+            continue
+    await db.commit()
+    return {"sent": count, "total_users": len(user_ids)}
 
 
 # ── Web Push ──────────────────────────────────────────────────────────────────

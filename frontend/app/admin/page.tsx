@@ -175,6 +175,9 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Aviso a todos los usuarios */}
+        <BroadcastCard />
+
         {/* Stats */}
         {!loading && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -287,6 +290,77 @@ export default function AdminPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BroadcastCard() {
+  const { post } = useApi();
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState("");
+
+  async function send() {
+    if (!title.trim() || !body.trim() || sending) return;
+    setSending(true);
+    setResult("");
+    try {
+      const res = await post<{ sent: number; total_users: number }>(
+        "/notifications/admin/broadcast",
+        { title: title.trim(), body: body.trim() }
+      );
+      setResult(`✅ Enviado a ${res.sent} de ${res.total_users} usuarios.`);
+      setTitle("");
+      setBody("");
+    } catch (e) {
+      setResult(`❌ ${e instanceof Error ? e.message : "Error al enviar"}`);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="card p-4 mb-6">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between text-left">
+        <span className="text-body-sm font-semibold text-[var(--text-primary)]">
+          📣 Enviar aviso a todos los usuarios
+        </span>
+        <span className="text-caption text-[var(--text-tertiary)]">{open ? "Cerrar" : "Abrir"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 space-y-2">
+          <input
+            className="input"
+            placeholder="Título (ej. ¡Nuevo en Beel!)"
+            value={title}
+            maxLength={120}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <textarea
+            className="input resize-none"
+            rows={2}
+            placeholder="Mensaje (ej. Ya puedes enviar fotos en el chat 📷)"
+            value={body}
+            maxLength={500}
+            onChange={(e) => setBody(e.target.value)}
+          />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={send}
+              disabled={sending || !title.trim() || !body.trim()}
+              className="btn btn-primary text-body-sm px-4 py-2 disabled:opacity-50"
+            >
+              {sending ? "Enviando…" : "Enviar a todos"}
+            </button>
+            {result && <p className="text-caption text-[var(--text-secondary)]">{result}</p>}
+          </div>
+          <p className="text-caption text-[var(--text-tertiary)]">
+            Llega como notificación in-app (campana) y push a los dispositivos suscritos.
+          </p>
         </div>
       )}
     </div>
