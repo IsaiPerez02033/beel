@@ -22,6 +22,9 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
   const wsRef = useRef<WebSocket | null>(null);
   const retryRef = useRef(0);
   const activeRef = useRef(true);
+  // En segundo plano cerramos el WS a propósito: mientras esté conectado el
+  // backend asume que estás viendo el chat y no manda push de esos mensajes.
+  const suspendedRef = useRef(false);
   const optionsRef = useRef(options);
   optionsRef.current = options;
   // getToken puede cambiar de identidad en cada render; lo guardamos en un ref
@@ -30,7 +33,7 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
   getTokenRef.current = getToken;
 
   const connect = useCallback(async () => {
-    if (!conversationId || !activeRef.current) return;
+    if (!conversationId || !activeRef.current || suspendedRef.current) return;
 
     if (wsRef.current) {
       wsRef.current.close();
@@ -69,7 +72,7 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
     };
 
     ws.onclose = () => {
-      if (!activeRef.current) return;
+      if (!activeRef.current || suspendedRef.current) return;
       const delay = Math.min(1000 * 2 ** retryRef.current, 30_000);
       retryRef.current++;
       setTimeout(connect, delay);
@@ -83,6 +86,25 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
       activeRef.current = false;
       wsRef.current?.close();
     };
+  }, [connect]);
+
+  // Suspender el WS cuando la app pasa a segundo plano y reconectar al volver.
+  // Así los mensajes que lleguen mientras no estás viendo el chat SÍ generan
+  // push, y al volver la reconexión dispara onConnected → recarga de mensajes.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) {
+        suspendedRef.current = true;
+        wsRef.current?.close();
+        wsRef.current = null;
+      } else {
+        suspendedRef.current = false;
+        retryRef.current = 0;
+        connect();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [connect]);
 
   /**

@@ -20,6 +20,7 @@ async def create_notification(
     data: Optional[dict] = None,
     send_email: bool = True,
     send_whatsapp: bool = False,
+    send_push: bool = True,
 ) -> Notification:
     """Crea una notificación en la base de datos."""
     notif = Notification(
@@ -38,11 +39,12 @@ async def create_notification(
 
     # Web Push best-effort a los dispositivos del usuario (PWA instalada).
     # Nunca debe romper la transacción del evento que originó la notificación.
-    try:
-        from app.modules.notifications.push import send_push_to_user
-        await send_push_to_user(db, user_id, title=title, body=body, type_=type, data=data)
-    except Exception as e:  # noqa: BLE001
-        logger.warning("Web push falló para usuario %s: %s", user_id, e)
+    if send_push:
+        try:
+            from app.modules.notifications.push import send_push_to_user
+            await send_push_to_user(db, user_id, title=title, body=body, type_=type, data=data)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Web push falló para usuario %s: %s", user_id, e)
 
     return notif
 

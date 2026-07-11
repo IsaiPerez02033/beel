@@ -317,8 +317,9 @@ async def websocket_messages(
 
     await ws.accept()
 
-    # Registrar listener para broadcast
-    q: asyncio.Queue = service._register_listener(conv.id)
+    # Registrar listener para broadcast (con user_id para suprimir push
+    # cuando el usuario está viendo el chat)
+    q: asyncio.Queue = service._register_listener(conv.id, user.id)
 
     try:
         # Notificar conexión

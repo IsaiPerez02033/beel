@@ -19,29 +19,36 @@ from app.modules.reservations.models import Reservation
 
 logger = logging.getLogger(__name__)
 
-# ── SSE: cola de eventos por conversación ─────────────────────────────────────
-# Dict[conversation_id → List[asyncio.Queue]]
-# Cada conexión SSE activa tiene su propia Queue.
-_sse_listeners: dict[uuid.UUID, list[asyncio.Queue]] = {}
+# ── Tiempo real: cola de eventos por conversación ─────────────────────────────
+# Dict[conversation_id → List[(asyncio.Queue, user_id)]]
+# Cada conexión WS activa tiene su propia Queue; el user_id permite saber si un
+# usuario está viendo el chat (para no mandarle push redundante).
+_sse_listeners: dict[uuid.UUID, list[tuple[asyncio.Queue, Optional[uuid.UUID]]]] = {}
 
 
-def _register_listener(conversation_id: uuid.UUID) -> asyncio.Queue:
+def _register_listener(
+    conversation_id: uuid.UUID, user_id: Optional[uuid.UUID] = None
+) -> asyncio.Queue:
     q: asyncio.Queue = asyncio.Queue(maxsize=100)
-    _sse_listeners.setdefault(conversation_id, []).append(q)
+    _sse_listeners.setdefault(conversation_id, []).append((q, user_id))
     return q
 
 
 def _unregister_listener(conversation_id: uuid.UUID, q: asyncio.Queue) -> None:
     listeners = _sse_listeners.get(conversation_id, [])
-    if q in listeners:
-        listeners.remove(q)
-    if not listeners:
+    _sse_listeners[conversation_id] = [item for item in listeners if item[0] is not q]
+    if not _sse_listeners.get(conversation_id):
         _sse_listeners.pop(conversation_id, None)
 
 
+def user_is_connected(conversation_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+    """True si el usuario tiene una conexión en vivo a esta conversación."""
+    return any(uid == user_id for _, uid in _sse_listeners.get(conversation_id, []))
+
+
 async def _broadcast(conversation_id: uuid.UUID, event: dict) -> None:
-    """Envía un evento a todas las colas SSE activas de la conversación."""
-    for q in _sse_listeners.get(conversation_id, []):
+    """Envía un evento a todas las colas activas de la conversación."""
+    for q, _uid in _sse_listeners.get(conversation_id, []):
         try:
             q.put_nowait(event)
         except asyncio.QueueFull:
@@ -326,6 +333,9 @@ async def send_message(
                 title=f"Nuevo mensaje de {sender.full_name}",
                 body="Te envió una foto 📷" if data.message_type == "image" else preview,
                 data={"conversation_id": str(conversation.id)},
+                # Si el destinatario tiene este chat abierto (WS en vivo), el
+                # mensaje le llega en pantalla: no duplicar con un push.
+                send_push=not user_is_connected(conversation.id, recipient_id),
             )
     except Exception as e:
         logger.error("Error al crear notificación de nuevo mensaje: %s", e)
