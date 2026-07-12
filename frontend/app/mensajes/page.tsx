@@ -183,6 +183,12 @@ export default function MensajesPage() {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Al elegir "responder", llevar el foco al cuadro de texto (como WhatsApp).
+  useEffect(() => {
+    if (replyingTo) messageInputRef.current?.focus();
+  }, [replyingTo]);
   // Envío de fotos en el chat
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState("");
@@ -972,6 +978,7 @@ export default function MensajesPage() {
                       : <Paperclip size={18} />}
                   </button>
                   <textarea
+                    ref={messageInputRef}
                     value={input}
                     onChange={(e) => {
                       setInput(e.target.value);
