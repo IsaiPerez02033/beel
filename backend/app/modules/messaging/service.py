@@ -408,6 +408,7 @@ async def mark_read(
     count = 0
     for m in msgs:
         m.read_at = now
+        m.is_read = True  # el frontend usa is_read para las palomitas azules
         count += 1
 
     # Resetear contador de no-leídos

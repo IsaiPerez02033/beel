@@ -38,23 +38,43 @@ async def unread_summary(
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
-    """Conteo de notificaciones sin leer: total y solo de mensajes.
+    """Conteo de no-leídos: total de notificaciones y mensajes de chat.
 
-    El tab 'Mensajes' del móvil usa `messages` para no inflar el badge con
-    avisos/reservas que en móvil no tienen campana donde marcarse leídos.
+    `messages` sale de los contadores de las conversaciones (la misma fuente
+    que los badges de la lista de chats), no de filas de notificaciones: así
+    el tab Mensajes nunca muestra residuos y siempre coincide con la lista.
     """
     from sqlalchemy import func
+    from app.modules.messaging.models import Conversation
     from app.modules.notifications.models import Notification
 
-    base = select(func.count()).where(
-        Notification.user_id == current_user.id,
-        Notification.is_read.is_(False),
-    )
-    total = (await db.execute(base)).scalar_one()
-    messages = (
-        await db.execute(base.where(Notification.type == "new_message"))
+    total = (
+        await db.execute(
+            select(func.count()).where(
+                Notification.user_id == current_user.id,
+                Notification.is_read.is_(False),
+            )
+        )
     ).scalar_one()
-    return {"total": total, "messages": messages}
+
+    guest_unread = (
+        await db.execute(
+            select(func.coalesce(func.sum(Conversation.unread_count_guest), 0)).where(
+                Conversation.guest_id == current_user.id,
+                Conversation.is_archived.is_(False),
+            )
+        )
+    ).scalar_one()
+    host_unread = (
+        await db.execute(
+            select(func.coalesce(func.sum(Conversation.unread_count_host), 0)).where(
+                Conversation.host_id == current_user.id,
+                Conversation.is_archived.is_(False),
+            )
+        )
+    ).scalar_one()
+
+    return {"total": total, "messages": int(guest_unread) + int(host_unread)}
 
 
 @router.post("/{notification_id}/read", response_model=NotificationOut)

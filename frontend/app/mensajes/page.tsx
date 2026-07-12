@@ -72,6 +72,7 @@ interface Message {
   message_type: string;
   created_at: string;
   is_read?: boolean;
+  read_at?: string | null;
   sender?: Participant;
   reactions?: Reaction[];
   reply_to_id?: string;
@@ -163,7 +164,8 @@ export default function MensajesPage() {
   const [filterUnread, setFilterUnread] = useState(false);
   
   // Sidebar de reservación
-  const [showInfoSidebar, setShowInfoSidebar] = useState(true);
+  // El panel de detalles de reserva inicia cerrado; se abre con el botón ⓘ.
+  const [showInfoSidebar, setShowInfoSidebar] = useState(false);
   const [reservationDetails, setReservationDetails] = useState<ReservationDetails | null>(null);
   const [loadingReservation, setLoadingReservation] = useState(false);
 
@@ -205,8 +207,22 @@ export default function MensajesPage() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) {
-      router.push("/iniciar-sesion");
-      return;
+      // Al abrir la PWA en frío (p. ej. tocando una notificación) la sesión
+      // puede reportarse vacía un instante. Confirmar contra el servidor antes
+      // de mandar a login, y conservar el destino para volver tras entrar.
+      let cancelled = false;
+      (async () => {
+        try {
+          const { getSession } = await import("next-auth/react");
+          const session = await getSession();
+          if (cancelled || session) return; // sí hay sesión: el provider se actualiza solo
+        } catch {}
+        if (!cancelled) {
+          const dest = window.location.pathname + window.location.search;
+          router.push(`/iniciar-sesion?callbackUrl=${encodeURIComponent(dest)}`);
+        }
+      })();
+      return () => { cancelled = true; };
     }
     get<{ id: string }>("/users/me")
       .then((d) => setLocalUserId(d.id))
@@ -230,9 +246,16 @@ export default function MensajesPage() {
     get<{ messages: Message[] }>(`/messaging/${activeConvId}/messages`)
       .then((d) => {
         // Conservar burbujas optimistas aún en vuelo (el POST las resolverá).
+        // Y si nada cambió, conservar el array anterior: evita re-render y el
+        // auto-scroll que se sentía como pantalla trabada durante el sondeo.
         setMessages((prev) => {
           const temps = prev.filter((m) => m.pending);
-          return temps.length ? [...d.messages, ...temps] : d.messages;
+          const next = temps.length ? [...d.messages, ...temps] : d.messages;
+          const sig = (list: Message[]) =>
+            list
+              .map((m) => `${m.id}:${m.is_read || m.read_at ? 1 : 0}:${(m.reactions ?? []).length}`)
+              .join("|");
+          return sig(prev) === sig(next) ? prev : next;
         });
         // Limpiar el no-leído local de esta conversación en la lista lateral.
         setConversations((prev) =>
@@ -251,6 +274,18 @@ export default function MensajesPage() {
   }, [activeConvId, get]);
 
   reloadMessagesRef.current = reloadMessages;
+
+  // Refleja el último mensaje en la lista lateral al instante (al enviar o
+  // recibir), para que al regresar con la flecha no se vea un preview viejo.
+  const bumpConversationPreview = useCallback((convId: string, preview: string) => {
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === convId || c.reservation_id === convId
+          ? { ...c, last_message_preview: preview, last_message_at: new Date().toISOString() }
+          : c
+      )
+    );
+  }, []);
 
   // Cargar mensajes al seleccionar conversación
   useEffect(() => {
@@ -326,6 +361,12 @@ export default function MensajesPage() {
           },
         ];
       });
+      if (activeConvId) {
+        bumpConversationPreview(
+          activeConvId,
+          data.message_type === "image" ? "📷 Foto" : (data.body ?? "")
+        );
+      }
     },
     onConnected: () => {
       // Al (re)conectar el WS pueden haberse perdido mensajes mientras estuvo
@@ -352,10 +393,14 @@ export default function MensajesPage() {
     if (!el || messages.length === 0) return;
 
     // Al (re)abrir la conversación: salto instantáneo al fondo, SIN banner.
+    // Doble pasada (ahora + próximo frame) por si el layout aún se acomoda.
     if (scrollConvRef.current !== activeConvId) {
       scrollConvRef.current = activeConvId;
       prevMsgCountRef.current = messages.length;
       messagesEndRef.current?.scrollIntoView({ block: "end" });
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ block: "end" });
+      });
       setHasNewMessages(false);
       return;
     }
@@ -364,17 +409,17 @@ export default function MensajesPage() {
     prevMsgCountRef.current = messages.length;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 250;
 
-    // No creció el conteo (p. ej. cambió "escribiendo…"): solo mantener pegado
-    // al fondo si ya estabas ahí; nunca marcar "nuevos".
+    // No creció el conteo (p. ej. cambió "escribiendo…"): no tocar el scroll.
+    // (Antes hacía scroll suave aquí y peleaba con el dedo del usuario.)
     if (messages.length <= prevCount) {
-      if (nearBottom) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
     }
 
-    // Llegó un mensaje nuevo de verdad.
+    // Llegó un mensaje nuevo de verdad. Salto instantáneo: el scroll suave se
+    // re-disparaba en cada render y dejaba la pantalla "trabada" un momento.
     const lastMessage = messages[messages.length - 1];
     if (nearBottom || (lastMessage && lastMessage.sender_id === localUserId)) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current?.scrollIntoView({ block: "end" });
       setHasNewMessages(false);
     } else {
       setHasNewMessages(true);
@@ -442,6 +487,7 @@ export default function MensajesPage() {
           : undefined,
       } as Message,
     ]);
+    bumpConversationPreview(activeConvId, text);
 
     try {
       const msg = await post<Message>(`/messaging/${activeConvId}/messages`, {
@@ -498,6 +544,7 @@ export default function MensajesPage() {
         throw new Error(err.detail ?? `HTTP ${res.status}`);
       }
       const msg: Message = await res.json();
+      bumpConversationPreview(activeConvId, "📷 Foto");
       // El WS puede haberlo insertado ya (sin metadata completa): reemplazar por id.
       setMessages((prev) => {
         const idx = prev.findIndex((m) => m.id === msg.id);
@@ -1346,11 +1393,13 @@ function SwipeableMessage({
                 className="block -mx-1 cursor-zoom-in"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
+                {/* Tamaño fijo: si la altura dependiera de la carga de la foto,
+                    el scroll inicial al fondo quedaría corto al terminar de cargar. */}
                 <img
                   src={msg.metadata?.image_url ?? msg.content ?? msg.body}
                   alt="Foto"
                   loading="lazy"
-                  className="rounded-xl max-w-[240px] max-h-[300px] object-cover"
+                  className="rounded-xl w-[240px] h-[280px] object-cover bg-black/10"
                 />
               </button>
             ) : (
@@ -1377,7 +1426,7 @@ function SwipeableMessage({
                   msg.pending
                     // Enviando: una palomita tenue
                     ? <Check size={13} className="text-white/50" />
-                    : msg.is_read
+                    : (msg.is_read || !!msg.read_at)
                       // Leído: dos palomitas azules (estilo WhatsApp)
                       ? <CheckCheck size={13} className="text-[#8FE3FF]" />
                       // Entregado: dos palomitas grises
