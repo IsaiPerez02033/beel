@@ -77,6 +77,8 @@ interface Message {
   reply_to_id?: string;
   reply_to?: ReplyPreview;
   metadata?: { image_url?: string; storage_key?: string } | null;
+  /** Solo cliente: mensaje optimista aún no confirmado por el servidor. */
+  pending?: boolean;
 }
 
 interface PropertyPhoto {
@@ -227,7 +229,11 @@ export default function MensajesPage() {
     if (!activeConvId) return;
     get<{ messages: Message[] }>(`/messaging/${activeConvId}/messages`)
       .then((d) => {
-        setMessages(d.messages);
+        // Conservar burbujas optimistas aún en vuelo (el POST las resolverá).
+        setMessages((prev) => {
+          const temps = prev.filter((m) => m.pending);
+          return temps.length ? [...d.messages, ...temps] : d.messages;
+        });
         // Limpiar el no-leído local de esta conversación en la lista lateral.
         setConversations((prev) =>
           prev.map((c) =>
@@ -410,29 +416,56 @@ export default function MensajesPage() {
     setInput("");
     stopTyping();
     const replyId = replyingTo?.id ?? null;
+    const replySnapshot = replyingTo;
     setReplyingTo(null);
+
+    // Burbuja optimista: aparece al instante con una sola palomita (enviando).
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempId,
+        sender_id: localUserId,
+        body: text,
+        content: text,
+        message_type: "text",
+        created_at: new Date().toISOString(),
+        pending: true,
+        reply_to_id: replyId ?? undefined,
+        reply_to: replySnapshot
+          ? {
+              id: replySnapshot.id,
+              sender_id: replySnapshot.sender_id,
+              content: replySnapshot.content ?? replySnapshot.body,
+              sender_name: replySnapshot.sender?.full_name,
+            }
+          : undefined,
+      } as Message,
+    ]);
 
     try {
       const msg = await post<Message>(`/messaging/${activeConvId}/messages`, {
         body: text,
         ...(replyId ? { reply_to_id: replyId } : {}),
       });
-      // El broadcast del WS puede haber insertado este mismo mensaje antes de que
-      // el POST resuelva, pero SIN el detalle completo (reply_to, reacciones). Si
-      // ya existe, lo reemplazamos por la versión completa del POST.
+      // Quitar la burbuja optimista y quedarnos con la versión del servidor.
+      // El broadcast del WS puede haber insertado este mismo mensaje antes de
+      // que el POST resuelva, pero SIN el detalle completo: reemplazar por id.
       setMessages((prev) => {
-        const idx = prev.findIndex((m) => m.id === msg.id);
+        const withoutTemp = prev.filter((m) => m.id !== tempId);
+        const idx = withoutTemp.findIndex((m) => m.id === msg.id);
         if (idx >= 0) {
-          const copy = [...prev];
+          const copy = [...withoutTemp];
           copy[idx] = msg;
           return copy;
         }
-        return [...prev, msg];
+        return [...withoutTemp, msg];
       });
     } catch (e) {
       console.error(e);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setInput(text);
-      if (replyId) setReplyingTo(replyingTo);
+      if (replyId) setReplyingTo(replySnapshot);
     } finally {
       setSending(false);
     }
@@ -1341,9 +1374,14 @@ function SwipeableMessage({
               <span className="text-[9px] opacity-60 flex-shrink-0 flex items-center gap-1">
                 {format(msgDate, "HH:mm")}
                 {isMine && (
-                  msg.is_read
-                    ? <CheckCheck size={13} className="text-white" />
-                    : <Check size={13} className="text-white/70" />
+                  msg.pending
+                    // Enviando: una palomita tenue
+                    ? <Check size={13} className="text-white/50" />
+                    : msg.is_read
+                      // Leído: dos palomitas azules (estilo WhatsApp)
+                      ? <CheckCheck size={13} className="text-[#8FE3FF]" />
+                      // Entregado: dos palomitas grises
+                      : <CheckCheck size={13} className="text-white/70" />
                 )}
               </span>
               {isMine && (

@@ -48,9 +48,11 @@ export default function BottomNav() {
 
   useEffect(() => {
     if (!isSignedIn) { setUnread(0); setIsAdmin(false); return; }
+    // Solo notificaciones de mensajes: los avisos/reservas no deben inflar el
+    // badge del tab Mensajes (en móvil no hay campana donde marcarlos leídos).
     const refresh = () =>
-      get<{ unread_count: number }>("/notifications?limit=1")
-        .then((r) => setUnread(r.unread_count ?? 0))
+      get<{ messages: number }>("/notifications/unread-summary")
+        .then((r) => setUnread(r.messages ?? 0))
         .catch(() => {});
     refresh();
     // Refrescar cuando el chat marca notificaciones como leídas, y con un sondeo

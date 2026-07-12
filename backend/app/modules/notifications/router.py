@@ -33,6 +33,30 @@ async def list_notifications(
     return NotificationListOut(notifications=notifs, total=total, unread_count=unread)
 
 
+@router.get("/unread-summary")
+async def unread_summary(
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Conteo de notificaciones sin leer: total y solo de mensajes.
+
+    El tab 'Mensajes' del móvil usa `messages` para no inflar el badge con
+    avisos/reservas que en móvil no tienen campana donde marcarse leídos.
+    """
+    from sqlalchemy import func
+    from app.modules.notifications.models import Notification
+
+    base = select(func.count()).where(
+        Notification.user_id == current_user.id,
+        Notification.is_read.is_(False),
+    )
+    total = (await db.execute(base)).scalar_one()
+    messages = (
+        await db.execute(base.where(Notification.type == "new_message"))
+    ).scalar_one()
+    return {"total": total, "messages": messages}
+
+
 @router.post("/{notification_id}/read", response_model=NotificationOut)
 async def mark_read(
     notification_id: uuid.UUID,

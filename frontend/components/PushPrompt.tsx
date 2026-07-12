@@ -37,7 +37,11 @@ export default function PushPrompt() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
     if (Notification.permission === "denied") return;
     try {
-      if (localStorage.getItem(DISMISS_KEY) || localStorage.getItem(SUBSCRIBED_KEY)) return;
+      if (localStorage.getItem(SUBSCRIBED_KEY)) return;
+      // El "cerrar" solo silencia el banner 7 días; después vuelve a ofrecerse.
+      // (Valores viejos como "1" cuentan como expirados.)
+      const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0);
+      if (dismissedAt && Date.now() - dismissedAt < 7 * 24 * 60 * 60 * 1000) return;
     } catch {}
 
     // iOS: solo funciona con la PWA instalada (standalone)
@@ -66,7 +70,7 @@ export default function PushPrompt() {
 
   function dismiss() {
     setShow(false);
-    try { localStorage.setItem(DISMISS_KEY, "1"); } catch {}
+    try { localStorage.setItem(DISMISS_KEY, String(Date.now())); } catch {}
   }
 
   async function enable() {
