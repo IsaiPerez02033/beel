@@ -7,6 +7,7 @@ import HeroSection from "@/components/HeroSection";
 import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
 import ExperienceCard from "@/components/ExperienceCard";
 import ExploreTabs from "@/components/ExploreTabs";
+import StoriesCarousel from "@/components/StoriesCarousel";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Suspense } from "react";
 import { Shield, Star, MessageCircle, Sparkles } from "lucide-react";
@@ -57,6 +58,9 @@ export default async function HomePage() {
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <HeroSection />
+
+      {/* ── Historias de anfitriones (24h) ─────────────────────────────────── */}
+      <StoriesCarousel />
 
       {/* ── Propiedades destacadas ─────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

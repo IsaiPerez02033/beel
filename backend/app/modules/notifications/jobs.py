@@ -114,6 +114,16 @@ async def _run_cycle() -> None:
         except Exception:  # noqa: BLE001
             logger.exception("Fallo el ciclo de trabajos de notificaciones")
             await db.rollback()
+        # Limpieza de historias expiradas (media en storage + soft-delete)
+        try:
+            from app.modules.stories.service import cleanup_expired_stories
+            cleaned = await cleanup_expired_stories(db)
+            if cleaned:
+                await db.commit()
+                logger.info("Historias expiradas limpiadas: %s", cleaned)
+        except Exception:  # noqa: BLE001
+            logger.exception("Fallo la limpieza de historias expiradas")
+            await db.rollback()
 
 
 async def notification_jobs_loop() -> None:
