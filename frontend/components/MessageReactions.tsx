@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { Smile, CornerUpLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PRESET_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🙏"];
@@ -22,6 +23,9 @@ interface Props {
   compact?: boolean;
   // showOnlyBadges: solo muestra las reacciones existentes con contador
   showOnlyBadges?: boolean;
+  // hover: grupo de acciones estilo Instagram junto a la burbuja (solo desktop)
+  hover?: boolean;
+  onReply?: () => void;
   memberNames?: Record<string, string>;
 }
 
@@ -33,6 +37,8 @@ export default function MessageReactions({
   onReact,
   compact,
   showOnlyBadges,
+  hover,
+  onReply,
   memberNames,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -87,6 +93,60 @@ export default function MessageReactions({
             </button>
           );
         })}
+      </div>
+    );
+  }
+
+  // Modo hover (estilo Instagram): acciones junto a la burbuja, visibles solo
+  // al pasar el mouse sobre el mensaje (el contenedor padre lleva `group`).
+  if (hover) {
+    return (
+      <div
+        ref={pickerRef}
+        className={cn(
+          "relative hidden sm:flex items-center gap-0.5 self-center mx-1",
+          "opacity-0 group-hover:opacity-100 transition-opacity",
+          pickerOpen && "opacity-100",
+          // Para mensajes propios el grupo va a la izquierda de la burbuja:
+          // espejo para que el emoji quede pegado a la burbuja, como Instagram.
+          isMine && "flex-row-reverse"
+        )}
+      >
+        <button
+          onClick={(e) => { e.stopPropagation(); setPickerOpen(!pickerOpen); }}
+          title="Reaccionar"
+          className="p-1.5 rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+        >
+          <Smile size={16} />
+        </button>
+        {onReply && (
+          <button
+            onClick={onReply}
+            title="Responder"
+            className="p-1.5 rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+          >
+            <CornerUpLeft size={16} />
+          </button>
+        )}
+
+        {pickerOpen && (
+          <div
+            className={cn(
+              "absolute bottom-full mb-2 z-50 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl shadow-xl p-2 flex gap-1",
+              isMine ? "right-0" : "left-0"
+            )}
+          >
+            {PRESET_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onMouseDown={(e) => { e.preventDefault(); handleEmoji(emoji); }}
+                className="w-9 h-9 rounded-xl hover:bg-[var(--bg-subtle)] text-xl flex items-center justify-center transition-all active:scale-95 hover:scale-125"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

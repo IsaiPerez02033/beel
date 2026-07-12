@@ -1325,6 +1325,7 @@ function SwipeableMessage({
   const [swipeX, setSwipeX] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const triggered = useRef(false);
+  const lastTapRef = useRef(0);
   const THRESHOLD = 60;
 
   function onTouchStart(e: React.TouchEvent) {
@@ -1349,7 +1350,21 @@ function SwipeableMessage({
   }
 
   function onTouchEnd() {
-    if (triggered.current) onReply();
+    if (triggered.current) {
+      onReply();
+    } else if (swipeX < 8) {
+      // Doble tap = ❤️ (estilo Instagram). Solo en toques sin arrastre.
+      const now = Date.now();
+      if (now - lastTapRef.current < 300) {
+        const heart = (msg.reactions ?? []).find((r) => r.emoji === "❤️");
+        const hasHeart = heart?.user_ids.includes(currentUserId) ?? false;
+        onReact(msg.id, "❤️", hasHeart);
+        if (navigator.vibrate) navigator.vibrate(20);
+        lastTapRef.current = 0;
+      } else {
+        lastTapRef.current = now;
+      }
+    }
     setSwipeX(0);
     setSwiping(false);
   }
@@ -1374,6 +1389,21 @@ function SwipeableMessage({
         </div>
       )}
 
+      {/* Acciones al hover (estilo Instagram) — a la izquierda de mis burbujas */}
+      {isMine && (
+        <MessageReactions
+          messageId={msg.id}
+          conversationId={conversationId}
+          reactions={msg.reactions ?? []}
+          currentUserId={currentUserId}
+          isMine={isMine}
+          onReact={onReact}
+          onReply={onReply}
+          memberNames={memberNames}
+          hover
+        />
+      )}
+
       <div
         className="flex flex-col max-w-[75%] sm:max-w-[70%] lg:max-w-[60%]"
         style={swiping ? { transform: `translateX(${swipeX}px)`, transition: "none" } : { transition: "transform 0.2s ease" }}
@@ -1386,18 +1416,6 @@ function SwipeableMessage({
 
         {/* Burbuja */}
         <div className="relative">
-          {/* Botón reply — solo desktop (hover) */}
-          <button
-            onClick={onReply}
-            className={cn(
-              "hidden sm:flex absolute top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-[var(--bg-elevated)] border border-[var(--border-subtle)] shadow-sm text-[var(--text-tertiary)] hover:text-[var(--color-primary)] opacity-0 group-hover:opacity-100 transition-opacity z-10",
-              isMine ? "-left-9" : "-right-9"
-            )}
-            title="Responder"
-          >
-            <CornerUpLeft size={14} />
-          </button>
-
           <div
             className={cn(
               "px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm",
@@ -1444,20 +1462,8 @@ function SwipeableMessage({
               <p className="whitespace-pre-wrap">{msg.content ?? msg.body}</p>
             )}
 
-            {/* Timestamp + botón de reacción en móvil (inline dentro de burbuja) */}
-            <div className={cn("flex items-center gap-2 mt-1.5", isMine ? "justify-end" : "justify-between")}>
-              {!isMine && (
-                <MessageReactions
-                  messageId={msg.id}
-                  conversationId={conversationId}
-                  reactions={msg.reactions ?? []}
-                  currentUserId={currentUserId}
-                  isMine={isMine}
-                  onReact={onReact}
-                  memberNames={memberNames}
-                  compact
-                />
-              )}
+            {/* Timestamp + palomitas */}
+            <div className="flex items-center gap-2 mt-1.5 justify-end">
               <span className="text-[9px] opacity-60 flex-shrink-0 flex items-center gap-1">
                 {format(msgDate, "HH:mm")}
                 {isMine && (
@@ -1471,18 +1477,6 @@ function SwipeableMessage({
                       : <CheckCheck size={13} className="text-white/70" />
                 )}
               </span>
-              {isMine && (
-                <MessageReactions
-                  messageId={msg.id}
-                  conversationId={conversationId}
-                  reactions={msg.reactions ?? []}
-                  currentUserId={currentUserId}
-                  isMine={isMine}
-                  onReact={onReact}
-                  memberNames={memberNames}
-                  compact
-                />
-              )}
             </div>
           </div>
 
@@ -1503,6 +1497,21 @@ function SwipeableMessage({
           )}
         </div>
       </div>
+
+      {/* Acciones al hover (estilo Instagram) — a la derecha de las burbujas recibidas */}
+      {!isMine && (
+        <MessageReactions
+          messageId={msg.id}
+          conversationId={conversationId}
+          reactions={msg.reactions ?? []}
+          currentUserId={currentUserId}
+          isMine={isMine}
+          onReact={onReact}
+          onReply={onReply}
+          memberNames={memberNames}
+          hover
+        />
+      )}
 
       {/* Icono de reply al swipear (derecha, para mensajes propios) */}
       {isMine && (
