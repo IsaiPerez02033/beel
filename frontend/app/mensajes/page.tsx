@@ -266,11 +266,29 @@ export default function MensajesPage() {
               .join("|");
           return sig(prev) === sig(next) ? prev : next;
         });
-        // Limpiar el no-leído local de esta conversación en la lista lateral.
+        // Sincronizar la lista lateral: sin no-leídos y con el preview del
+        // último mensaje real (los mensajes que llegan por este sondeo, y no
+        // por WS, dejaban un preview viejo en la lista).
+        const last = d.messages[d.messages.length - 1];
+        const lastPreview = !last
+          ? null
+          : last.message_type === "image"
+            ? "📷 Foto"
+            : (last.content ?? last.body ?? "");
         setConversations((prev) =>
           prev.map((c) =>
             c.id === activeConvId || c.reservation_id === activeConvId
-              ? { ...c, unread_count_guest: 0, unread_count_host: 0 }
+              ? {
+                  ...c,
+                  unread_count_guest: 0,
+                  unread_count_host: 0,
+                  ...(lastPreview !== null
+                    ? {
+                        last_message_preview: lastPreview,
+                        last_message_at: last.created_at ?? c.last_message_at,
+                      }
+                    : {}),
+                }
               : c
           )
         );
