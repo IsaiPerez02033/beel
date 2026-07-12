@@ -783,8 +783,29 @@ input, textarea, select {
 /* Espacio inferior en móvil para que la barra de navegación no tape contenido */
 @media (max-width: 767px) {
   body.has-bottom-nav {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
+}
+
+/* ── Barra inferior flotante estilo Instagram ──
+   A diferencia de .navbar-glass (header sticky full-width, donde el blur
+   causaba jank al hacer scroll), esta pastilla es fija y pequeña: el costo
+   del backdrop-filter es aceptable. */
+.bottom-nav-float {
+  bottom: max(14px, env(safe-area-inset-bottom));
+  background-color: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+}
+.dark .bottom-nav-float {
+  background-color: rgba(38, 38, 36, 0.78);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .bottom-nav-float { background-color: rgba(255, 255, 255, 0.97); }
+  .dark .bottom-nav-float { background-color: rgba(38, 38, 36, 0.97); }
 }
 
 /* Indicador de conexión SSE */

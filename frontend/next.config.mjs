@@ -9,9 +9,13 @@ const apiOrigin = (() => {
 })();
 const wsOrigin = apiOrigin.replace(/^http/, "ws");
 
+// next dev compila con eval(): sin 'unsafe-eval' la app no hidrata en local.
+// En producción NO se agrega.
+const devEval = process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : "";
+
 const cspHeader = [
   "default-src 'self' 'unsafe-inline' data: blob:",
-  `script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.mercadopago.com.ar https://www.mercadopago.com https://*.mercadopago.com https://*.google.com https://www.googletagmanager.com https://maps.googleapis.com https://maps.gstatic.com https://*.gstatic.com https://unpkg.com`,
+  `script-src 'self' 'unsafe-inline'${devEval} https://accounts.google.com https://www.mercadopago.com.ar https://www.mercadopago.com https://*.mercadopago.com https://*.google.com https://www.googletagmanager.com https://maps.googleapis.com https://maps.gstatic.com https://*.gstatic.com https://unpkg.com`,
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com https://*.gstatic.com https://*.googleapis.com https://unpkg.com`,
   `img-src 'self' data: blob: ${apiOrigin} https://lh3.googleusercontent.com https://*.googleusercontent.com https://images.unsplash.com https://*.supabase.co https://*.cloudfront.net https://www.mercadopago.com https://www.google.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.tile.openstreetmap.org https://unpkg.com`,
   `font-src 'self' data: https://fonts.gstatic.com https://maps.gstatic.com https://*.gstatic.com`,

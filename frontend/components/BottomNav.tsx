@@ -84,8 +84,8 @@ export default function BottomNav() {
   if (hidden) return null;
 
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[var(--bg-elevated)] border-t border-[var(--border-subtle)] safe-area-bottom">
-      <div className="flex items-stretch justify-around pt-2.5 pb-1">
+    <nav className="md:hidden fixed left-1/2 -translate-x-1/2 z-40 bottom-nav-float rounded-full max-w-[calc(100vw-24px)]">
+      <div className="flex items-center px-2">
         {tabs.map((tab) => {
           const active = tab.match(pathname);
           const href = tab.authOnly && !isSignedIn ? `/iniciar-sesion?callbackUrl=${encodeURIComponent(tab.href)}` : tab.href;
@@ -94,20 +94,20 @@ export default function BottomNav() {
             <Link
               key={tab.label}
               href={href}
+              aria-label={tab.label}
               className={cn(
-                "flex flex-col items-center gap-1.5 flex-1 py-1 transition-all duration-150 active:scale-[0.93] active:opacity-85",
-                active ? "text-[var(--color-primary)]" : "text-[var(--text-tertiary)]"
+                "flex items-center justify-center w-12 h-14 transition-all duration-150 active:scale-[0.88] active:opacity-85",
+                active ? "text-[var(--text-primary)]" : "text-[var(--text-tertiary)]"
               )}
             >
               <span className="relative">
-                <Icon size={22} strokeWidth={active ? 2.4 : 2} />
+                <Icon size={24} strokeWidth={active ? 2.5 : 2} />
                 {tab.label === "Mensajes" && unread > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[var(--color-accent)] text-[#2C2C2A] text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
                     {unread > 9 ? "9+" : unread}
                   </span>
                 )}
               </span>
-              <span className="text-[10px] font-medium leading-none">{tab.label}</span>
             </Link>
           );
         })}
