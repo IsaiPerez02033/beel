@@ -41,7 +41,15 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
     }
 
     const token = await getTokenRef.current();
-    if (!token) return;
+    if (!token) {
+      // Al abrir la app en frío la sesión puede no estar lista todavía:
+      // reintentar en breve en lugar de rendirse (sin esto, el tiempo real
+      // quedaba muerto hasta cambiar de conversación).
+      if (activeRef.current && !suspendedRef.current) {
+        setTimeout(connect, 1500);
+      }
+      return;
+    }
 
     const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/^http/, "ws");
     const url = `${baseUrl}/api/v1/messaging/${conversationId}/ws?token=${encodeURIComponent(token)}`;

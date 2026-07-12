@@ -148,6 +148,11 @@ export default function MensajesPage() {
   const typingSentRef = useRef(false);
   const typingStopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
+  // Carga inicial de mensajes de la conversación activa (spinner en vez de
+  // pantalla vacía al abrir desde una notificación con la app en frío).
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const loadedConvRef = useRef<string | null>(null);
+
   // Visor de fotos a pantalla completa (tipo WhatsApp)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   useEffect(() => {
@@ -243,8 +248,12 @@ export default function MensajesPage() {
   // avisamos para que el badge global se refresque.
   const reloadMessages = useCallback(() => {
     if (!activeConvId) return;
+    // Primer intento de esta conversación: mostrar indicador de carga.
+    setMessagesLoading((prev) => prev || loadedConvRef.current !== activeConvId);
     get<{ messages: Message[] }>(`/messaging/${activeConvId}/messages`)
       .then((d) => {
+        loadedConvRef.current = activeConvId;
+        setMessagesLoading(false);
         // Conservar burbujas optimistas aún en vuelo (el POST las resolverá).
         // Y si nada cambió, conservar el array anterior: evita re-render y el
         // auto-scroll que se sentía como pantalla trabada durante el sondeo.
@@ -287,9 +296,14 @@ export default function MensajesPage() {
     );
   }, []);
 
-  // Cargar mensajes al seleccionar conversación
+  // Cargar mensajes al seleccionar conversación. También se re-dispara cuando
+  // la sesión termina de cargar (isSignedIn / get cambian): al abrir la PWA en
+  // frío desde una notificación, el primer intento salía sin token y fallaba,
+  // dejando el chat vacío hasta el siguiente sondeo.
   useEffect(() => {
-    if (!activeConvId) return;
+    if (!activeConvId || !isSignedIn) return;
+    // Al cambiar de conversación, no mostrar mensajes de la anterior.
+    if (loadedConvRef.current !== activeConvId) setMessages([]);
     reloadMessages();
     // Si no tenemos esta conversación en la lista lateral, recargar la lista.
     const exists = conversations.some(c => c.id === activeConvId || c.reservation_id === activeConvId);
@@ -299,7 +313,7 @@ export default function MensajesPage() {
         .catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeConvId]);
+  }, [activeConvId, isSignedIn, reloadMessages]);
 
   // Fallback de tiempo real: recargar al volver el foco / visibilidad y con un
   // sondeo suave, por si el WebSocket perdió mensajes mientras estuvo caído.
@@ -849,7 +863,13 @@ export default function MensajesPage() {
                 onScroll={handleScroll}
                 className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 bg-[var(--bg-elevated)] relative"
               >
-                {renderMessages()}
+                {messagesLoading && messages.length === 0 ? (
+                  <div className="h-full flex items-center justify-center">
+                    <Loader2 size={26} className="animate-spin text-[var(--text-tertiary)]" />
+                  </div>
+                ) : (
+                  renderMessages()
+                )}
                 {otherTyping && (
                   <div className="flex items-center gap-1.5 mt-2 ml-1">
                     <span className="flex gap-1 bg-[var(--bg-subtle)] rounded-2xl rounded-tl-none px-3 py-2.5">
