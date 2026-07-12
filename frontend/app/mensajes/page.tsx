@@ -1448,7 +1448,7 @@ function SwipeableMessage({
                     ? <Check size={13} className="text-white/50" />
                     : (msg.is_read || !!msg.read_at)
                       // Leído: dos palomitas azules (estilo WhatsApp)
-                      ? <CheckCheck size={13} className="text-[#8FE3FF]" />
+                      ? <CheckCheck size={14} strokeWidth={2.6} className="text-[#2EB8FF]" />
                       // Entregado: dos palomitas grises
                       : <CheckCheck size={13} className="text-white/70" />
                 )}
