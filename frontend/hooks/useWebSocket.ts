@@ -7,6 +7,7 @@ interface WSOptions {
   onMessage?: (data: any) => void;
   onSystem?: (data: any) => void;
   onTyping?: (data: { sender_id: string; is_typing: boolean }) => void;
+  onMessageDeleted?: (data: { id: string }) => void;
   onConnected?: () => void;
   onError?: (err: Event) => void;
 }
@@ -71,6 +72,8 @@ export function useWebSocket(conversationId: string | null, options: WSOptions) 
           optionsRef.current.onSystem?.(data);
         } else if (data.type === "typing") {
           optionsRef.current.onTyping?.(data);
+        } else if (data.type === "message_deleted") {
+          optionsRef.current.onMessageDeleted?.(data);
         }
       } catch {}
     };

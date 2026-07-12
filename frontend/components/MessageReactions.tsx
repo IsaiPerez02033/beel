@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Smile, CornerUpLeft } from "lucide-react";
+import { Smile, CornerUpLeft, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PRESET_EMOJIS = ["❤️", "😂", "👍", "😮", "😢", "🙏"];
@@ -26,6 +26,7 @@ interface Props {
   // hover: grupo de acciones estilo Instagram junto a la burbuja (solo desktop)
   hover?: boolean;
   onReply?: () => void;
+  onMore?: () => void;
   memberNames?: Record<string, string>;
 }
 
@@ -39,6 +40,7 @@ export default function MessageReactions({
   showOnlyBadges,
   hover,
   onReply,
+  onMore,
   memberNames,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -126,6 +128,15 @@ export default function MessageReactions({
             className="p-1.5 rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
           >
             <CornerUpLeft size={16} />
+          </button>
+        )}
+        {onMore && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onMore(); }}
+            title="Más opciones"
+            className="p-1.5 rounded-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+          >
+            <MoreVertical size={16} />
           </button>
         )}
 

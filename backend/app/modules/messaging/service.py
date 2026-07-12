@@ -431,6 +431,53 @@ async def mark_read(
     return count
 
 
+async def delete_message(
+    db: AsyncSession,
+    conversation: Conversation,
+    user: User,
+    message_id: uuid.UUID,
+) -> None:
+    """Anula el envío de un mensaje propio (soft-delete, desaparece para ambos)."""
+    result = await db.execute(
+        select(Message).where(
+            Message.id == message_id,
+            Message.conversation_id == conversation.id,
+        )
+    )
+    msg = result.scalar_one_or_none()
+    if not msg or msg.deleted_by_sender:
+        raise HTTPException(status_code=404, detail="Mensaje no encontrado")
+    if msg.sender_id != user.id:
+        raise HTTPException(status_code=403, detail="Solo puedes anular tus propios mensajes")
+
+    msg.deleted_by_sender = True
+    await db.flush()
+
+    # Si era el último mensaje, recalcular el preview de la conversación.
+    last_result = await db.execute(
+        select(Message)
+        .where(
+            Message.conversation_id == conversation.id,
+            Message.deleted_by_sender.is_(False),
+        )
+        .order_by(Message.created_at.desc())
+        .limit(1)
+    )
+    last = last_result.scalar_one_or_none()
+    if last is None:
+        conversation.last_message_preview = None
+    elif last.message_type == "image":
+        conversation.last_message_preview = "📷 Foto"
+    elif last.message_type == "system":
+        conversation.last_message_preview = f"[Sistema] {(last.content or '')[:60]}"
+    else:
+        conversation.last_message_preview = (last.content or "")[:80]
+    await db.flush()
+
+    # Avisar en tiempo real para que desaparezca sin recargar.
+    await _broadcast(conversation.id, {"type": "message_deleted", "id": str(message_id)})
+
+
 async def send_system_message(
     db: AsyncSession,
     conversation: Conversation,

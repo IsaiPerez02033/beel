@@ -26,6 +26,8 @@ import {
   CornerUpLeft,
   Paperclip,
   Loader2,
+  Copy,
+  Trash2,
 } from "lucide-react";
 import MessageReactions from "@/components/MessageReactions";
 import ReportButton from "@/components/ReportButton";
@@ -152,6 +154,10 @@ export default function MensajesPage() {
   // pantalla vacía al abrir desde una notificación con la app en frío).
   const [messagesLoading, setMessagesLoading] = useState(false);
   const loadedConvRef = useRef<string | null>(null);
+
+  // Menú de acciones de mensaje (Copiar / Anular envío), estilo Instagram
+  const [actionMsg, setActionMsg] = useState<Message | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Visor de fotos a pantalla completa (tipo WhatsApp)
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -422,6 +428,10 @@ export default function MensajesPage() {
         );
       }
     },
+    onMessageDeleted: (data) => {
+      // El otro participante anuló un envío: quitarlo sin recargar.
+      setMessages((prev) => prev.filter((m) => m.id !== data.id));
+    },
     onConnected: () => {
       // Al (re)conectar el WS pueden haberse perdido mensajes mientras estuvo
       // caído (p. ej. la app estuvo en segundo plano). Recargamos para recuperar.
@@ -634,6 +644,32 @@ export default function MensajesPage() {
     }
   }
 
+  async function handleCopyMessage(msg: Message) {
+    const text = msg.message_type === "image"
+      ? (msg.metadata?.image_url ?? msg.content ?? msg.body ?? "")
+      : (msg.content ?? msg.body ?? "");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => { setCopied(false); setActionMsg(null); }, 700);
+    } catch {
+      setActionMsg(null);
+    }
+  }
+
+  async function handleUnsend(msg: Message) {
+    if (!activeConvId) return;
+    setActionMsg(null);
+    // Optimista: quitarlo ya; si el servidor falla, el sondeo lo restaura.
+    setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+    try {
+      await del(`/messaging/${activeConvId}/messages/${msg.id}`);
+    } catch (e) {
+      console.error("No se pudo anular el envío:", e);
+      reloadMessages();
+    }
+  }
+
   function scrollToMessage(id: string) {
     const el = messageRefs.current[id];
     if (!el) return;
@@ -734,6 +770,7 @@ export default function MensajesPage() {
               onReact={handleReaction}
               memberNames={memberNames}
               onOpenImage={setLightboxUrl}
+              onMore={() => setActionMsg(msg)}
             />
           )}
         </div>
@@ -1288,6 +1325,38 @@ export default function MensajesPage() {
         )}
       </div>
 
+      {/* Menú de acciones de mensaje (Copiar / Anular envío) */}
+      {actionMsg && (
+        <div
+          className="fixed inset-0 z-[95] bg-black/50 flex items-center justify-center p-6 animate-fade-in"
+          onClick={() => setActionMsg(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="bg-[var(--bg-elevated)] rounded-2xl shadow-xl w-full max-w-[260px] overflow-hidden divide-y divide-[var(--border-subtle)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => handleCopyMessage(actionMsg)}
+              className="w-full flex items-center justify-between px-5 py-3.5 text-body-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+            >
+              {copied ? "Copiado ✓" : "Copiar"}
+              <Copy size={16} className="text-[var(--text-tertiary)]" />
+            </button>
+            {actionMsg.sender_id === localUserId && !actionMsg.pending && (
+              <button
+                onClick={() => handleUnsend(actionMsg)}
+                className="w-full flex items-center justify-between px-5 py-3.5 text-body-sm text-red-500 font-medium hover:bg-[var(--bg-subtle)] transition-colors"
+              >
+                Anular envío
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Visor de foto a pantalla completa (tipo WhatsApp/Instagram) */}
       {lightboxUrl && (
         <div
@@ -1330,6 +1399,7 @@ function SwipeableMessage({
   onReact,
   memberNames,
   onOpenImage,
+  onMore,
 }: {
   msg: Message;
   isMine: boolean;
@@ -1342,6 +1412,7 @@ function SwipeableMessage({
   onReact: (messageId: string, emoji: string, hasReacted: boolean) => void;
   memberNames: Record<string, string>;
   onOpenImage: (url: string) => void;
+  onMore: () => void;
 }) {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -1349,18 +1420,36 @@ function SwipeableMessage({
   const [swiping, setSwiping] = useState(false);
   const triggered = useRef(false);
   const lastTapRef = useRef(0);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressed = useRef(false);
   const THRESHOLD = 60;
+
+  function clearLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
 
   function onTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     triggered.current = false;
+    longPressed.current = false;
     setSwiping(true);
+    // Mantener presionado (500ms sin mover) abre el menú de acciones, como IG.
+    clearLongPress();
+    longPressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      if (navigator.vibrate) navigator.vibrate(30);
+      onMore();
+    }, 500);
   }
 
   function onTouchMove(e: React.TouchEvent) {
     const dx = e.touches[0].clientX - touchStartX.current;
     const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+    if (Math.abs(dx) > 10 || dy > 10) clearLongPress();
     // Si el gesto es más vertical que horizontal, cancelar swipe
     if (dy > Math.abs(dx) * 1.5) { setSwiping(false); setSwipeX(0); return; }
     // Solo swipe hacia la derecha para responder
@@ -1373,6 +1462,13 @@ function SwipeableMessage({
   }
 
   function onTouchEnd() {
+    clearLongPress();
+    if (longPressed.current) {
+      // El long-press ya abrió el menú: no interpretar como tap/swipe.
+      setSwipeX(0);
+      setSwiping(false);
+      return;
+    }
     if (triggered.current) {
       onReply();
     } else if (swipeX < 8) {
@@ -1422,6 +1518,7 @@ function SwipeableMessage({
           isMine={isMine}
           onReact={onReact}
           onReply={onReply}
+          onMore={onMore}
           memberNames={memberNames}
           hover
         />
@@ -1531,6 +1628,7 @@ function SwipeableMessage({
           isMine={isMine}
           onReact={onReact}
           onReply={onReply}
+          onMore={onMore}
           memberNames={memberNames}
           hover
         />

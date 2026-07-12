@@ -211,6 +211,26 @@ async def remove_reaction(
     return msg
 
 
+@router.delete("/{conversation_id}/messages/{message_id}", status_code=200)
+async def unsend_message(
+    conversation_id: uuid.UUID,
+    message_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Anula el envío de un mensaje propio (desaparece para ambos)."""
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    conv = await service.get_conversation(db, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    _assert_participant(conv, user.id)
+    await service.delete_message(db, conv, user, message_id)
+    await db.commit()
+    return {"deleted": True}
+
+
 @router.post("/{conversation_id}/read", status_code=200)
 async def mark_read(
     conversation_id: uuid.UUID,
