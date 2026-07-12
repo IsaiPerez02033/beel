@@ -234,13 +234,29 @@ export default function MensajesPage() {
       .catch(console.error);
   }, [isSignedIn, isLoaded, get, router]);
 
-  // Cargar lista de conversaciones
+  // Cargar lista de conversaciones y mantenerla viva: el WS solo cubre la
+  // conversación abierta, así que los mensajes de otros chats (o sin chat
+  // abierto) no aparecían en el panel hasta recargar la página.
   useEffect(() => {
     if (!isSignedIn) return;
-    get<{ conversations: Conversation[] }>("/messaging")
-      .then((d) => setConversations(d.conversations))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const refresh = () => {
+      get<{ conversations: Conversation[] }>("/messaging")
+        .then((d) => setConversations(d.conversations))
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    };
+    refresh();
+    const interval = setInterval(refresh, 12000);
+    const onVisible = () => {
+      if (!document.hidden) refresh();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [isSignedIn, get]);
 
   // Recarga los mensajes de la conversación activa. El GET también marca como
