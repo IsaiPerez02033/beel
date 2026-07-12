@@ -727,8 +727,19 @@ export default function MensajesPage() {
       memberNames[activeConv.host.id] = activeConv.host.id === localUserId ? "Tú" : activeConv.host.full_name;
     }
 
-    return messages.map((msg) => {
+    // Dos mensajes forman grupo si son del mismo remitente, del mismo día y
+    // con menos de 1 minuto entre ellos (agrupación de burbujas estilo IG).
+    const groupedWith = (a?: Message, b?: Message) =>
+      !!a && !!b &&
+      a.message_type !== "system" && b.message_type !== "system" &&
+      a.sender_id === b.sender_id &&
+      a.created_at.slice(0, 10) === b.created_at.slice(0, 10) &&
+      Math.abs(parseISO(b.created_at).getTime() - parseISO(a.created_at).getTime()) <= 60_000;
+
+    return messages.map((msg, idx) => {
       const msgDate = parseISO(msg.created_at);
+      const isFirstOfGroup = !groupedWith(messages[idx - 1], msg);
+      const isLastOfGroup = !groupedWith(msg, messages[idx + 1]);
       const dateStr = isToday(msgDate)
         ? "Hoy"
         : isYesterday(msgDate)
@@ -771,6 +782,8 @@ export default function MensajesPage() {
               memberNames={memberNames}
               onOpenImage={setLightboxUrl}
               onMore={() => setActionMsg(msg)}
+              isFirstOfGroup={isFirstOfGroup}
+              isLastOfGroup={isLastOfGroup}
             />
           )}
         </div>
@@ -908,16 +921,9 @@ export default function MensajesPage() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
-                        {otherParticipant?.full_name}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-[var(--text-tertiary)] font-medium">
-                      {isLocalUserGuest ? "Anfitrión de Beel" : "Huésped"}
-                    </span>
-                  </div>
+                  <span className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
+                    {otherParticipant?.full_name}
+                  </span>
                 </div>
 
                 {/* Botón Info Reservación */}
@@ -1400,6 +1406,8 @@ function SwipeableMessage({
   memberNames,
   onOpenImage,
   onMore,
+  isFirstOfGroup,
+  isLastOfGroup,
 }: {
   msg: Message;
   isMine: boolean;
@@ -1413,6 +1421,8 @@ function SwipeableMessage({
   memberNames: Record<string, string>;
   onOpenImage: (url: string) => void;
   onMore: () => void;
+  isFirstOfGroup: boolean;
+  isLastOfGroup: boolean;
 }) {
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
@@ -1492,7 +1502,7 @@ function SwipeableMessage({
 
   return (
     <div
-      className={cn("flex my-3 group", isMine ? "justify-end" : "justify-start")}
+      className={cn("flex group", isMine ? "justify-end" : "justify-start", isFirstOfGroup ? "mt-3" : "mt-[3px]")}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -1506,6 +1516,26 @@ function SwipeableMessage({
         >
           <CornerUpLeft size={18} className="text-[var(--color-primary)]" />
         </div>
+      )}
+
+      {/* Avatar del otro participante junto a la última burbuja del grupo (estilo IG) */}
+      {!isMine && (
+        <span className="w-7 mr-1.5 flex-shrink-0 self-end mb-0.5">
+          {isLastOfGroup && (
+            otherParticipant?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={otherParticipant.avatar_url}
+                alt=""
+                className="w-7 h-7 rounded-full object-cover"
+              />
+            ) : (
+              <span className="w-7 h-7 rounded-full bg-neutral-900 text-white text-[11px] font-semibold flex items-center justify-center">
+                {(msg.sender?.full_name || otherParticipant?.full_name || "?").charAt(0).toUpperCase()}
+              </span>
+            )
+          )}
+        </span>
       )}
 
       {/* Acciones al hover (estilo Instagram) — a la izquierda de mis burbujas */}
@@ -1528,7 +1558,7 @@ function SwipeableMessage({
         className="flex flex-col max-w-[75%] sm:max-w-[70%] lg:max-w-[60%]"
         style={swiping ? { transform: `translateX(${swipeX}px)`, transition: "none" } : { transition: "transform 0.2s ease" }}
       >
-        {!isMine && (
+        {!isMine && isFirstOfGroup && (
           <span className="text-[11px] text-[var(--text-tertiary)] font-medium mb-1 ml-2">
             {msg.sender?.full_name || otherParticipant?.full_name}
           </span>
@@ -1538,10 +1568,20 @@ function SwipeableMessage({
         <div className="relative">
           <div
             className={cn(
-              "px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words shadow-sm",
+              // Píldora estilo IG: las esquinas del lado del remitente se aplanan
+              // en las burbujas intermedias del grupo.
+              "px-4 py-2.5 rounded-[22px] text-sm leading-relaxed break-words shadow-sm",
               isMine
-                ? "bg-[var(--color-primary)] text-white rounded-tr-none"
-                : "bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-tl-none"
+                ? cn(
+                    "bg-[var(--color-primary)] text-white",
+                    !isFirstOfGroup && "rounded-tr-md",
+                    !isLastOfGroup && "rounded-br-md"
+                  )
+                : cn(
+                    "bg-[var(--bg-subtle)] text-[var(--text-primary)]",
+                    !isFirstOfGroup && "rounded-tl-md",
+                    !isLastOfGroup && "rounded-bl-md"
+                  )
             )}
           >
             {/* Cita del mensaje respondido */}
