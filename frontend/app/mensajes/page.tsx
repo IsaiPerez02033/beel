@@ -29,6 +29,9 @@ import {
   Copy,
   Trash2,
   User,
+  Download,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import MessageReactions from "@/components/MessageReactions";
 import ReportButton from "@/components/ReportButton";
@@ -160,16 +163,26 @@ export default function MensajesPage() {
   const [actionMsg, setActionMsg] = useState<Message | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Visor de fotos a pantalla completa (tipo WhatsApp)
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  // Visor de fotos a pantalla completa (tipo Instagram): lista navegable + índice
+  const [lightbox, setLightbox] = useState<{ items: { id: string; url: string }[]; index: number } | null>(null);
+  const lbPrev = useCallback(() => {
+    setLightbox((lb) => (lb ? { ...lb, index: (lb.index - 1 + lb.items.length) % lb.items.length } : lb));
+  }, []);
+  const lbNext = useCallback(() => {
+    setLightbox((lb) => (lb ? { ...lb, index: (lb.index + 1) % lb.items.length } : lb));
+  }, []);
+  // X inicial del gesto de deslizar en el visor (para navegar entre fotos).
+  const lightboxTouchX = useRef<number | null>(null);
   useEffect(() => {
-    if (!lightboxUrl) return;
+    if (!lightbox) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLightboxUrl(null);
+      if (e.key === "Escape") setLightbox(null);
+      else if (e.key === "ArrowLeft") lbPrev();
+      else if (e.key === "ArrowRight") lbNext();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [lightboxUrl]);
+  }, [lightbox, lbPrev, lbNext]);
 
   // Filtros y búsqueda
   const [searchQuery, setSearchQuery] = useState("");
@@ -211,6 +224,46 @@ export default function MensajesPage() {
       .catch(() => { if (!cancelled) setChatMedia([]); });
     return () => { cancelled = true; };
   }, [showChatDetails, activeConvId, get]);
+
+  // Lista de todas las fotos de la conversación, para navegar en el visor.
+  const conversationPhotos = useCallback((): { id: string; url: string }[] => {
+    const source =
+      chatMedia ?? messages.filter((m) => m.message_type === "image").slice().reverse();
+    return source
+      .filter((m) => m.message_type === "image")
+      .map((m) => ({ id: m.id, url: m.metadata?.image_url ?? m.content ?? m.body ?? "" }))
+      .filter((p) => p.url);
+  }, [chatMedia, messages]);
+
+  // Abrir el visor desde una foto suelta (burbuja del chat): arma la galería
+  // completa y posiciona el índice en la foto tocada para poder desplazarse.
+  const openLightbox = useCallback((url: string) => {
+    const items = conversationPhotos();
+    const idx = items.findIndex((p) => p.url === url);
+    if (idx >= 0) setLightbox({ items, index: idx });
+    else setLightbox({ items: [{ id: url, url }], index: 0 });
+  }, [conversationPhotos]);
+
+  // Descargar la imagen del visor (como Instagram). Intenta blob para forzar
+  // la descarga; si el CORS lo impide, abre la foto en otra pestaña.
+  const downloadImage = useCallback(async (url: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("fetch failed");
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = `beel-foto-${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objUrl);
+    } catch {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }, []);
+
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -903,7 +956,7 @@ export default function MensajesPage() {
               conversationId={activeConvId!}
               onReact={handleReaction}
               memberNames={memberNames}
-              onOpenImage={setLightboxUrl}
+              onOpenImage={openLightbox}
               onMore={() => setActionMsg(msg)}
               isFirstOfGroup={isFirstOfGroup}
               isLastOfGroup={isLastOfGroup}
@@ -1601,10 +1654,10 @@ export default function MensajesPage() {
                       Fotos compartidas
                     </h3>
                     <div className="grid grid-cols-3 gap-1.5">
-                      {photos.map((p) => (
+                      {photos.map((p, i) => (
                         <button
                           key={p.id}
-                          onClick={() => setLightboxUrl(p.url)}
+                          onClick={() => setLightbox({ items: photos, index: i })}
                           className="aspect-square rounded-lg overflow-hidden bg-[var(--bg-subtle)]"
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1712,30 +1765,84 @@ export default function MensajesPage() {
         </div>
       )}
 
-      {/* Visor de foto a pantalla completa (tipo WhatsApp/Instagram) */}
-      {lightboxUrl && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center animate-fade-in"
-          onClick={() => setLightboxUrl(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <button
-            onClick={() => setLightboxUrl(null)}
-            aria-label="Cerrar"
-            className="absolute top-4 right-4 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+      {/* Visor de foto a pantalla completa (tipo Instagram): navegable + descarga */}
+      {lightbox && lightbox.items.length > 0 && (() => {
+        const current = lightbox.items[lightbox.index];
+        const multiple = lightbox.items.length > 1;
+        return (
+          <div
+            className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center animate-fade-in"
+            onClick={() => setLightbox(null)}
+            role="dialog"
+            aria-modal="true"
           >
-            <X size={22} />
-          </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={lightboxUrl}
-            alt="Foto"
-            className="max-w-[92vw] max-h-[88vh] object-contain rounded-lg select-none"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+            {/* Barra superior: contador + descargar + cerrar */}
+            <div
+              className="absolute top-0 inset-x-0 flex items-center justify-between px-4 py-4 z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="text-white/90 text-body-sm font-medium tabular-nums">
+                {multiple ? `${lightbox.index + 1} / ${lightbox.items.length}` : ""}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => downloadImage(current.url)}
+                  aria-label="Descargar foto"
+                  className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                >
+                  <Download size={20} />
+                </button>
+                <button
+                  onClick={() => setLightbox(null)}
+                  aria-label="Cerrar"
+                  className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+            </div>
+
+            {/* Flecha anterior (desktop) */}
+            {multiple && (
+              <button
+                onClick={(e) => { e.stopPropagation(); lbPrev(); }}
+                aria-label="Foto anterior"
+                className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              key={current.id}
+              src={current.url}
+              alt="Foto"
+              className="max-w-[92vw] max-h-[82vh] object-contain rounded-lg select-none animate-fade-in"
+              onClick={(e) => e.stopPropagation()}
+              onTouchStart={(e) => { lightboxTouchX.current = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                if (lightboxTouchX.current == null) return;
+                const dx = e.changedTouches[0].clientX - lightboxTouchX.current;
+                lightboxTouchX.current = null;
+                if (Math.abs(dx) < 50 || !multiple) return;
+                if (dx > 0) lbPrev(); else lbNext();
+              }}
+            />
+
+            {/* Flecha siguiente (desktop) */}
+            {multiple && (
+              <button
+                onClick={(e) => { e.stopPropagation(); lbNext(); }}
+                aria-label="Foto siguiente"
+                className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
