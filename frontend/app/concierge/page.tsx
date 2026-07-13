@@ -33,8 +33,20 @@ export default function ConciergePage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // Estado del avatar de cabecera: coiling -> thinking -> fluffing -> done -> idle
-  const [avatarState, setAvatarState] = useState<"idle" | "coiling" | "thinking" | "fluffing" | "done">("idle");
+  // Estado emocional de Kukul
+  const [avatarState, setAvatarState] = useState<
+    | "idle"
+    | "listening"
+    | "thinking"
+    | "responding"
+    | "success"
+    | "error"
+    | "celebration"
+    | "sleeping"
+    | "coiling"
+    | "fluffing"
+    | "done"
+  >("idle");
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,6 +58,16 @@ export default function ConciergePage() {
       endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [messages, loading]);
+
+  // Detectar cuando el usuario está redactando/escribiendo un mensaje (Listening State)
+  useEffect(() => {
+    if (loading) return;
+    if (input.trim().length > 0) {
+      setAvatarState("listening");
+    } else if (avatarState === "listening") {
+      setAvatarState("idle");
+    }
+  }, [input, loading, avatarState]);
 
   async function send(text: string) {
     const clean = text.trim();
@@ -65,27 +87,32 @@ export default function ConciergePage() {
         { messages: next.map((m) => ({ role: m.role, content: m.content })) }
       );
       clearTimeout(coilTimeout);
-      setAvatarState("fluffing");
+      setAvatarState("responding");
       
-      // Esperamos a que termine el esponjado de plumas antes de pintar el mensaje
+      // Esperamos a que termine el esponjado de plumas y destello antes de pintar el mensaje
       setTimeout(() => {
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: res.reply, properties: res.properties, experiences: res.experiences },
         ]);
         setLoading(false);
-        setAvatarState("done");
+        setAvatarState("celebration");
         
-        // Regresa a reposo después del asentimiento
+        // Regresa a reposo después de celebrar el éxito
         setTimeout(() => {
           setAvatarState("idle");
         }, 900);
       }, 850);
     } catch (e) {
       clearTimeout(coilTimeout);
-      setAvatarState("idle");
+      setAvatarState("error");
       setLoading(false);
       setError(e instanceof Error ? e.message : "No se pudo contactar al Concierge.");
+      
+      // Regresa a reposo tras mostrar decepción/error temporal
+      setTimeout(() => {
+        setAvatarState("idle");
+      }, 2200);
     }
   }
 
