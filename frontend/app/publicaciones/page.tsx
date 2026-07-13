@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
+import StoriesCarousel from "@/components/StoriesCarousel";
 import PostsFeed from "@/components/PostsFeed";
 
 export const metadata: Metadata = {
@@ -14,6 +15,8 @@ export default function PublicacionesPage() {
     <div className="min-h-screen bg-[var(--bg-base)]">
       <Navbar />
       <main className="pb-10">
+        {/* Historias de anfitriones (24h), arriba del feed como en Instagram */}
+        <StoriesCarousel />
         <PostsFeed standalone />
       </main>
     </div>
