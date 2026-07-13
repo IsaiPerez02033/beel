@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import select, func, and_, or_, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
@@ -309,6 +310,25 @@ async def get_media_messages(
     return list(result.scalars().all())
 
 
+async def _find_by_client_id(
+    db: AsyncSession,
+    conversation_id: uuid.UUID,
+    sender_id: uuid.UUID,
+    client_id: str,
+) -> Optional[Message]:
+    """Busca un mensaje ya creado con esta clave de idempotencia."""
+    result = await db.execute(
+        select(Message)
+        .options(selectinload(Message.sender))
+        .where(
+            Message.conversation_id == conversation_id,
+            Message.sender_id == sender_id,
+            Message.client_id == client_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
 async def send_message(
     db: AsyncSession,
     conversation: Conversation,
@@ -316,6 +336,14 @@ async def send_message(
     data: MessageCreateIn,
 ) -> Message:
     """Crea un mensaje y actualiza el estado de la conversación."""
+    # Idempotencia: si el cliente reintenta el mismo envío (el proxy puede
+    # devolver 504 cuando el mensaje YA se creó y commiteó), devolver el
+    # existente sin crear otra fila ni volver a incrementar no-leídos.
+    if data.client_id:
+        existing = await _find_by_client_id(db, conversation.id, sender.id, data.client_id)
+        if existing:
+            return existing
+
     msg = Message(
         conversation_id=conversation.id,
         sender_id=sender.id,
@@ -323,8 +351,20 @@ async def send_message(
         content=data.body,
         metadata_=data.metadata,
         reply_to_id=data.reply_to_id,
+        client_id=data.client_id,
     )
     db.add(msg)
+    try:
+        await db.flush()
+    except IntegrityError:
+        # Carrera entre dos reintentos simultáneos: el índice único
+        # uq_messages_conv_client rechazó el duplicado. Recuperar el original.
+        await db.rollback()
+        if data.client_id:
+            existing = await _find_by_client_id(db, conversation.id, sender.id, data.client_id)
+            if existing:
+                return existing
+        raise
 
     # Actualizar preview y timestamp en la conversación
     # (para imágenes el content es la URL: mostramos un preview amigable)

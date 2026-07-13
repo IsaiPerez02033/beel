@@ -99,6 +99,9 @@ class Message(Base):
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     read_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     deleted_by_sender: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Clave de idempotencia generada por el cliente: los reintentos del mismo
+    # envío (504 del proxy) no deben crear un segundo mensaje.
+    client_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 

@@ -151,6 +151,8 @@ class MessageCreateIn(BaseModel):
     message_type: str = Field(default="text", pattern="^(text|system|image)$")
     metadata: Optional[dict] = None
     reply_to_id: Optional[uuid.UUID] = None
+    # Clave de idempotencia del cliente: reintentar el mismo envío no duplica.
+    client_id: Optional[str] = Field(None, max_length=64)
 
 
 class ReactionIn(BaseModel):

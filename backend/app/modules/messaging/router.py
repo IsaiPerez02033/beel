@@ -377,7 +377,10 @@ async def websocket_messages(
                                     db,
                                     conversation=active_conv,
                                     sender=user,
-                                    data=MessageCreateIn(body=data["body"][:4000]),
+                                    data=MessageCreateIn(
+                                        body=data["body"][:4000],
+                                        client_id=(str(data["client_id"])[:64] if data.get("client_id") else None),
+                                    ),
                                 )
                                 await db.commit()
                     elif data.get("type") == "typing":
