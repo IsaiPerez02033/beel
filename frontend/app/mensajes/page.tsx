@@ -1335,7 +1335,8 @@ export default function MensajesPage() {
           reacciones rápidas arriba, vista previa y acciones abajo. */}
       {actionMsg && (
         <div
-          className="fixed inset-0 z-[95] bg-black/55 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in"
+          className="fixed inset-0 z-[95] bg-black/55 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in select-none"
+          style={{ WebkitTouchCallout: "none" }}
           onClick={() => setActionMsg(null)}
           role="dialog"
           aria-modal="true"
@@ -1561,17 +1562,18 @@ function SwipeableMessage({
 
   return (
     <div
-      className={cn("flex group", isMine ? "justify-end" : "justify-start", isFirstOfGroup ? "mt-3" : "mt-[3px]")}
+      className={cn("relative flex group chat-no-select", isMine ? "justify-end" : "justify-start", isFirstOfGroup ? "mt-3" : "mt-[3px]")}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       style={{ touchAction: swiping ? "none" : "pan-y" }}
     >
-      {/* Icono de reply que aparece al swipear (izquierda del mensaje) */}
+      {/* Icono de reply que aparece al swipear (posición absoluta: no roba
+          ancho a las burbujas cuando está oculto) */}
       {!isMine && (
         <div
-          className="flex items-center justify-center w-8 mr-1 transition-opacity"
-          style={{ opacity: progress, transform: `scale(${0.6 + 0.4 * progress})` }}
+          className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 transition-opacity pointer-events-none"
+          style={{ opacity: progress, transform: `translateY(-50%) scale(${0.6 + 0.4 * progress})` }}
         >
           <CornerUpLeft size={18} className="text-[var(--color-primary)]" />
         </div>
@@ -1614,7 +1616,7 @@ function SwipeableMessage({
       )}
 
       <div
-        className="flex flex-col max-w-[75%] sm:max-w-[70%] lg:max-w-[60%]"
+        className="flex flex-col max-w-[84%] sm:max-w-[70%] lg:max-w-[60%]"
         style={swiping ? { transform: `translateX(${swipeX}px)`, transition: "none" } : { transition: "transform 0.2s ease" }}
       >
         {!isMine && isFirstOfGroup && (
@@ -1736,8 +1738,8 @@ function SwipeableMessage({
       {/* Icono de reply al swipear (derecha, para mensajes propios) */}
       {isMine && (
         <div
-          className="flex items-center justify-center w-8 ml-1 transition-opacity"
-          style={{ opacity: progress, transform: `scale(${0.6 + 0.4 * progress})` }}
+          className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 transition-opacity pointer-events-none"
+          style={{ opacity: progress, transform: `translateY(-50%) scale(${0.6 + 0.4 * progress})` }}
         >
           <CornerUpLeft size={18} className="text-[var(--color-primary)]" />
         </div>

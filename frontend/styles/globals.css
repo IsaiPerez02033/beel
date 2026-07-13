@@ -787,6 +787,19 @@ input, textarea, select {
   }
 }
 
+/* En táctil, los mensajes del chat no se seleccionan al mantener presionado
+   (el long-press abre el menú de acciones estilo IG; sin esto iOS marca el
+   texto en azul y muestra su propio menú Copiar/Consultar). En desktop la
+   selección con mouse sigue funcionando. */
+@media (pointer: coarse) {
+  .chat-no-select,
+  .chat-no-select * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
 /* ── Barra inferior flotante estilo Instagram ──
    A diferencia de .navbar-glass (header sticky full-width, donde el blur
    causaba jank al hacer scroll), esta pastilla es fija y pequeña: el costo
