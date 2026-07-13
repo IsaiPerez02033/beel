@@ -129,7 +129,7 @@ export default function ConciergePage() {
                 {/* Mensaje del usuario */}
                 {m.role === "user" && (
                   <div className="flex justify-end">
-                    <div className="max-w-[85%] bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-sm px-4.5 py-3 shadow-sm text-body-sm whitespace-pre-wrap animate-concierge-bubble">
+                    <div className="max-w-[85%] bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-sm px-4.5 py-3 shadow-sm text-body-sm whitespace-pre-wrap animate-concierge-bubble w-fit">
                       {m.content}
                     </div>
                   </div>
@@ -137,11 +137,11 @@ export default function ConciergePage() {
 
                 {/* Mensaje del asistente */}
                 {m.role === "assistant" && (
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 items-start">
                     <KukulAvatar size={32} state="idle" />
                     <div className="flex-1 space-y-4 max-w-[85%]">
                       {/* Burbuja principal */}
-                      <div className="bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-2xl rounded-tl-sm px-4.5 py-3 text-body-sm shadow-sm leading-relaxed animate-concierge-bubble whitespace-pre-wrap">
+                      <div className="bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-2xl rounded-tl-sm px-4.5 py-3 text-body-sm shadow-sm leading-relaxed animate-concierge-bubble whitespace-pre-wrap w-fit">
                         {m.content}
                       </div>
 
@@ -171,9 +171,9 @@ export default function ConciergePage() {
             ))}
 
             {loading && (
-              <div className="flex gap-3 items-center">
+              <div className="flex gap-3 items-start">
                 <KukulAvatar size={32} state={avatarState} />
-                <div className="flex items-center gap-1.5 text-body-sm text-[var(--text-tertiary)]">
+                <div className="bg-[var(--bg-subtle)] text-[var(--text-secondary)] rounded-2xl rounded-tl-sm px-4.5 py-3 text-body-sm shadow-sm leading-relaxed w-fit flex items-center gap-2 animate-concierge-bubble">
                   <span>
                     {avatarState === "fluffing"
                       ? "¡Kukul ha encontrado tu viaje!"
