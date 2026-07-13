@@ -6,7 +6,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, Search, Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useSafeAuth";
 import dynamic from "next/dynamic";
 import SearchBar from "./SearchBar";
@@ -147,7 +146,6 @@ export default function Navbar({ transparent = false }: NavbarProps) {
           >
             <Clapperboard size={19} />
           </Link>
-          <ThemeToggle />
           <div className="hidden sm:block">
             <NavbarAuth />
           </div>

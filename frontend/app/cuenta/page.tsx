@@ -10,6 +10,7 @@ import {
 import Navbar from "@/components/Navbar";
 import BecomeHostModal from "@/components/BecomeHostModal";
 import PushToggle from "@/components/PushToggle";
+import ThemeSetting from "@/components/ThemeSetting";
 import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 
@@ -111,6 +112,7 @@ export default function CuentaPage() {
           <MenuRow href="/anfitrion/configuracion?seccion=perfil" icon={<UserIcon size={18} />} label="Información personal" />
           <MenuRow href="/anfitrion/configuracion?seccion=seguridad" icon={<Settings size={18} />} label="Configuración y seguridad" />
           <PushToggle />
+          <ThemeSetting />
           <MenuRow href="/ayuda" icon={<HelpCircle size={18} />} label="Centro de ayuda" />
           <MenuRow href="/como-funciona" icon={<Briefcase size={18} />} label="Cómo funciona Beel" />
           <MenuRow href="/terminos" icon={<ShieldCheck size={18} />} label="Términos de servicio" />
