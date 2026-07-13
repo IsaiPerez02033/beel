@@ -74,6 +74,12 @@ export default function PostComposer({
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [files]);
 
+  // Abrir la galería de inmediato al entrar (estilo Instagram). Si el
+  // navegador lo bloquea, el botón "Elegir fotos" sigue disponible.
+  useEffect(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   async function pickFiles(list: FileList | null) {
     setError("");
     if (!list) return;

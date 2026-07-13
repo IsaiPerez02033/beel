@@ -43,6 +43,13 @@ export default function StoryComposer({
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  // Abrir la galería de inmediato al entrar (estilo Instagram: un tap en
+  // "+ Tu historia" ya muestra tus fotos). Si el navegador lo bloquea, el
+  // botón "Elegir foto" sigue disponible.
+  useEffect(() => {
+    fileInputRef.current?.click();
+  }, []);
+
   function pickFile(f: File | null) {
     setError("");
     if (!f) return;
