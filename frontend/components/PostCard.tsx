@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Heart, MoreHorizontal, Trash2 } from "lucide-react";
+import { Heart, MoreHorizontal, Play, Trash2 } from "lucide-react";
 import type { Post } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -23,12 +23,14 @@ export default function PostCard({
   isOwn,
   onToggleLike,
   onDelete,
+  onOpenVideo,
 }: {
   post: Post;
   isSignedIn: boolean;
   isOwn: boolean;
   onToggleLike: (postId: string, liked: boolean) => void;
   onDelete?: (postId: string) => void;
+  onOpenVideo?: (postId: string) => void;
 }) {
   const [slide, setSlide] = useState(0);
   const [heartBurst, setHeartBurst] = useState(false);
@@ -111,17 +113,40 @@ export default function PostCard({
           className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none"
           style={{ scrollbarWidth: "none" }}
         >
-          {media.map((m) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={m.id}
-              src={m.media_url}
-              alt={post.caption ?? "Publicación"}
-              loading="lazy"
-              draggable={false}
-              className="w-full flex-shrink-0 snap-start object-cover aspect-square select-none bg-[var(--bg-subtle)]"
-            />
-          ))}
+          {media.map((m) =>
+            m.media_type === "video" ? (
+              <button
+                key={m.id}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenVideo?.(post.id); }}
+                className="relative w-full flex-shrink-0 snap-start aspect-square bg-black"
+                aria-label="Reproducir video"
+              >
+                <video
+                  src={m.media_url}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="w-14 h-14 rounded-full bg-black/50 flex items-center justify-center">
+                    <Play size={26} className="text-white ml-1" fill="white" />
+                  </span>
+                </span>
+              </button>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={m.id}
+                src={m.media_url}
+                alt={post.caption ?? "Publicación"}
+                loading="lazy"
+                draggable={false}
+                className="w-full flex-shrink-0 snap-start object-cover aspect-square select-none bg-[var(--bg-subtle)]"
+              />
+            )
+          )}
         </div>
 
         {/* Corazón del doble tap */}

@@ -34,6 +34,14 @@ ALLOWED_CONTENT_TYPES = {
     "image/heic": "heic",
 }
 
+# Videos (reels). Se suben DIRECTO del navegador a Supabase con URL firmada
+# (el proxy de Vercel limita ~4.5 MB por request); quicktime = .mov de iPhone.
+ALLOWED_VIDEO_CONTENT_TYPES = {
+    "video/mp4": "mp4",
+    "video/quicktime": "mov",
+    "video/webm": "webm",
+}
+
 
 def storage_configured() -> bool:
     """Retorna True si Supabase Storage está configurado."""
@@ -104,6 +112,43 @@ async def upload_photo(
     except httpx.HTTPError as e:
         logger.error("Error de red subiendo a Supabase Storage: %s", e)
         raise RuntimeError("Error al subir la foto. Intenta de nuevo.") from e
+
+
+async def create_signed_upload_url(key: str) -> str:
+    """
+    Genera una URL firmada de subida en Supabase Storage: el cliente hace PUT
+    del archivo directo a Supabase (sin pasar por Vercel ni por esta API).
+
+    Devuelve la URL absoluta lista para PUT (token en el querystring, ~2 h).
+
+    Raises:
+        RuntimeError: storage no configurado o error de la API de Supabase.
+    """
+    if not storage_configured():
+        raise RuntimeError(
+            "Supabase Storage no está configurado. "
+            "Agrega SUPABASE_URL y SUPABASE_SERVICE_KEY al .env"
+        )
+    base = settings.SUPABASE_URL.rstrip("/")
+    bucket = settings.SUPABASE_STORAGE_BUCKET
+    url = f"{base}/storage/v1/object/upload/sign/{bucket}/{key}"
+    headers = {"Authorization": f"Bearer {settings.SUPABASE_SERVICE_KEY}"}
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.post(url, headers=headers, json={})
+        if resp.status_code not in (200, 201):
+            logger.error(
+                "Error firmando subida en Supabase [%s]: %s", resp.status_code, resp.text
+            )
+            raise RuntimeError("No se pudo preparar la subida. Intenta de nuevo.")
+        # Respuesta: {"url": "/object/upload/sign/{bucket}/{key}?token=..."}
+        signed_path = resp.json().get("url", "")
+        if not signed_path:
+            raise RuntimeError("No se pudo preparar la subida. Intenta de nuevo.")
+        return f"{base}/storage/v1{signed_path}"
+    except httpx.HTTPError as e:
+        logger.error("Error de red firmando subida en Supabase: %s", e)
+        raise RuntimeError("No se pudo preparar la subida. Intenta de nuevo.") from e
 
 
 async def delete_photo(key: str) -> None:

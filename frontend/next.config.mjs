@@ -19,7 +19,10 @@ const cspHeader = [
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com https://maps.gstatic.com https://*.gstatic.com https://*.googleapis.com https://unpkg.com`,
   `img-src 'self' data: blob: ${apiOrigin} https://lh3.googleusercontent.com https://*.googleusercontent.com https://images.unsplash.com https://*.supabase.co https://*.cloudfront.net https://www.mercadopago.com https://www.google.com https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com https://*.gstatic.com https://*.tile.openstreetmap.org https://unpkg.com`,
   `font-src 'self' data: https://fonts.gstatic.com https://maps.gstatic.com https://*.gstatic.com`,
-  `connect-src 'self' ${apiOrigin} ${wsOrigin} https://accounts.google.com https://www.mercadopago.com https://api.mercadopago.com https://*.google-analytics.com https://*.analytics.google.com https://open.er-api.com https://maps.googleapis.com https://*.googleapis.com https://*.gstatic.com`,
+  // *.supabase.co en connect-src: subida directa de videos (reels) con URL firmada
+  `connect-src 'self' ${apiOrigin} ${wsOrigin} https://*.supabase.co https://accounts.google.com https://www.mercadopago.com https://api.mercadopago.com https://*.google-analytics.com https://*.analytics.google.com https://open.er-api.com https://maps.googleapis.com https://*.googleapis.com https://*.gstatic.com`,
+  // Videos de reels servidos desde Supabase Storage
+  "media-src 'self' blob: https://*.supabase.co",
   `frame-src 'self' https://accounts.google.com https://www.mercadopago.com https://www.mercadopago.com.ar https://*.mercadopago.com`,
   "frame-ancestors 'none'",
   "form-action 'self'",

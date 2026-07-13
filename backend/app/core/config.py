@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_KEY: Optional[str] = None  # service_role key (NO el anon)
     SUPABASE_STORAGE_BUCKET: str = "beel-media"  # bucket público
     MAX_PHOTO_SIZE_BYTES: int = 10 * 1024 * 1024
+    # Videos (reels): se suben directo a Supabase con URL firmada, no a la API
+    MAX_VIDEO_SIZE_BYTES: int = 50 * 1024 * 1024
 
     # ── AWS S3 (legacy, ya no se usa — reemplazado por Supabase Storage) ───────
     AWS_ACCESS_KEY_ID: Optional[str] = None

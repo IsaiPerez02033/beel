@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useSafeAuth";
 import { useApi } from "@/hooks/useApi";
 import PostCard from "@/components/PostCard";
 import PostComposer from "@/components/PostComposer";
+import ReelsViewer from "@/components/ReelsViewer";
 
 /**
  * Feed de publicaciones de anfitriones (estilo Instagram) en la home.
@@ -22,6 +23,7 @@ export default function PostsFeed() {
   const [isHost, setIsHost] = useState(false);
   const [myId, setMyId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [reelsPostId, setReelsPostId] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const loadFeed = useCallback(() => {
@@ -130,6 +132,7 @@ export default function PostsFeed() {
               isOwn={p.host.id === myId}
               onToggleLike={toggleLike}
               onDelete={handleDelete}
+              onOpenVideo={setReelsPostId}
             />
           ))}
         </div>
@@ -156,6 +159,23 @@ export default function PostsFeed() {
           onPublished={() => { setComposerOpen(false); loadFeed(); }}
         />
       )}
+
+      {reelsPostId !== null && (() => {
+        // Modo reels: todos los posts con video, empezando por el tocado.
+        const videoPosts = posts.filter((p) =>
+          p.media.some((m) => m.media_type === "video")
+        );
+        const start = Math.max(0, videoPosts.findIndex((p) => p.id === reelsPostId));
+        return (
+          <ReelsViewer
+            posts={videoPosts}
+            startIndex={start}
+            isSignedIn={!!isSignedIn}
+            onClose={() => setReelsPostId(null)}
+            onToggleLike={toggleLike}
+          />
+        );
+      })()}
     </section>
   );
 }

@@ -11,8 +11,37 @@ interface MyProperty {
 }
 
 const MAX_FILES = 5;
+const MAX_VIDEO_MB = 50;
+const MAX_VIDEO_SECONDS = 30;
+const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 
-/** Modal para crear una publicación (hasta 5 fotos + caption + propiedad opcional). */
+interface VideoMeta {
+  duration_s: number;
+  width: number;
+  height: number;
+}
+
+/** Lee duración y dimensiones de un video desde su metadata (client-side). */
+function readVideoMeta(file: File): Promise<VideoMeta> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.onloadedmetadata = () => {
+      const meta = {
+        duration_s: Math.round(v.duration),
+        width: v.videoWidth,
+        height: v.videoHeight,
+      };
+      URL.revokeObjectURL(url);
+      resolve(meta);
+    };
+    v.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Video no válido")); };
+    v.src = url;
+  });
+}
+
+/** Modal para crear una publicación: hasta 5 fotos, o 1 video (reel) de 30s. */
 export default function PostComposer({
   onClose,
   onPublished,
@@ -24,6 +53,7 @@ export default function PostComposer({
   const { get } = useApi();
 
   const [files, setFiles] = useState<File[]>([]);
+  const [videoMeta, setVideoMeta] = useState<VideoMeta | null>(null);
   const [previews, setPreviews] = useState<string[]>([]);
   const [caption, setCaption] = useState("");
   const [propertyId, setPropertyId] = useState("");
@@ -44,14 +74,37 @@ export default function PostComposer({
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [files]);
 
-  function pickFiles(list: FileList | null) {
+  async function pickFiles(list: FileList | null) {
     setError("");
     if (!list) return;
+    const picked = Array.from(list);
+
+    // Un video va solo (reel): sustituye cualquier selección previa.
+    const video = picked.find((f) => VIDEO_TYPES.includes(f.type));
+    if (video) {
+      if (video.size > MAX_VIDEO_MB * 1024 * 1024) {
+        setError(`El video no debe superar ${MAX_VIDEO_MB} MB.`);
+        return;
+      }
+      try {
+        const meta = await readVideoMeta(video);
+        if (meta.duration_s > MAX_VIDEO_SECONDS) {
+          setError(`El video no debe durar más de ${MAX_VIDEO_SECONDS} segundos.`);
+          return;
+        }
+        setVideoMeta(meta);
+        setFiles([video]);
+      } catch {
+        setError("No se pudo leer el video. Prueba con otro archivo.");
+      }
+      return;
+    }
+
     const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    const next = [...files];
-    for (const f of Array.from(list)) {
+    const next = videoMeta ? [] : [...files];
+    for (const f of picked) {
       if (!allowed.includes(f.type)) {
-        setError("Formato no válido. Usa JPEG, PNG o WebP.");
+        setError("Formato no válido. Usa JPEG, PNG, WebP o un video MP4/MOV.");
         continue;
       }
       if (f.size > 10 * 1024 * 1024) {
@@ -60,11 +113,13 @@ export default function PostComposer({
       }
       if (next.length < MAX_FILES) next.push(f);
     }
+    setVideoMeta(null);
     setFiles(next);
   }
 
   function removeFile(idx: number) {
     setFiles((prev) => prev.filter((_, i) => i !== idx));
+    setVideoMeta(null);
   }
 
   async function publish() {
@@ -73,18 +128,59 @@ export default function PostComposer({
     setError("");
     try {
       const token = await getToken();
-      const formData = new FormData();
-      files.forEach((f) => formData.append("files", f));
-      if (caption.trim()) formData.append("caption", caption.trim());
-      if (propertyId) formData.append("property_id", propertyId);
-      const res = await fetch("/api/backend/posts", {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: "Error al publicar" }));
-        throw new Error(err.detail ?? `HTTP ${res.status}`);
+      const authHeader: Record<string, string> = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
+
+      if (videoMeta) {
+        // Video: subir DIRECTO a Supabase con URL firmada (el proxy de Vercel
+        // limita ~4.5 MB por request) y luego registrar la publicación.
+        const video = files[0];
+        const signRes = await fetch("/api/backend/posts/upload-url", {
+          method: "POST",
+          headers: { ...authHeader, "Content-Type": "application/json" },
+          body: JSON.stringify({ content_type: video.type, size_bytes: video.size }),
+        });
+        if (!signRes.ok) {
+          const err = await signRes.json().catch(() => ({ detail: "Error al preparar la subida" }));
+          throw new Error(err.detail ?? `HTTP ${signRes.status}`);
+        }
+        const { upload_url, key } = await signRes.json();
+
+        const putRes = await fetch(upload_url, {
+          method: "PUT",
+          headers: { "Content-Type": video.type },
+          body: video,
+        });
+        if (!putRes.ok) throw new Error("No se pudo subir el video. Intenta de nuevo.");
+
+        const directRes = await fetch("/api/backend/posts/direct", {
+          method: "POST",
+          headers: { ...authHeader, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            media: [{ key, media_type: "video", ...videoMeta }],
+            caption: caption.trim() || null,
+            property_id: propertyId || null,
+          }),
+        });
+        if (!directRes.ok) {
+          const err = await directRes.json().catch(() => ({ detail: "Error al publicar" }));
+          throw new Error(err.detail ?? `HTTP ${directRes.status}`);
+        }
+      } else {
+        const formData = new FormData();
+        files.forEach((f) => formData.append("files", f));
+        if (caption.trim()) formData.append("caption", caption.trim());
+        if (propertyId) formData.append("property_id", propertyId);
+        const res = await fetch("/api/backend/posts", {
+          method: "POST",
+          headers: authHeader,
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: "Error al publicar" }));
+          throw new Error(err.detail ?? `HTTP ${res.status}`);
+        }
       }
       onPublished();
     } catch (e) {
@@ -115,13 +211,27 @@ export default function PostComposer({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
             multiple
             className="hidden"
             onChange={(e) => { pickFiles(e.target.files); e.target.value = ""; }}
           />
 
-          {previews.length > 0 ? (
+          {videoMeta && previews[0] ? (
+            <div className="relative rounded-xl overflow-hidden border border-[var(--border-subtle)] bg-black">
+              <video src={previews[0]} muted playsInline controls className="w-full h-64 object-contain" />
+              <button
+                onClick={() => removeFile(0)}
+                aria-label="Quitar video"
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white"
+              >
+                <X size={14} />
+              </button>
+              <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full bg-black/60 text-white text-[11px] font-medium">
+                Reel · {videoMeta.duration_s}s
+              </span>
+            </div>
+          ) : previews.length > 0 ? (
             <div className="grid grid-cols-3 gap-2">
               {previews.map((url, i) => (
                 <div key={url} className="relative aspect-square rounded-lg overflow-hidden border border-[var(--border-subtle)]">
@@ -151,8 +261,10 @@ export default function PostComposer({
               className="w-full h-56 rounded-xl border-2 border-dashed border-[var(--border-default)] flex flex-col items-center justify-center gap-2 text-[var(--text-tertiary)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
             >
               <ImagePlus size={28} />
-              <span className="text-body-sm font-medium">Elegir fotos</span>
-              <span className="text-caption">Hasta {MAX_FILES} · JPEG, PNG o WebP · máx. 10 MB c/u</span>
+              <span className="text-body-sm font-medium">Elegir fotos o un video</span>
+              <span className="text-caption text-center px-4">
+                Hasta {MAX_FILES} fotos (10 MB c/u) o 1 video de {MAX_VIDEO_SECONDS}s (máx. {MAX_VIDEO_MB} MB)
+              </span>
             </button>
           )}
 

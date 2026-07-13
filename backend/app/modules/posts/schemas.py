@@ -47,3 +47,31 @@ class PostFeedOut(BaseModel):
 class LikeOut(BaseModel):
     liked: bool
     like_count: int
+
+
+# ── Subida directa a Supabase (videos/reels) ─────────────────────────────────
+
+
+class UploadUrlIn(BaseModel):
+    content_type: str
+    size_bytes: int
+
+
+class UploadUrlOut(BaseModel):
+    upload_url: str
+    key: str
+    public_url: str
+
+
+class DirectMediaIn(BaseModel):
+    key: str
+    media_type: str = "video"
+    width: Optional[int] = None
+    height: Optional[int] = None
+    duration_s: Optional[int] = None
+
+
+class DirectPostIn(BaseModel):
+    media: list[DirectMediaIn]
+    caption: Optional[str] = None
+    property_id: Optional[uuid.UUID] = None

@@ -12,7 +12,14 @@ from app.core.auth import CurrentUser, OptionalUser
 from app.core.database import get_db
 from app.core.limiter import limiter
 from app.modules.posts import service
-from app.modules.posts.schemas import LikeOut, PostFeedOut, PostOut
+from app.modules.posts.schemas import (
+    DirectPostIn,
+    LikeOut,
+    PostFeedOut,
+    PostOut,
+    UploadUrlIn,
+    UploadUrlOut,
+)
 from app.modules.users import service as user_service
 
 logger = logging.getLogger(__name__)
@@ -96,6 +103,98 @@ async def create_post(
 
     caption_clean = (caption or "").strip()[:500] or None
     post = await service.create_post(db, user, media_items, caption_clean, property_id)
+    await db.commit()
+    counts = await service._like_counts(db, [post.id])
+    return service._post_dict(post, counts.get(post.id, 0), False)
+
+
+@router.post("/upload-url", response_model=UploadUrlOut)
+@limiter.limit("10/minute")
+async def upload_url(
+    request: Request,
+    body: UploadUrlIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """URL firmada para subir un video DIRECTO a Supabase (evita el límite del
+    proxy de Vercel). Solo anfitriones."""
+    from app.core.config import settings
+    from app.core.storage import (
+        ALLOWED_VIDEO_CONTENT_TYPES,
+        _public_url,
+        create_signed_upload_url,
+        s3_configured,
+    )
+
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not user.is_host:
+        raise HTTPException(status_code=403, detail="Solo los anfitriones pueden publicar")
+    if not s3_configured():
+        raise HTTPException(status_code=503, detail="El almacenamiento no está configurado.")
+
+    if body.content_type not in ALLOWED_VIDEO_CONTENT_TYPES:
+        raise HTTPException(status_code=400, detail="Formato no válido. Usa MP4, MOV o WebM.")
+    if body.size_bytes > settings.MAX_VIDEO_SIZE_BYTES:
+        max_mb = settings.MAX_VIDEO_SIZE_BYTES // (1024 * 1024)
+        raise HTTPException(status_code=400, detail=f"El video no debe superar {max_mb} MB.")
+
+    ext = ALLOWED_VIDEO_CONTENT_TYPES[body.content_type]
+    key = f"posts/{user.id}/{uuid.uuid4()}.{ext}"
+    try:
+        signed = await create_signed_upload_url(key)
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    return {"upload_url": signed, "key": key, "public_url": _public_url(key)}
+
+
+@router.post("/direct", response_model=PostOut, status_code=201)
+@limiter.limit("10/minute")
+async def create_post_direct(
+    request: Request,
+    body: DirectPostIn,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Registra una publicación cuya media ya se subió directo a Supabase."""
+    from app.core.storage import _public_url
+
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not user.is_host:
+        raise HTTPException(status_code=403, detail="Solo los anfitriones pueden publicar")
+
+    if body.property_id:
+        from app.modules.properties.models import Property
+        prop = await db.get(Property, body.property_id)
+        if not prop or (prop.host_id != user.id and user.role != "admin"):
+            raise HTTPException(status_code=400, detail="La propiedad no te pertenece")
+
+    media_items: list[dict] = []
+    for m in body.media:
+        # El bucket es público: solo aceptamos keys dentro de la carpeta del
+        # propio anfitrión para que nadie registre objetos ajenos.
+        if not m.key.startswith(f"posts/{user.id}/"):
+            raise HTTPException(status_code=400, detail="Archivo no válido")
+        if m.media_type not in ("image", "video"):
+            raise HTTPException(status_code=400, detail="Tipo de media no válido")
+        if m.media_type == "video" and m.duration_s and m.duration_s > 30:
+            raise HTTPException(status_code=400, detail="El video no debe durar más de 30 segundos")
+        media_items.append(
+            {
+                "media_url": _public_url(m.key),
+                "storage_key": m.key,
+                "media_type": m.media_type,
+                "width": m.width,
+                "height": m.height,
+                "duration_s": m.duration_s,
+            }
+        )
+
+    caption_clean = (body.caption or "").strip()[:500] or None
+    post = await service.create_post(db, user, media_items, caption_clean, body.property_id)
     await db.commit()
     counts = await service._like_counts(db, [post.id])
     return service._post_dict(post, counts.get(post.id, 0), False)
