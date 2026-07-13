@@ -10,10 +10,13 @@ import PostComposer from "@/components/PostComposer";
 import ReelsViewer from "@/components/ReelsViewer";
 
 /**
- * Feed de publicaciones de anfitriones (estilo Instagram) en la home.
- * Si no hay publicaciones y el usuario no es anfitrión, no renderiza nada.
+ * Feed de publicaciones de anfitriones (estilo Instagram).
+ * - Como sección embebida: si no hay publicaciones y el usuario no es
+ *   anfitrión, no renderiza nada.
+ * - Con `standalone` (página /publicaciones): siempre renderiza, con estado
+ *   vacío para visitantes.
  */
-export default function PostsFeed() {
+export default function PostsFeed({ standalone = false }: { standalone?: boolean }) {
   const { isSignedIn } = useAuth();
   const { get, post: apiPost, del } = useApi();
 
@@ -104,7 +107,7 @@ export default function PostsFeed() {
     del(`/posts/${postId}`).catch(() => loadFeed());
   }
 
-  if (posts.length === 0 && !isHost) return null;
+  if (posts.length === 0 && !isHost && !standalone) return null;
 
   return (
     <section className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 pt-8">
@@ -145,6 +148,16 @@ export default function PostsFeed() {
             <ImagePlus size={26} />
             <span className="text-body-sm font-medium">Comparte la primera publicación</span>
           </button>
+        )}
+
+        {posts.length === 0 && !isHost && standalone && (
+          <div className="py-20 text-center flex flex-col items-center gap-2 text-[var(--text-tertiary)]">
+            <span className="text-4xl">📸</span>
+            <p className="text-body font-medium text-[var(--text-secondary)]">Aún no hay publicaciones</p>
+            <p className="text-body-sm max-w-xs">
+              Muy pronto los anfitriones compartirán fotos y videos de sus espacios.
+            </p>
+          </div>
         )}
 
         <div ref={sentinelRef} className="h-1" />

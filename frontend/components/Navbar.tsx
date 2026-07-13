@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useSafeAuth";
@@ -138,6 +138,15 @@ export default function Navbar({ transparent = false }: NavbarProps) {
 
         {/* Auth — solo cliente, sin SSR (zona derecha, mismo peso que izquierda) */}
         <div className="flex-1 flex items-center justify-end gap-2">
+          {/* Publicaciones: en móvil vive en la barra inferior */}
+          <Link
+            href="/publicaciones"
+            aria-label="Publicaciones"
+            title="Publicaciones"
+            className="hidden md:flex p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            <Clapperboard size={19} />
+          </Link>
           <ThemeToggle />
           <div className="hidden sm:block">
             <NavbarAuth />
