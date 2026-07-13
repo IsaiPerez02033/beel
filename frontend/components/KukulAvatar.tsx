@@ -16,7 +16,7 @@ export default function KukulAvatar({
   state = "idle",
 }: {
   size?: number;
-  state?: "idle" | "thinking" | "done";
+  state?: "idle" | "coiling" | "thinking" | "fluffing" | "done";
 }) {
   return (
     <span

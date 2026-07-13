@@ -33,17 +33,9 @@ export default function ConciergePage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // Estado transitorio para la animación "terminó de pensar" de Kukul.
-  const [justAnswered, setJustAnswered] = useState(false);
+  // Estado del avatar de cabecera: coiling -> thinking -> fluffing -> done -> idle
+  const [avatarState, setAvatarState] = useState<"idle" | "coiling" | "thinking" | "fluffing" | "done">("idle");
   const endRef = useRef<HTMLDivElement>(null);
-
-  // Estado del avatar de cabecera: pensando mientras carga, un destello al
-  // responder, y respiración en reposo.
-  const headerState: "idle" | "thinking" | "done" = loading
-    ? "thinking"
-    : justAnswered
-      ? "done"
-      : "idle";
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace("/iniciar-sesion?callbackUrl=/concierge");
@@ -63,6 +55,10 @@ export default function ConciergePage() {
     setMessages(next);
     setInput("");
     setLoading(true);
+    setAvatarState("coiling");
+    const coilTimeout = setTimeout(() => {
+      setAvatarState("thinking");
+    }, 450); // duración del enrollado en CSS
     try {
       const res = await post<{ reply: string; properties: Property[]; experiences: Experience[] }>(
         "/concierge/chat",
@@ -72,10 +68,17 @@ export default function ConciergePage() {
         ...prev,
         { role: "assistant", content: res.reply, properties: res.properties, experiences: res.experiences },
       ]);
-      // Kukul "asiente" al entregar la respuesta y vuelve a reposo.
-      setJustAnswered(true);
-      setTimeout(() => setJustAnswered(false), 900);
+      clearTimeout(coilTimeout);
+      setAvatarState("fluffing");
+      setTimeout(() => {
+        setAvatarState("done");
+        setTimeout(() => {
+          setAvatarState("idle");
+        }, 900);
+      }, 850); // duración del esponjado en CSS
     } catch (e) {
+      clearTimeout(coilTimeout);
+      setAvatarState("idle");
       setError(e instanceof Error ? e.message : "No se pudo contactar al Concierge.");
     } finally {
       setLoading(false);
@@ -92,7 +95,7 @@ export default function ConciergePage() {
           {/* Cabecera */}
           <div className="text-center mb-6">
             <div className="flex justify-center mb-3">
-              <KukulAvatar size={56} state={headerState} />
+              <KukulAvatar size={56} state={avatarState} />
             </div>
             <h1 className="text-h1 sm:text-display font-display font-semibold text-[var(--text-primary)]">Beel Concierge</h1>
             <p className="text-body-sm text-[var(--text-secondary)] mt-1 max-w-md mx-auto">
