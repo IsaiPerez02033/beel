@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -28,6 +28,7 @@ import {
   Loader2,
   Copy,
   Trash2,
+  User,
 } from "lucide-react";
 import MessageReactions from "@/components/MessageReactions";
 import ReportButton from "@/components/ReportButton";
@@ -187,6 +188,16 @@ export default function MensajesPage() {
   const prevMsgCountRef = useRef(0);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [hasNewMessages, setHasNewMessages] = useState(false);
+  // Paginación hacia atrás: cargar mensajes más antiguos al scrollear arriba.
+  const [hasMoreOlder, setHasMoreOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const loadingOlderRef = useRef(false);
+  // Altura previa del contenedor al prepender (para conservar la posición).
+  const prependAdjustRef = useRef<number | null>(null);
+  const justPrependedRef = useRef(false);
+  // Panel de detalles del chat (perfil, buscar, fotos)
+  const [showChatDetails, setShowChatDetails] = useState(false);
+  const [chatSearch, setChatSearch] = useState("");
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -278,16 +289,33 @@ export default function MensajesPage() {
     if (!activeConvId) return;
     // Primer intento de esta conversación: mostrar indicador de carga.
     setMessagesLoading((prev) => prev || loadedConvRef.current !== activeConvId);
-    get<{ messages: Message[] }>(`/messaging/${activeConvId}/messages`)
+    get<{ messages: Message[]; has_more?: boolean }>(`/messaging/${activeConvId}/messages`)
       .then((d) => {
+        const firstLoad = loadedConvRef.current !== activeConvId;
         loadedConvRef.current = activeConvId;
         setMessagesLoading(false);
-        // Conservar burbujas optimistas aún en vuelo (el POST las resolverá).
+        // Al abrir la conversación, el backend nos dice si hay historial más
+        // antiguo que la ventana inicial (se carga al scrollear hacia arriba).
+        if (firstLoad) setHasMoreOlder(!!d.has_more);
+        // Conservar burbujas optimistas aún en vuelo (el POST las resolverá)
+        // y el historial antiguo ya paginado (anterior a la ventana traída).
         // Y si nada cambió, conservar el array anterior: evita re-render y el
         // auto-scroll que se sentía como pantalla trabada durante el sondeo.
         setMessages((prev) => {
           const temps = prev.filter((m) => m.pending);
-          const next = temps.length ? [...d.messages, ...temps] : d.messages;
+          const fetched = d.messages;
+          const fetchedIds = new Set(fetched.map((m) => m.id));
+          const firstFetched = fetched[0];
+          const older = firstFetched
+            ? prev.filter(
+                (m) =>
+                  !m.pending &&
+                  !fetchedIds.has(m.id) &&
+                  new Date(m.created_at).getTime() <
+                    new Date(firstFetched.created_at).getTime()
+              )
+            : [];
+          const next = [...older, ...fetched, ...temps];
           const sig = (list: Message[]) =>
             list
               .map((m) => `${m.id}:${m.is_read || m.read_at ? 1 : 0}:${(m.reactions ?? []).length}`)
@@ -330,6 +358,46 @@ export default function MensajesPage() {
 
   reloadMessagesRef.current = reloadMessages;
 
+  // Cargar mensajes más antiguos (cursor before_id) al scrollear arriba.
+  const loadOlderMessages = useCallback(() => {
+    if (!activeConvId || !hasMoreOlder || loadingOlderRef.current) return;
+    const first = messages.find((m) => !m.pending);
+    if (!first) return;
+    loadingOlderRef.current = true;
+    setLoadingOlder(true);
+    const el = messagesContainerRef.current;
+    const prevHeight = el?.scrollHeight ?? 0;
+    get<{ messages: Message[]; has_more?: boolean }>(
+      `/messaging/${activeConvId}/messages?before_id=${first.id}`
+    )
+      .then((d) => {
+        setHasMoreOlder(!!d.has_more);
+        if (d.messages.length) {
+          prependAdjustRef.current = prevHeight;
+          justPrependedRef.current = true;
+          setMessages((prev) => {
+            const ids = new Set(prev.map((m) => m.id));
+            const older = d.messages.filter((m) => !ids.has(m.id));
+            return older.length ? [...older, ...prev] : prev;
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        loadingOlderRef.current = false;
+        setLoadingOlder(false);
+      });
+  }, [activeConvId, get, hasMoreOlder, messages]);
+
+  // Tras prepender historial, conservar la posición visual del scroll
+  // (sin esto el usuario "saltaría" al inicio de lo recién cargado).
+  useLayoutEffect(() => {
+    if (prependAdjustRef.current === null) return;
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop += el.scrollHeight - prependAdjustRef.current;
+    prependAdjustRef.current = null;
+  }, [messages]);
+
   // Refleja el último mensaje en la lista lateral al instante (al enviar o
   // recibir), para que al regresar con la flecha no se vea un preview viejo.
   const bumpConversationPreview = useCallback((convId: string, preview: string) => {
@@ -349,7 +417,12 @@ export default function MensajesPage() {
   useEffect(() => {
     if (!activeConvId || !isSignedIn) return;
     // Al cambiar de conversación, no mostrar mensajes de la anterior.
-    if (loadedConvRef.current !== activeConvId) setMessages([]);
+    if (loadedConvRef.current !== activeConvId) {
+      setMessages([]);
+      setHasMoreOlder(false);
+      setShowChatDetails(false);
+      setChatSearch("");
+    }
     reloadMessages();
     // Si no tenemos esta conversación en la lista lateral, recargar la lista.
     const exists = conversations.some(c => c.id === activeConvId || c.reservation_id === activeConvId);
@@ -442,6 +515,8 @@ export default function MensajesPage() {
   const handleScroll = () => {
     const el = messagesContainerRef.current;
     if (!el) return;
+    // Cerca del tope: cargar historial más antiguo (estilo WhatsApp/IG).
+    if (el.scrollTop < 250) loadOlderMessages();
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
     setIsNearBottom(nearBottom);
     if (nearBottom) {
@@ -455,6 +530,14 @@ export default function MensajesPage() {
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (!el || messages.length === 0) return;
+
+    // Se prependió historial antiguo: la posición ya se ajustó en el
+    // useLayoutEffect; no tratarlo como mensaje nuevo ni tocar el scroll.
+    if (justPrependedRef.current) {
+      justPrependedRef.current = false;
+      prevMsgCountRef.current = messages.length;
+      return;
+    }
 
     // Al (re)abrir la conversación: salto instantáneo al fondo, SIN banner.
     // Doble pasada (ahora + próximo frame) por si el layout aún se acomoda.
@@ -907,7 +990,12 @@ export default function MensajesPage() {
                   >
                     <ArrowLeft size={20} />
                   </button>
-                  <div className="relative">
+                  {/* Tocar avatar/nombre abre los detalles del chat (estilo IG) */}
+                  <button
+                    onClick={() => setShowChatDetails(true)}
+                    className="flex items-center gap-3 active:opacity-70 transition-opacity"
+                    aria-label="Detalles de la conversación"
+                  >
                     {otherParticipant?.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -916,14 +1004,14 @@ export default function MensajesPage() {
                         className="w-10 h-10 rounded-full object-cover border border-[var(--border-subtle)] shadow-sm"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-neutral-900 text-white font-semibold text-sm flex items-center justify-center shadow-sm">
+                      <span className="w-10 h-10 rounded-full bg-neutral-900 text-white font-semibold text-sm flex items-center justify-center shadow-sm">
                         {otherParticipant?.full_name.charAt(0).toUpperCase()}
-                      </div>
+                      </span>
                     )}
-                  </div>
-                  <span className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
-                    {otherParticipant?.full_name}
-                  </span>
+                    <span className="text-[15px] font-semibold text-[var(--text-primary)] leading-tight">
+                      {otherParticipant?.full_name}
+                    </span>
+                  </button>
                 </div>
 
                 {/* Botón Info Reservación */}
@@ -951,7 +1039,14 @@ export default function MensajesPage() {
                     <Loader2 size={26} className="animate-spin text-[var(--text-tertiary)]" />
                   </div>
                 ) : (
-                  renderMessages()
+                  <>
+                    {loadingOlder && (
+                      <div className="flex justify-center py-2">
+                        <Loader2 size={18} className="animate-spin text-[var(--text-tertiary)]" />
+                      </div>
+                    )}
+                    {renderMessages()}
+                  </>
                 )}
                 {otherTyping && (
                   <div className="flex items-center gap-1.5 mt-2 ml-1">
@@ -1330,6 +1425,152 @@ export default function MensajesPage() {
           </>
         )}
       </div>
+
+      {/* Panel de detalles del chat (estilo Instagram): perfil, buscar en la
+          conversación y fotos compartidas. Se abre tocando el nombre. */}
+      {showChatDetails && otherParticipant && (
+        <div
+          className="fixed inset-0 z-[92] bg-[var(--bg-elevated)] animate-fade-in flex flex-col"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="flex items-center gap-2 px-3 py-3 border-b border-[var(--border-subtle)] flex-shrink-0">
+            <button
+              onClick={() => setShowChatDetails(false)}
+              aria-label="Volver al chat"
+              className="p-2 rounded-full hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] transition-colors"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h2 className="text-body font-semibold text-[var(--text-primary)]">Detalles</h2>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            <div className="max-w-md mx-auto w-full px-5 py-6 flex flex-col gap-7">
+              {/* Perfil */}
+              <div className="flex flex-col items-center gap-2">
+                {otherParticipant.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={otherParticipant.avatar_url}
+                    alt={otherParticipant.full_name}
+                    className="w-20 h-20 rounded-full object-cover border border-[var(--border-subtle)]"
+                  />
+                ) : (
+                  <span className="w-20 h-20 rounded-full bg-neutral-900 text-white font-semibold text-2xl flex items-center justify-center">
+                    {otherParticipant.full_name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <p className="text-body font-semibold text-[var(--text-primary)]">
+                  {otherParticipant.full_name}
+                </p>
+                <p className="text-caption text-[var(--text-tertiary)] -mt-1">
+                  {isLocalUserGuest ? "Anfitrión de Beel" : "Huésped"}
+                </p>
+                <div className="flex gap-3 mt-1.5">
+                  <Link
+                    href={`/u/${otherParticipant.id}`}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--border-default)] text-body-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+                  >
+                    <User size={15} /> Ver perfil
+                  </Link>
+                  {activeConv?.reservation_id && (
+                    <button
+                      onClick={() => { setShowChatDetails(false); setShowInfoSidebar(true); }}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[var(--border-default)] text-body-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+                    >
+                      <Info size={15} /> Reserva
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Buscar en la conversación */}
+              <div>
+                <div className="relative">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+                  <input
+                    value={chatSearch}
+                    onChange={(e) => setChatSearch(e.target.value)}
+                    placeholder="Buscar en la conversación"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-subtle)] text-body-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--color-primary)]"
+                  />
+                </div>
+                {chatSearch.trim().length >= 2 && (() => {
+                  const q = chatSearch.trim().toLowerCase();
+                  const matches = messages
+                    .filter(
+                      (m) =>
+                        m.message_type !== "system" &&
+                        m.message_type !== "image" &&
+                        (m.content ?? m.body ?? "").toLowerCase().includes(q)
+                    )
+                    .slice(-25)
+                    .reverse();
+                  return (
+                    <div className="mt-2 divide-y divide-[var(--border-subtle)] rounded-xl border border-[var(--border-subtle)] overflow-hidden">
+                      {matches.length === 0 && (
+                        <p className="px-4 py-3 text-body-sm text-[var(--text-tertiary)]">
+                          Sin resultados en los mensajes cargados.
+                        </p>
+                      )}
+                      {matches.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => { setShowChatDetails(false); scrollToMessage(m.id); }}
+                          className="w-full text-left px-4 py-2.5 hover:bg-[var(--bg-subtle)] transition-colors"
+                        >
+                          <p className="text-[11px] text-[var(--text-tertiary)] mb-0.5">
+                            {m.sender_id === localUserId ? "Tú" : otherParticipant.full_name}
+                            {" · "}
+                            {format(parseISO(m.created_at), "d MMM HH:mm", { locale: es })}
+                          </p>
+                          <p className="text-body-sm text-[var(--text-primary)] line-clamp-2">
+                            {m.content ?? m.body}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Fotos compartidas */}
+              {(() => {
+                const photos = messages
+                  .filter((m) => m.message_type === "image")
+                  .map((m) => ({ id: m.id, url: m.metadata?.image_url ?? m.content ?? m.body ?? "" }))
+                  .filter((p) => p.url)
+                  .reverse();
+                if (photos.length === 0) return null;
+                return (
+                  <div>
+                    <h3 className="text-body-sm font-semibold text-[var(--text-primary)] mb-2.5">
+                      Fotos compartidas
+                    </h3>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {photos.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => setLightboxUrl(p.url)}
+                          className="aspect-square rounded-lg overflow-hidden bg-[var(--bg-subtle)]"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={p.url} alt="Foto" loading="lazy" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-caption text-[var(--text-tertiary)] mt-2">
+                      Se muestran las fotos de los mensajes cargados; desliza hacia
+                      arriba en el chat para cargar más historial.
+                    </p>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Menú contextual de mensaje estilo Instagram: fondo difuminado,
           reacciones rápidas arriba, vista previa y acciones abajo. */}
