@@ -8,6 +8,7 @@ import PropertyCard, { PropertyCardSkeleton } from "@/components/PropertyCard";
 import ExperienceCard from "@/components/ExperienceCard";
 import ExploreTabs from "@/components/ExploreTabs";
 import StoriesCarousel from "@/components/StoriesCarousel";
+import PostsFeed from "@/components/PostsFeed";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Suspense } from "react";
 import { Shield, Star, MessageCircle, Sparkles } from "lucide-react";
@@ -61,6 +62,9 @@ export default async function HomePage() {
 
       {/* ── Historias de anfitriones (24h) ─────────────────────────────────── */}
       <StoriesCarousel />
+
+      {/* ── Publicaciones de anfitriones (feed estilo Instagram) ───────────── */}
+      <PostsFeed />
 
       {/* ── Propiedades destacadas ─────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

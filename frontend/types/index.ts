@@ -234,3 +234,32 @@ export interface Reservation {
   status: ReservationStatus;
   created_at: string;
 }
+
+// ── Publicaciones de anfitriones (feed estilo Instagram) ─────────────────────
+
+export interface PostHost {
+  id: string;
+  full_name?: string | null;
+  avatar_url?: string | null;
+}
+
+export interface PostMedia {
+  id: string;
+  position: number;
+  media_url: string;
+  media_type: "image" | "video";
+  width?: number | null;
+  height?: number | null;
+  duration_s?: number | null;
+}
+
+export interface Post {
+  id: string;
+  host: PostHost;
+  property_id?: string | null;
+  caption?: string | null;
+  created_at: string;
+  media: PostMedia[];
+  like_count: number;
+  liked: boolean;
+}
