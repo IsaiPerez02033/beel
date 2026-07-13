@@ -1157,8 +1157,8 @@ input, textarea, select {
 }
 
 /* Colores por parte (heredan tema claro/oscuro por las variables de marca) */
-.kukul-disc { fill: var(--color-primary-light); }
-.kukul-body { fill: var(--color-primary); transform-origin: 32px 32px; transform-box: view-box; }
+.kukul-disc { fill: var(--color-primary-light); transform-origin: 32px 32px; transform-box: view-box; }
+.kukul-body { fill: var(--color-primary); transform-origin: 32px 42px; transform-box: view-box; }
 .kukul-head { fill: var(--color-primary); transform-origin: 45px 20px; transform-box: view-box; }
 .kukul-feather { fill: var(--color-accent); transform-origin: 28px 36px; transform-box: view-box; }
 .kukul-feathers { transform-origin: 32px 32px; transform-box: view-box; }
@@ -1175,7 +1175,8 @@ input, textarea, select {
   transform-box: view-box;
 }
 
-/* Transiciones físicas entre estados para amortiguar cualquier salto */
+/* Transiciones fluidas tipo física de resortes (Spring) para amortiguar cambios de estado */
+.kukul-disc,
 .kukul-body, 
 .kukul-head, 
 .kukul-feathers, 
@@ -1185,49 +1186,76 @@ input, textarea, select {
 .kukul-eye-shine {
   transition: 
     transform 750ms cubic-bezier(0.34, 1.56, 0.64, 1), 
-    filter 750ms ease,
+    filter 750ms cubic-bezier(0.34, 1.56, 0.64, 1), 
+    fill 450ms ease,
     opacity 450ms ease;
 }
 
-/* ── Animaciones Base (Física Orgánica) ── */
+/* ── INTERACCIÓN HOVER PREMIUM (Curiosidad del avatar) ── */
+.kukul:hover svg {
+  transform: scale(1.06) rotate(3deg);
+  filter: drop-shadow(0 4px 10px rgba(20, 122, 92, 0.25));
+}
+.kukul:hover .kukul-head {
+  transform: rotate(-4deg) translateY(-0.8px) skewX(-2deg);
+}
+.kukul:hover .kukul-tongue {
+  animation: kukul-tongue-flick 1.4s ease-in-out infinite !important;
+}
+.kukul:hover .kukul-eye-shine {
+  transform: scale(1.3) translate(-0.4px, 0.2px);
+}
+.kukul:hover .kukul-feather {
+  animation: kukul-feather-shimmer 2s ease-in-out infinite;
+}
+.kukul:hover .kukul-feather-1 { animation-delay: 0s; }
+.kukul:hover .kukul-feather-2 { animation-delay: 0.15s; }
+.kukul:hover .kukul-feather-3 { animation-delay: 0.3s; }
 
-/* Parpadeo natural del ojo (cada 5s) */
+@keyframes kukul-feather-shimmer {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 0 rgba(245, 166, 35, 0)); }
+  50% { filter: brightness(1.22) drop-shadow(0 0 4px rgba(245, 166, 35, 0.65)); }
+}
+
+/* ── Animaciones Base (Física Orgánica de Respiración y Parpadeo) ── */
+
+/* Parpadeo natural del ojo (cada 4.8 segundos) */
 .kukul-eye {
-  animation: kukul-eye-blink 5s ease-in-out infinite;
+  animation: kukul-eye-blink 4.8s ease-in-out infinite;
 }
 @keyframes kukul-eye-blink {
   0%, 96%, 100% { transform: scaleY(1); }
-  98% { transform: scaleY(0.08); }
+  98% { transform: scaleY(0.06); }
 }
 
 /* 1. IDLE (Reposo con respiración 3D, deformación ósea y siseo de lengua) */
 .kukul--idle svg {
-  animation: kukul-sway 3.6s ease-in-out infinite;
+  animation: kukul-sway 3.8s ease-in-out infinite;
 }
 .kukul--idle .kukul-body {
-  animation: kukul-body-idle 3.6s ease-in-out infinite;
+  animation: kukul-body-idle 3.8s ease-in-out infinite;
 }
 .kukul--idle .kukul-head {
-  animation: kukul-head-idle 3.6s ease-in-out infinite;
+  animation: kukul-head-idle 3.8s ease-in-out infinite;
 }
 .kukul--idle .kukul-feathers {
-  animation: kukul-feathers-idle 3.6s ease-in-out infinite;
+  animation: kukul-feathers-idle 3.8s ease-in-out infinite;
 }
 .kukul--idle .kukul-tongue {
-  animation: kukul-tongue-flick 5.2s ease-in-out infinite;
+  animation: kukul-tongue-flick 5.6s ease-in-out infinite;
 }
 
 @keyframes kukul-sway {
   0%, 100% { transform: translateY(0) rotate(-3.5deg); }
-  50%      { transform: translateY(-2.5px) rotate(3.5deg); }
+  50%      { transform: translateY(-2.8px) rotate(3.5deg); }
 }
 @keyframes kukul-body-idle {
   0%, 100% { transform: scale(1) skewX(-1.5deg); }
-  50%      { transform: scale(1.03, 0.96) translateY(0.5px) skewX(1.5deg); }
+  50%      { transform: scale(1.03, 0.96) translateY(0.6px) skewX(1.5deg); }
 }
 @keyframes kukul-head-idle {
   0%, 100% { transform: translateY(0) rotate(0deg) skewX(2deg); }
-  50%      { transform: translateY(0.8px) rotate(-2deg) skewX(-2deg); }
+  50%      { transform: translateY(0.9px) rotate(-2deg) skewX(-2deg); }
 }
 @keyframes kukul-feathers-idle {
   0%, 100% { transform: scale(1) rotate(0deg); }
@@ -1235,47 +1263,50 @@ input, textarea, select {
 }
 @keyframes kukul-tongue-flick {
   0%, 75%, 95%, 100% { transform: scaleX(0); opacity: 0; }
-  80%, 90% { transform: scaleX(1.1) translateX(1px); opacity: 1; }
-  83% { transform: scaleX(0.7) translateY(-0.5px) rotate(5deg); opacity: 1; }
-  87% { transform: scaleX(0.9) translateY(0.5px) rotate(-5deg); opacity: 1; }
+  80%, 90% { transform: scaleX(1.15) translateX(1px); opacity: 1; }
+  83% { transform: scaleX(0.7) translateY(-0.6px) rotate(6deg); opacity: 1; }
+  87% { transform: scaleX(0.95) translateY(0.6px) rotate(-6deg); opacity: 1; }
 }
 
-/* 2. COILING (Enrollado de entrada) */
+/* 2. COILING (Enrollado de anticipación - compresión vertical) */
 .kukul--coiling .kukul-body {
-  animation: kukul-body-coil 480ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: kukul-body-coil 480ms cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
 }
 .kukul--coiling .kukul-head {
-  animation: kukul-head-coil 480ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: kukul-head-coil 480ms cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
 }
 .kukul--coiling .kukul-feathers {
-  animation: kukul-feathers-coil 480ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: kukul-feathers-coil 480ms cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
 }
 .kukul--coiling .kukul-tongue {
-  animation: kukul-tongue-coil 480ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: kukul-tongue-coil 480ms ease-out forwards;
 }
 
 @keyframes kukul-body-coil {
   0% { transform: scale(1) skewX(0); }
-  100% { transform: scale(0.8, 0.62) translateY(8px) skewX(-4deg); }
+  100% { transform: scale(0.8, 0.6) translateY(9px) skewX(-4deg); }
 }
 @keyframes kukul-head-coil {
   0% { transform: translateY(0) rotate(0deg) skewX(0); }
-  100% { transform: translateY(9px) translateX(-6px) rotate(-26deg) skewX(4deg); }
+  100% { transform: translateY(10px) translateX(-6px) rotate(-28deg) skewX(4deg); }
 }
 @keyframes kukul-feathers-coil {
   0% { transform: scale(1) rotate(0deg); }
-  100% { transform: scale(0.68) rotate(-18deg) translateY(4px); }
+  100% { transform: scale(0.66) rotate(-18deg) translateY(4px); }
 }
 @keyframes kukul-tongue-coil {
   0% { transform: scale(1); }
   100% { transform: scale(0); opacity: 0; }
 }
 
-/* 3. THINKING (Baile de cálculo con flexión de columna) */
+/* 3. THINKING (Cargando datos: Kukul se mantiene enrollado y sus plumas parpadean en secuencia como cargador) */
 .kukul--thinking svg {
   animation:
     kukul-dance 0.75s ease-in-out infinite,
     kukul-glow 1.4s ease-in-out infinite;
+}
+.kukul--thinking .kukul-disc {
+  animation: kukul-disc-charge 1.5s ease-in-out infinite;
 }
 .kukul--thinking .kukul-body {
   animation: kukul-body-think 0.75s ease-in-out infinite;
@@ -1284,101 +1315,117 @@ input, textarea, select {
   animation: kukul-head-think 0.75s ease-in-out infinite;
 }
 .kukul--thinking .kukul-feathers {
-  transform: scale(0.76) rotate(-10deg) translateY(3px);
+  transform: scale(0.72) rotate(-12deg) translateY(4px);
 }
-.kukul--thinking .kukul-feather   { animation: kukul-feather-pulse 1s ease-in-out infinite; }
-.kukul--thinking .kukul-feather-2 { animation-delay: 0.14s; }
-.kukul--thinking .kukul-feather-3 { animation-delay: 0.28s; }
+/* Secuenciador de carga estilo barra de progreso en las plumas */
+.kukul--thinking .kukul-feather-1 {
+  animation: kukul-feather-charge 1.0s ease-in-out infinite;
+  animation-delay: -0.66s;
+}
+.kukul--thinking .kukul-feather-2 {
+  animation: kukul-feather-charge 1.0s ease-in-out infinite;
+  animation-delay: -0.33s;
+}
+.kukul--thinking .kukul-feather-3 {
+  animation: kukul-feather-charge 1.0s ease-in-out infinite;
+  animation-delay: 0s;
+}
 
 @keyframes kukul-dance {
-  0%, 100% { transform: translateY(0) rotate(-8deg); }
-  50%      { transform: translateY(-4px) rotate(8deg); }
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%      { transform: translateY(-3px) rotate(6deg); }
 }
 @keyframes kukul-glow {
-  0%, 100% { filter: drop-shadow(0 0 1px rgba(245, 166, 35, 0.1)); }
-  50%      { filter: drop-shadow(0 0 8px rgba(245, 166, 35, 0.95)); }
+  0%, 100% { filter: drop-shadow(0 0 1px rgba(20, 122, 92, 0.1)); }
+  50%      { filter: drop-shadow(0 0 9px rgba(245, 166, 35, 0.85)); }
 }
-@keyframes kukul-feather-pulse {
-  0%, 100% { opacity: 0.4; }
-  50%      { opacity: 1; }
+@keyframes kukul-disc-charge {
+  0%, 100% { fill: var(--color-primary-light); opacity: 0.8; }
+  50%      { fill: var(--color-accent-light, #fef9ec); opacity: 1; }
+}
+@keyframes kukul-feather-charge {
+  0%, 100% { opacity: 0.35; transform: scale(0.72) rotate(0); }
+  50%      { opacity: 1; transform: scale(1.1) filter(brightness(1.18)); }
 }
 @keyframes kukul-body-think {
-  0%, 100% { transform: scale(0.83, 0.7) translateY(6.5px) skewX(-3deg); }
-  50%      { transform: scale(0.86, 0.66) translateY(7.5px) skewX(3deg); }
+  0%, 100% { transform: scale(0.8, 0.6) translateY(9px) skewX(-2deg); }
+  50%      { transform: scale(0.83, 0.57) translateY(10px) skewX(2deg); }
 }
 @keyframes kukul-head-think {
-  0%, 100% { transform: translateY(6.5px) translateX(-3.5px) rotate(-20deg) skewX(4deg); }
-  50%      { transform: translateY(5px) translateX(-2px) rotate(-10deg) skewX(-4deg); }
+  0%, 100% { transform: translateY(10px) translateX(-6px) rotate(-28deg) skewX(3deg); }
+  50%      { transform: translateY(8.5px) translateX(-4px) rotate(-20deg) skewX(-3deg); }
 }
 
-/* 4. FLUFFING (Esponjado elástico de plumas con apertura secuencial) */
+/* 4. FLUFFING (¡Esponjado majestuoso! Kukul se infla exageradamente y abre sus plumas una por una con rebote elástico) */
 .kukul--fluffing .kukul-body {
-  animation: kukul-body-fluff 850ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: kukul-body-fluff 900ms cubic-bezier(0.175, 0.885, 0.32, 1.375) forwards;
 }
 .kukul--fluffing .kukul-head {
-  animation: kukul-head-fluff 850ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: kukul-head-fluff 900ms cubic-bezier(0.175, 0.885, 0.32, 1.375) forwards;
 }
 .kukul--fluffing .kukul-tongue {
-  animation: kukul-tongue-fluff 850ms ease-out forwards;
+  animation: kukul-tongue-fluff 900ms ease-out forwards;
 }
 
-/* Apertura secuencial escalonada de plumas */
+/* Apertura secuencial elástica de las plumas traseras */
 .kukul--fluffing .kukul-feather-1 {
-  animation: kukul-feather-1-fluff 850ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: kukul-feather-1-fluff 900ms cubic-bezier(0.175, 0.885, 0.32, 1.375) forwards;
 }
 .kukul--fluffing .kukul-feather-2 {
-  animation: kukul-feather-2-fluff 850ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: kukul-feather-2-fluff 900ms cubic-bezier(0.175, 0.885, 0.32, 1.375) forwards;
   animation-delay: 0.08s;
 }
 .kukul--fluffing .kukul-feather-3 {
-  animation: kukul-feather-3-fluff 850ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: kukul-feather-3-fluff 900ms cubic-bezier(0.175, 0.885, 0.32, 1.375) forwards;
   animation-delay: 0.16s;
 }
 
 @keyframes kukul-body-fluff {
-  0% { transform: scale(0.82, 0.65) translateY(8px); }
-  45% { transform: scale(1.16, 1.09) translateY(-4px) skewX(2deg); }
-  100% { transform: scale(1.08, 1.03) translateY(-2px) skewX(0); }
+  0% { transform: scale(0.8, 0.6) translateY(9px); }
+  35% { transform: scale(1.24, 1.15) translateY(-5px); } /* Súper inflado */
+  65% { transform: scale(1.02, 0.98) translateY(1px); }
+  100% { transform: scale(1.08, 1.03) translateY(-2px); }
 }
 @keyframes kukul-head-fluff {
-  0% { transform: translateY(9px) translateX(-6px) rotate(-26deg); }
-  45% { transform: translateY(-5px) rotate(11deg) skewX(-2deg); }
-  100% { transform: translateY(-2px) rotate(4deg) skewX(0); }
+  0% { transform: translateY(10px) translateX(-6px) rotate(-28deg); }
+  35% { transform: translateY(-8px) rotate(14deg) skewX(-2deg); } /* Cabeza erguida orgullosa */
+  65% { transform: translateY(1px) rotate(-2deg); }
+  100% { transform: translateY(-2px) rotate(4deg); }
 }
 
 @keyframes kukul-feather-1-fluff {
-  0% { transform: scale(0.7) rotate(-16deg); }
-  45% { transform: scale(1.36) rotate(-20deg); filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.7)); }
+  0% { transform: scale(0.66) rotate(-18deg); }
+  35% { transform: scale(1.48) rotate(-28deg); filter: drop-shadow(0 0 8px rgba(245, 166, 35, 0.95)) brightness(1.2); }
   100% { transform: scale(1.22) rotate(-10deg); }
 }
 @keyframes kukul-feather-2-fluff {
-  0% { transform: scale(0.7); }
-  45% { transform: scale(1.42) translateY(-3px); filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.7)); }
+  0% { transform: scale(0.66); }
+  35% { transform: scale(1.58) translateY(-6px); filter: drop-shadow(0 0 8px rgba(245, 166, 35, 0.95)) brightness(1.2); }
   100% { transform: scale(1.28) translateY(-1px); }
 }
 @keyframes kukul-feather-3-fluff {
-  0% { transform: scale(0.7) rotate(16deg); }
-  45% { transform: scale(1.36) rotate(20deg); filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.7)); }
+  0% { transform: scale(0.66) rotate(16deg); }
+  35% { transform: scale(1.48) rotate(28deg); filter: drop-shadow(0 0 8px rgba(245, 166, 35, 0.95)) brightness(1.2); }
   100% { transform: scale(1.22) rotate(10deg); }
 }
 
 @keyframes kukul-tongue-fluff {
   0% { transform: scaleX(0); }
-  30%, 60% { transform: scaleX(1.3) rotate(6deg); }
-  45% { transform: scaleX(1.3) rotate(-6deg); }
+  30%, 60% { transform: scaleX(1.35) rotate(6deg); }
+  45% { transform: scaleX(1.35) rotate(-6deg); }
   100% { transform: scaleX(0); }
 }
 
-/* 5. DONE (Asentimiento nod) */
+/* 5. DONE (Asentimiento de entrega final) */
 .kukul--done svg {
-  animation: kukul-nod 900ms cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  animation: kukul-nod 920ms cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
 @keyframes kukul-nod {
   0%   { transform: translateY(0) rotate(0deg); }
-  22%  { transform: translateY(3.5px) rotate(14deg); }
-  52%  { transform: translateY(-4px) rotate(-8deg); }
-  78%  { transform: translateY(1px) rotate(4deg); }
+  22%  { transform: translateY(4px) rotate(16deg); }
+  52%  { transform: translateY(-4px) rotate(-6deg); }
+  78%  { transform: translateY(1px) rotate(3deg); }
   100% { transform: translateY(0) rotate(0deg); }
 }
 
