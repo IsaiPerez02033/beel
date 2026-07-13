@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Send, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -48,6 +48,33 @@ export default function ConciergePage() {
     | "done"
   >("idle");
   const endRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Obtener recomendaciones de respuestas dinámicas según la última pregunta de Kukul
+  const quickReplies = useMemo(() => {
+    if (loading || messages.length === 0) return [];
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role === "assistant") {
+      const t = lastMsg.content.toLowerCase();
+      // 1. Destinos / Pueblos Mágicos
+      if (t.includes("pueblo mágico") || t.includes("cuál pueblo") || t.includes("dónde") || t.includes("destino")) {
+        return ["Guanajuato", "San Miguel de Allende", "Oaxaca", "Pátzcuaro", "Tepoztlán", "Tulum"];
+      }
+      // 2. Duración
+      if (t.includes("noches") || t.includes("cuántas noches") || t.includes("días piensas") || t.includes("tiempo")) {
+        return ["1 noche", "2 noches", "3 noches", "Fin de semana (2 noches)", "5 noches"];
+      }
+      // 3. Presupuesto
+      if (t.includes("presupuesto") || t.includes("precio") || t.includes("presupuesto aproximado") || t.includes("cuánto piensas gastar")) {
+        return ["Bajo (< $1,500 MXN)", "Moderado ($1,500 - $3,500 MXN)", "Luxe (> $3,500 MXN)"];
+      }
+      // 4. Experiencias
+      if (t.includes("experiencia") || t.includes("actividades") || t.includes("guste especialmente") || t.includes("naturaleza") || t.includes("gastronomía")) {
+        return ["Gastronomía", "Naturaleza y Aventura", "Cultura y Arte", "Wellness/Relajación", "Romántico"];
+      }
+    }
+    return [];
+  }, [messages, loading]);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace("/iniciar-sesion?callbackUrl=/concierge");
@@ -229,11 +256,35 @@ export default function ConciergePage() {
 
       {/* Input (hijo del flex, siempre visible abajo) */}
       <div className="flex-shrink-0 border-t border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-3">
+        {/* Recomendaciones de Respuestas (Pills) */}
+        {quickReplies.length > 0 && (
+          <div className="flex gap-2 px-1 pb-3 overflow-x-auto scrollbar-none max-w-3xl mx-auto w-full scroll-mask-fade">
+            {quickReplies.map((reply, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => send(reply)}
+                className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-caption font-medium border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all active:scale-95 text-xs shadow-sm"
+              >
+                {reply}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => textareaRef.current?.focus()}
+              className="flex-shrink-0 px-3.5 py-1.5 rounded-full text-caption border border-dashed border-[var(--color-accent)] bg-[var(--bg-base)] text-[var(--color-accent)] hover:bg-[var(--bg-elevated)] transition-all active:scale-95 text-xs font-semibold shadow-sm"
+            >
+              Otro...
+            </button>
+          </div>
+        )}
+
         <form
           onSubmit={(e) => { e.preventDefault(); send(input); }}
           className="max-w-3xl mx-auto flex items-end gap-2 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-2xl p-2 shadow-sm"
         >
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
