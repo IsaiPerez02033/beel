@@ -102,21 +102,14 @@ export default function KukulAvatar({
           fill="url(#kukul-head-grad)"
         />
 
-        {/* Ojo inteligente con iris central y reflejos brillantes */}
-        <circle className="kukul-eye" cx="48" cy="21" r="2.6" fill="url(#kukul-eye-grad)" />
-        <circle className="kukul-eye-iris" cx="48.1" cy="21.1" r="1.3" fill="var(--color-accent)" opacity="0.65" />
-        <circle className="kukul-eye-shine kukul-eye-shine-1" cx="48.9" cy="20.1" r="0.8" fill="#ffffff" />
-        <circle className="kukul-eye-shine kukul-eye-shine-2" cx="47.2" cy="21.8" r="0.35" fill="#ffffff" opacity="0.6" />
+        {/* Ojo inteligente con iris central y reflejos brillantes (diseño expresivo ampliado) */}
+        <circle className="kukul-eye" cx="48" cy="21" r="3.2" fill="url(#kukul-eye-grad)" />
+        <circle className="kukul-eye-iris" cx="48.1" cy="21.1" r="1.6" fill="var(--color-accent)" opacity="0.65" />
+        <circle className="kukul-eye-shine kukul-eye-shine-1" cx="49.1" cy="19.9" r="1.0" fill="#ffffff" />
+        <circle className="kukul-eye-shine kukul-eye-shine-2" cx="46.9" cy="22.1" r="0.45" fill="#ffffff" opacity="0.65" />
 
         {/* Lengua bífida */}
         <path className="kukul-tongue" d="M54 24 L60 24 M60 24 L63.5 22 M60 24 L63.5 26" />
-
-        {/* Partículas de cálculo en órbita para el estado thinking */}
-        <g className="kukul-particles">
-          <circle className="kukul-particle kukul-particle-1" cx="32" cy="32" r="1.2" fill="var(--color-accent)" />
-          <circle className="kukul-particle kukul-particle-2" cx="32" cy="32" r="0.9" fill="var(--color-accent)" />
-          <circle className="kukul-particle kukul-particle-3" cx="32" cy="32" r="0.7" fill="#ffffff" />
-        </g>
       </svg>
     </span>
   );
