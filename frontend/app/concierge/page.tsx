@@ -129,10 +129,7 @@ export default function ConciergePage() {
                 {/* Mensaje del usuario */}
                 {m.role === "user" && (
                   <div className="flex justify-end">
-                    <div 
-                      className="bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-sm px-4.5 py-3 shadow-sm text-body-sm whitespace-pre-wrap animate-concierge-bubble"
-                      style={{ width: "fit-content", maxWidth: "85%" }}
-                    >
+                    <div className="max-w-[85%] text-[var(--text-primary)] text-body-sm whitespace-pre-wrap text-right animate-concierge-bubble">
                       {m.content}
                     </div>
                   </div>
@@ -143,11 +140,8 @@ export default function ConciergePage() {
                   <div className="flex gap-3 items-start">
                     <KukulAvatar size={32} state="idle" />
                     <div className="flex-1 space-y-4">
-                      {/* Burbuja principal */}
-                      <div 
-                        className="bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-2xl rounded-tl-sm px-4.5 py-3 text-body-sm shadow-sm leading-relaxed animate-concierge-bubble whitespace-pre-wrap"
-                        style={{ width: "fit-content", maxWidth: "85%" }}
-                      >
+                      {/* Mensaje directo sin burbuja */}
+                      <div className="text-body-sm text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed animate-concierge-bubble">
                         {m.content}
                       </div>
 
@@ -179,10 +173,7 @@ export default function ConciergePage() {
             {loading && (
               <div className="flex gap-3 items-start">
                 <KukulAvatar size={32} state={avatarState} />
-                <div 
-                  className="bg-[var(--bg-subtle)] text-[var(--text-secondary)] rounded-2xl rounded-tl-sm px-4.5 py-3 text-body-sm shadow-sm leading-relaxed flex items-center gap-2 animate-concierge-bubble"
-                  style={{ width: "fit-content", maxWidth: "85%" }}
-                >
+                <div className="text-body-sm text-[var(--text-secondary)] leading-relaxed flex items-center gap-2 animate-concierge-bubble">
                   <span>
                     {avatarState === "fluffing"
                       ? "¡Kukul ha encontrado tu viaje!"
