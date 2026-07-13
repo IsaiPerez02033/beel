@@ -64,24 +64,28 @@ export default function ConciergePage() {
         "/concierge/chat",
         { messages: next.map((m) => ({ role: m.role, content: m.content })) }
       );
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: res.reply, properties: res.properties, experiences: res.experiences },
-      ]);
       clearTimeout(coilTimeout);
       setAvatarState("fluffing");
+      
+      // Esperamos a que termine el esponjado de plumas antes de pintar el mensaje
       setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: res.reply, properties: res.properties, experiences: res.experiences },
+        ]);
+        setLoading(false);
         setAvatarState("done");
+        
+        // Regresa a reposo después del asentimiento
         setTimeout(() => {
           setAvatarState("idle");
         }, 900);
-      }, 850); // duración del esponjado en CSS
+      }, 850);
     } catch (e) {
       clearTimeout(coilTimeout);
       setAvatarState("idle");
-      setError(e instanceof Error ? e.message : "No se pudo contactar al Concierge.");
-    } finally {
       setLoading(false);
+      setError(e instanceof Error ? e.message : "No se pudo contactar al Concierge.");
     }
   }
 
@@ -118,26 +122,32 @@ export default function ConciergePage() {
             </div>
           )}
 
-          {/* Conversación */}
-          <div className="space-y-6">
-            {messages.map((m, i) => (
-              <div key={i}>
-                {m.role === "user" ? (
+          {/* Lista de mensajes */}
+          <div className="space-y-6 mb-24">
+            {messages.map((m, idx) => (
+              <div key={idx} className="space-y-4">
+                {/* Mensaje del usuario */}
+                {m.role === "user" && (
                   <div className="flex justify-end">
-                    <div className="max-w-[85%] bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-md px-4 py-2.5 text-body-sm animate-concierge-bubble">
+                    <div className="max-w-[85%] bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-2xl rounded-tr-sm px-4.5 py-3 shadow-sm text-body">
                       {m.content}
                     </div>
                   </div>
-                ) : (
-                  <div className="flex gap-3 animate-concierge-bubble">
+                )}
+
+                {/* Mensaje del asistente */}
+                {m.role === "assistant" && (
+                  <div className="flex gap-3">
                     <KukulAvatar size={32} state="idle" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-body-sm text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">
+                    <div className="flex-1 space-y-4 max-w-[85%]">
+                      {/* Burbuja principal */}
+                      <div className="bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-2xl rounded-tl-sm px-4.5 py-3 text-body shadow-sm leading-relaxed animate-concierge-bubble">
                         {m.content}
                       </div>
 
+                      {/* Hospedajes recomendados */}
                       {m.properties && m.properties.length > 0 && (
-                        <div className="mt-4">
+                        <div className="animate-fade-in delay-100">
                           <p className="text-caption font-semibold text-[var(--text-tertiary)] mb-2 uppercase tracking-wide">Hospedajes</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {m.properties.map((p) => <PropertyCard key={p.id} property={p} />)}
@@ -145,8 +155,9 @@ export default function ConciergePage() {
                         </div>
                       )}
 
+                      {/* Experiencias recomendadas */}
                       {m.experiences && m.experiences.length > 0 && (
-                        <div className="mt-4">
+                        <div className="animate-fade-in delay-200">
                           <p className="text-caption font-semibold text-[var(--text-tertiary)] mb-2 uppercase tracking-wide">Experiencias</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {m.experiences.map((e) => <ExperienceCard key={e.id} experience={e} />)}
@@ -161,14 +172,20 @@ export default function ConciergePage() {
 
             {loading && (
               <div className="flex gap-3 items-center">
-                <KukulAvatar size={32} state="thinking" />
+                <KukulAvatar size={32} state={avatarState} />
                 <div className="flex items-center gap-1.5 text-body-sm text-[var(--text-tertiary)]">
-                  <span>Kukul está pensando</span>
-                  <span className="typing-dots !p-0">
-                    <span className="typing-dot" />
-                    <span className="typing-dot" />
-                    <span className="typing-dot" />
+                  <span>
+                    {avatarState === "fluffing"
+                      ? "¡Kukul ha encontrado tu viaje!"
+                      : "Kukul está pensando"}
                   </span>
+                  {avatarState !== "fluffing" && (
+                    <span className="typing-dots !p-0">
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                    </span>
+                  )}
                 </div>
               </div>
             )}
