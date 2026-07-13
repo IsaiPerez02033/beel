@@ -263,7 +263,7 @@ export default function MensajesPage() {
             const session = await getSession();
             if (cancelled || session) return; // sí hay sesión: el provider se actualiza solo
             const dest = window.location.pathname + window.location.search;
-            router.push(`/iniciar-sesion?callbackUrl=${encodeURIComponent(dest)}`);
+            router.push(`/iniciar-sesion?redirect_url=${encodeURIComponent(dest)}`);
             return;
           } catch {
             await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
@@ -643,8 +643,15 @@ export default function MensajesPage() {
     const replySnapshot = replyingTo;
     setReplyingTo(null);
 
+    // Clave de idempotencia: si useApi reintenta el POST (504 del proxy con el
+    // mensaje ya creado en el backend), el servidor devuelve el mensaje
+    // existente en vez de duplicarlo (duplicaba filas y el badge marcaba x2).
+    const clientId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     // Burbuja optimista: aparece al instante con una sola palomita (enviando).
-    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const tempId = `temp-${clientId}`;
     setMessages((prev) => [
       ...prev,
       {
@@ -671,6 +678,7 @@ export default function MensajesPage() {
     try {
       const msg = await post<Message>(`/messaging/${activeConvId}/messages`, {
         body: text,
+        client_id: clientId,
         ...(replyId ? { reply_to_id: replyId } : {}),
       });
       // Quitar la burbuja optimista y quedarnos con la versión del servidor.

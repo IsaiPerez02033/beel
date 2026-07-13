@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signInWithGoogle } from "@/app/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -14,7 +14,10 @@ const API = typeof window !== "undefined" ? "/api/backend" : (process.env.NEXT_P
 export default function IniciarSesionPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect_url") ?? "/";
+  // Acepta ambos nombres de parámetro: el middleware manda redirect_url y
+  // otras rutas del cliente usan callbackUrl.
+  const redirectUrl =
+    searchParams.get("redirect_url") ?? searchParams.get("callbackUrl") ?? "/";
   const motivo = searchParams.get("motivo");
   const emailParam = searchParams.get("email") ?? "";
 
@@ -28,6 +31,31 @@ export default function IniciarSesionPage() {
       ? "Esta cuenta ya existe. Inicia sesión con tu contraseña."
       : ""
   );
+
+  // Si YA hay sesión, no mostrar el formulario: volver de inmediato al destino.
+  // El middleware puede rebotar aquí por un falso negativo (p. ej. al abrir la
+  // PWA desde una notificación push la cookie a veces no viaja en esa primera
+  // navegación); sin esta verificación, un usuario logueado quedaba atorado
+  // viendo el login.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getSession } = await import("next-auth/react");
+        const session = await getSession();
+        if (cancelled || !session) return;
+        // Solo destinos relativos internos (evita open redirect).
+        const dest =
+          redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")
+            ? redirectUrl
+            : "/";
+        router.replace(dest);
+      } catch {
+        // Sin red: dejar el formulario visible.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [redirectUrl, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
