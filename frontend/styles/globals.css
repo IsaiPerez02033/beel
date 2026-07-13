@@ -1137,3 +1137,84 @@ input, textarea, select {
   animation: concierge-bubble-pop 480ms cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Kukul — avatar de serpiente emplumada del Concierge
+   ───────────────────────────────────────────────────────────────────────── */
+.kukul {
+  display: inline-block;
+  flex-shrink: 0;
+  line-height: 0;
+  /* origen de las transformaciones cerca de la base del cuello (asentimiento) */
+  transform-origin: 50% 78%;
+}
+.kukul svg { display: block; overflow: visible; }
+
+/* Colores por parte (heredan tema claro/oscuro por las variables de marca) */
+.kukul-disc { fill: var(--color-primary-light); }
+.kukul-body { fill: var(--color-primary); }
+.kukul-head { fill: var(--color-primary); }
+.kukul-feather { fill: var(--color-accent); }
+.kukul-eye { fill: #12332a; }
+.dark .kukul-eye { fill: #0b1f1a; }
+.kukul-eye-shine { fill: #ffffff; }
+.kukul-tongue {
+  stroke: var(--color-accent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+@keyframes kukul-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-1.5px) scale(1.015); }
+}
+@keyframes kukul-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96%           { transform: scaleY(0.1); }
+}
+@keyframes kukul-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(245, 166, 35, 0)); }
+  50%      { filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.75)); }
+}
+@keyframes kukul-shimmer {
+  0%, 100% { fill: var(--color-accent); transform: translateY(0); }
+  50%      { fill: #ffd27a; transform: translateY(-1.5px); }
+}
+@keyframes kukul-nod {
+  0%   { transform: rotate(0deg) translateY(0); }
+  35%  { transform: rotate(7deg) translateY(1.5px); }
+  70%  { transform: rotate(-3deg) translateY(0); }
+  100% { transform: rotate(0deg) translateY(0); }
+}
+@keyframes kukul-flare {
+  0%   { fill: var(--color-accent); transform: scale(1); }
+  40%  { fill: #ffe1a3; transform: scale(1.12); }
+  100% { fill: var(--color-accent); transform: scale(1); }
+}
+
+/* Estado por defecto: estático (base para prefers-reduced-motion) */
+.kukul-eye,
+.kukul-feathers,
+.kukul-feather,
+.kukul svg { transform-box: fill-box; }
+.kukul-eye { transform-origin: center; }
+.kukul-feather { transform-origin: center; }
+.kukul-feathers { transform-origin: 50% 60%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* idle: respira y parpadea */
+  .kukul--idle svg { animation: kukul-breathe 3.2s ease-in-out infinite; }
+  .kukul--idle .kukul-eye { animation: kukul-blink 5.5s ease-in-out infinite; }
+
+  /* thinking: halo dorado latiendo + plumas ondulando en secuencia */
+  .kukul--thinking svg { animation: kukul-glow 1.4s ease-in-out infinite; }
+  .kukul--thinking .kukul-feather-1 { animation: kukul-shimmer 1.2s ease-in-out infinite; animation-delay: 0ms; }
+  .kukul--thinking .kukul-feather-2 { animation: kukul-shimmer 1.2s ease-in-out infinite; animation-delay: 140ms; }
+  .kukul--thinking .kukul-feather-3 { animation: kukul-shimmer 1.2s ease-in-out infinite; animation-delay: 280ms; }
+
+  /* done: asentimiento elástico + destello de plumas (una sola vez) */
+  .kukul--done svg { animation: kukul-nod 700ms cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+  .kukul--done .kukul-feather { animation: kukul-flare 700ms ease-out both; }
+}
+

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Send, Loader2 } from "lucide-react";
+import { Send, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import KukulAvatar from "@/components/KukulAvatar";
 import PropertyCard from "@/components/PropertyCard";
 import ExperienceCard from "@/components/ExperienceCard";
 import { useApi } from "@/hooks/useApi";
@@ -32,7 +33,17 @@ export default function ConciergePage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Estado transitorio para la animación "terminó de pensar" de Kukul.
+  const [justAnswered, setJustAnswered] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+
+  // Estado del avatar de cabecera: pensando mientras carga, un destello al
+  // responder, y respiración en reposo.
+  const headerState: "idle" | "thinking" | "done" = loading
+    ? "thinking"
+    : justAnswered
+      ? "done"
+      : "idle";
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) router.replace("/iniciar-sesion?callbackUrl=/concierge");
@@ -61,6 +72,9 @@ export default function ConciergePage() {
         ...prev,
         { role: "assistant", content: res.reply, properties: res.properties, experiences: res.experiences },
       ]);
+      // Kukul "asiente" al entregar la respuesta y vuelve a reposo.
+      setJustAnswered(true);
+      setTimeout(() => setJustAnswered(false), 900);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo contactar al Concierge.");
     } finally {
@@ -77,12 +91,12 @@ export default function ConciergePage() {
         <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-6">
           {/* Cabecera */}
           <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-[var(--color-primary-light)] flex items-center justify-center mx-auto mb-3">
-              <Sparkles size={26} className="text-[var(--color-primary)]" />
+            <div className="flex justify-center mb-3">
+              <KukulAvatar size={56} state={headerState} />
             </div>
             <h1 className="text-h1 sm:text-display font-display font-semibold text-[var(--text-primary)]">Beel Concierge</h1>
             <p className="text-body-sm text-[var(--text-secondary)] mt-1 max-w-md mx-auto">
-              Cuéntame a dónde quieres ir y te armo el viaje con hospedajes y experiencias reales.
+              Soy <span className="font-semibold text-[var(--text-primary)]">Kukul</span>, tu guía de viajes por México. Cuéntame a dónde quieres ir y te armo el viaje con hospedajes y experiencias reales.
             </p>
           </div>
 
@@ -113,9 +127,7 @@ export default function ConciergePage() {
                   </div>
                 ) : (
                   <div className="flex gap-3 animate-concierge-bubble">
-                    <div className="w-8 h-8 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0">
-                      <Sparkles size={15} className="text-[var(--color-primary)]" />
-                    </div>
+                    <KukulAvatar size={32} state="idle" />
                     <div className="flex-1 min-w-0">
                       <div className="text-body-sm text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">
                         {m.content}
@@ -145,12 +157,15 @@ export default function ConciergePage() {
             ))}
 
             {loading && (
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0">
-                  <Sparkles size={15} className="text-[var(--color-primary)]" />
-                </div>
-                <div className="flex items-center gap-2 text-body-sm text-[var(--text-tertiary)] pt-1">
-                  <Loader2 size={15} className="animate-spin" /> Armando tu plan…
+              <div className="flex gap-3 items-center">
+                <KukulAvatar size={32} state="thinking" />
+                <div className="flex items-center gap-1.5 text-body-sm text-[var(--text-tertiary)]">
+                  <span>Kukul está pensando</span>
+                  <span className="typing-dots !p-0">
+                    <span className="typing-dot" />
+                    <span className="typing-dot" />
+                    <span className="typing-dot" />
+                  </span>
                 </div>
               </div>
             )}
