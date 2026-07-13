@@ -1331,34 +1331,93 @@ export default function MensajesPage() {
         )}
       </div>
 
-      {/* Menú de acciones de mensaje (Copiar / Anular envío) */}
+      {/* Menú contextual de mensaje estilo Instagram: fondo difuminado,
+          reacciones rápidas arriba, vista previa y acciones abajo. */}
       {actionMsg && (
         <div
-          className="fixed inset-0 z-[95] bg-black/50 flex items-center justify-center p-6 animate-fade-in"
+          className="fixed inset-0 z-[95] bg-black/55 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in"
           onClick={() => setActionMsg(null)}
           role="dialog"
           aria-modal="true"
         >
           <div
-            className="bg-[var(--bg-elevated)] rounded-2xl shadow-xl w-full max-w-[260px] overflow-hidden divide-y divide-[var(--border-subtle)]"
+            className="w-full max-w-[300px] flex flex-col gap-3 animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => handleCopyMessage(actionMsg)}
-              className="w-full flex items-center justify-between px-5 py-3.5 text-body-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+            {/* Reacciones rápidas */}
+            <div className="bg-[var(--bg-elevated)] rounded-full shadow-xl px-2.5 py-2 flex items-center justify-between self-center">
+              {["❤️", "😂", "😮", "😢", "😡", "👍"].map((emoji) => {
+                const hasReacted =
+                  (actionMsg.reactions ?? [])
+                    .find((r) => r.emoji === emoji)
+                    ?.user_ids.includes(localUserId) ?? false;
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => {
+                      handleReaction(actionMsg.id, emoji, hasReacted);
+                      if (navigator.vibrate) navigator.vibrate(15);
+                      setActionMsg(null);
+                    }}
+                    className={cn(
+                      "w-10 h-10 rounded-full text-[22px] flex items-center justify-center transition-all active:scale-90 hover:scale-110",
+                      hasReacted && "bg-[var(--color-primary-light)] scale-105"
+                    )}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Vista previa del mensaje */}
+            <div
+              className={cn(
+                "max-w-[85%] px-4 py-2.5 rounded-[22px] text-sm leading-relaxed shadow-md",
+                actionMsg.sender_id === localUserId
+                  ? "bg-[var(--color-primary)] text-white self-end"
+                  : "bg-[var(--bg-elevated)] text-[var(--text-primary)] self-start"
+              )}
             >
-              {copied ? "Copiado ✓" : "Copiar"}
-              <Copy size={16} className="text-[var(--text-tertiary)]" />
-            </button>
-            {actionMsg.sender_id === localUserId && !actionMsg.pending && (
+              <p className="line-clamp-3 break-words">
+                {actionMsg.message_type === "image"
+                  ? "📷 Foto"
+                  : actionMsg.content ?? actionMsg.body}
+              </p>
+            </div>
+
+            {/* Menú de acciones */}
+            <div className="bg-[var(--bg-elevated)] rounded-2xl shadow-xl overflow-hidden">
+              <p className="px-5 pt-3 pb-1.5 text-[11px] font-medium text-[var(--text-tertiary)]">
+                {format(parseISO(actionMsg.created_at), "HH:mm")}
+              </p>
               <button
-                onClick={() => handleUnsend(actionMsg)}
-                className="w-full flex items-center justify-between px-5 py-3.5 text-body-sm text-red-500 font-medium hover:bg-[var(--bg-subtle)] transition-colors"
+                onClick={() => {
+                  setReplyingTo(actionMsg);
+                  setActionMsg(null);
+                }}
+                className="w-full flex items-center gap-3.5 px-5 py-3 text-body-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
               >
-                Anular envío
-                <Trash2 size={16} />
+                <CornerUpLeft size={18} className="text-[var(--text-secondary)]" />
+                Responder
               </button>
-            )}
+              <button
+                onClick={() => handleCopyMessage(actionMsg)}
+                className="w-full flex items-center gap-3.5 px-5 py-3 text-body-sm text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors border-t border-[var(--border-subtle)]"
+              >
+                <Copy size={18} className="text-[var(--text-secondary)]" />
+                {copied ? "Copiado ✓" : "Copiar"}
+              </button>
+              {actionMsg.sender_id === localUserId && !actionMsg.pending && (
+                <button
+                  onClick={() => handleUnsend(actionMsg)}
+                  className="w-full flex items-center gap-3.5 px-5 py-3 text-body-sm text-red-500 font-medium hover:bg-[var(--bg-subtle)] transition-colors border-t border-[var(--border-subtle)]"
+                >
+                  <Trash2 size={18} />
+                  Anular envío
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
