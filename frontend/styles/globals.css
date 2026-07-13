@@ -505,12 +505,14 @@ input, textarea, select {
 /* Search bar compuesta (Home hero) */
 .search-bar {
   display: flex;
+  /* Padding para que la píldora del campo activo "flote" adentro, estilo Airbnb */
+  padding: 5px;
   background: color-mix(in srgb, var(--bg-elevated) 65%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1.5px solid var(--color-primary-border);
   border-top: 2.5px solid var(--color-primary);
-  border-radius: 14px;
+  border-radius: var(--radius-full);
   overflow: visible;
   box-shadow: var(--shadow-search);
   transition: border-color 200ms ease, box-shadow 200ms ease;
@@ -533,6 +535,9 @@ input, textarea, select {
   padding: var(--space-3) var(--space-4);
   border-right: 0.5px solid var(--border-default);
   cursor: pointer;
+  /* Píldora redondeada al pasar el mouse / seleccionar (estilo Airbnb) */
+  border-radius: var(--radius-full);
+  transition: background 160ms ease, box-shadow 160ms ease;
 }
 /* En móvil: borde inferior en vez de derecho, contenido centrado */
 @media (max-width: 639px) {
@@ -555,6 +560,15 @@ input, textarea, select {
 }
 .search-bar-field:hover {
   background: var(--bg-subtle);
+}
+/* Campo activo estilo Airbnb: píldora blanca elevada, sin anillo de color */
+.search-bar-field-active,
+.search-bar-field-active:hover {
+  background: var(--bg-elevated);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  border-right-color: transparent;
+  position: relative;
+  z-index: 2;
 }
 .search-bar-label {
   font-family: var(--font-display);

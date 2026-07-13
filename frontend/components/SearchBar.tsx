@@ -238,8 +238,8 @@ export default function SearchBar({ compact = false, initialValues = {}, onSearc
           <div
             ref={anchorRef}
             className={cn(
-              "search-bar-field flex-[2] flex flex-col justify-center cursor-pointer rounded-l-2xl relative",
-              activeField === "destino" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
+              "search-bar-field flex-[2] flex flex-col justify-center cursor-pointer relative",
+              activeField === "destino" && "search-bar-field-active"
             )}
             onClick={() => { setActiveField("destino"); destinoInputRef.current?.focus(); }}
           >
@@ -262,8 +262,8 @@ export default function SearchBar({ compact = false, initialValues = {}, onSearc
 
           <div
             className={cn(
-              "search-bar-field flex items-center justify-between gap-3 rounded-r-2xl border-r-0",
-              activeField === "guests" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
+              "search-bar-field flex items-center justify-between gap-3 border-r-0",
+              activeField === "guests" && "search-bar-field-active"
             )}
           >
             <div className="flex flex-col justify-center flex-1 cursor-pointer items-center sm:items-start" onClick={() => setActiveField("guests")}>

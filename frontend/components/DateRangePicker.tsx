@@ -174,7 +174,7 @@ export default function DateRangePicker({
               onClick={(e) => { e.stopPropagation(); openWithPos("from"); }}
               className={cn(
                 "search-bar-field flex flex-col justify-center cursor-pointer",
-                open && selecting === "from" && "bg-[var(--bg-elevated)] !border-r !border-r-[var(--color-primary)] ring-1 ring-[var(--color-primary)] ring-inset"
+                open && selecting === "from" && "search-bar-field-active"
               )}
             >
               <span className="search-bar-label">Llegada</span>
@@ -187,7 +187,7 @@ export default function DateRangePicker({
               onClick={(e) => { e.stopPropagation(); openWithPos("to"); }}
               className={cn(
                 "search-bar-field flex flex-col justify-center cursor-pointer",
-                open && selecting === "to" && "bg-[var(--bg-elevated)] ring-1 ring-[var(--color-primary)] ring-inset"
+                open && selecting === "to" && "search-bar-field-active"
               )}
             >
               <span className="search-bar-label">Salida</span>
