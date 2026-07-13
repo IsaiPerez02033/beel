@@ -75,7 +75,7 @@ export default function HeroSection() {
           className="inline-flex items-center gap-2 mt-6 px-4 py-2 rounded-full text-body-sm font-medium text-white bg-white/15 border border-white/30 backdrop-blur-sm hover:bg-white/25 hover:scale-[1.03] transition-all active:scale-95"
         >
           <Sparkles size={15} className="text-white" />
-          ¿No sabes a dónde ir? Planéalo con el Concierge IA
+          ¿No sabes a dónde ir? Planéalo con Kukul
         </Link>
       </div>
     </section>
