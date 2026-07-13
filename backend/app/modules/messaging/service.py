@@ -285,6 +285,30 @@ async def get_messages(
     return msgs, has_more
 
 
+async def get_media_messages(
+    db: AsyncSession,
+    conversation_id: uuid.UUID,
+    limit: int = 200,
+) -> list[Message]:
+    """Retorna los mensajes de imagen de la conversación (más recientes primero).
+
+    Alimenta la sección "Fotos" del panel de detalles del chat sin depender de
+    cuántos mensajes tenga cargados el cliente.
+    """
+    result = await db.execute(
+        select(Message)
+        .options(selectinload(Message.sender))
+        .where(
+            Message.conversation_id == conversation_id,
+            Message.message_type == "image",
+            Message.deleted_by_sender.is_(False),
+        )
+        .order_by(Message.created_at.desc())
+        .limit(limit)
+    )
+    return list(result.scalars().all())
+
+
 async def send_message(
     db: AsyncSession,
     conversation: Conversation,
@@ -308,12 +332,22 @@ async def send_message(
     conversation.last_message_at = datetime.now(timezone.utc)
     conversation.last_message_preview = preview
 
-    # Incrementar no-leídos del destinatario
+    # Incrementar no-leídos del destinatario con UPDATE atómico en BD.
+    # El `+= 1` sobre el objeto ORM usaba el valor leído al inicio del request:
+    # si el receptor marcaba como leído (reset a 0) mientras este envío estaba
+    # en vuelo, se re-escribía el contador viejo +1 y el badge quedaba inflado.
     is_guest_sender = sender.id == conversation.guest_id
-    if is_guest_sender:
-        conversation.unread_count_host += 1
-    else:
-        conversation.unread_count_guest += 1
+    unread_col = (
+        Conversation.unread_count_host if is_guest_sender else Conversation.unread_count_guest
+    )
+    await db.execute(
+        update(Conversation)
+        .where(Conversation.id == conversation.id)
+        .values({unread_col.key: unread_col + 1})
+    )
+    # Sincronizar el objeto en memoria con el contador real de la BD (un
+    # expire lazy provocaría MissingGreenlet si se serializa la conversación).
+    await db.refresh(conversation, ["unread_count_host", "unread_count_guest"])
 
     await db.flush()
 
@@ -451,6 +485,22 @@ async def delete_message(
         raise HTTPException(status_code=403, detail="Solo puedes anular tus propios mensajes")
 
     msg.deleted_by_sender = True
+
+    # Si el receptor aún no lo leía, descontarlo de su badge de no-leídos
+    # (con piso en 0) para que el contador no quede inflado tras anular.
+    if msg.read_at is None and msg.message_type != "system":
+        unread_col = (
+            Conversation.unread_count_host
+            if msg.sender_id == conversation.guest_id
+            else Conversation.unread_count_guest
+        )
+        await db.execute(
+            update(Conversation)
+            .where(Conversation.id == conversation.id)
+            .values({unread_col.key: func.greatest(unread_col - 1, 0)})
+        )
+        await db.refresh(conversation, ["unread_count_host", "unread_count_guest"])
+
     await db.flush()
 
     # Si era el último mensaje, recalcular el preview de la conversación.

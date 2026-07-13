@@ -198,6 +198,19 @@ export default function MensajesPage() {
   // Panel de detalles del chat (perfil, buscar, fotos)
   const [showChatDetails, setShowChatDetails] = useState(false);
   const [chatSearch, setChatSearch] = useState("");
+  // Fotos de la conversación traídas del servidor (todas, no solo las de los
+  // mensajes ya cargados en pantalla).
+  const [chatMedia, setChatMedia] = useState<Message[] | null>(null);
+
+  useEffect(() => {
+    if (!showChatDetails || !activeConvId) return;
+    let cancelled = false;
+    setChatMedia(null);
+    get<{ messages: Message[] }>(`/messaging/${activeConvId}/media`)
+      .then((d) => { if (!cancelled) setChatMedia(d.messages ?? []); })
+      .catch(() => { if (!cancelled) setChatMedia([]); });
+    return () => { cancelled = true; };
+  }, [showChatDetails, activeConvId, get]);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -240,15 +253,25 @@ export default function MensajesPage() {
       // de mandar a login, y conservar el destino para volver tras entrar.
       let cancelled = false;
       (async () => {
-        try {
-          const { getSession } = await import("next-auth/react");
-          const session = await getSession();
-          if (cancelled || session) return; // sí hay sesión: el provider se actualiza solo
-        } catch {}
-        if (!cancelled) {
-          const dest = window.location.pathname + window.location.search;
-          router.push(`/iniciar-sesion?callbackUrl=${encodeURIComponent(dest)}`);
+        const { getSession } = await import("next-auth/react");
+        // Reintentar ante errores de red: al despertar la PWA desde una
+        // notificación, el radio/red puede tardar un instante y getSession()
+        // falla aunque la sesión exista. Solo redirigimos a login cuando el
+        // servidor CONFIRMA que no hay sesión (null), nunca por un error.
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const session = await getSession();
+            if (cancelled || session) return; // sí hay sesión: el provider se actualiza solo
+            const dest = window.location.pathname + window.location.search;
+            router.push(`/iniciar-sesion?callbackUrl=${encodeURIComponent(dest)}`);
+            return;
+          } catch {
+            await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
+            if (cancelled) return;
+          }
         }
+        // Sin respuesta del servidor: quedarse en la página; el provider de
+        // sesión reintentará solo cuando vuelva la conexión.
       })();
       return () => { cancelled = true; };
     }
@@ -422,6 +445,7 @@ export default function MensajesPage() {
       setHasMoreOlder(false);
       setShowChatDetails(false);
       setChatSearch("");
+      setChatMedia(null);
     }
     reloadMessages();
     // Si no tenemos esta conversación en la lista lateral, recargar la lista.
@@ -499,6 +523,14 @@ export default function MensajesPage() {
           activeConvId,
           data.message_type === "image" ? "📷 Foto" : (data.body ?? "")
         );
+        // Con el chat abierto y visible, marcarlo leído en el servidor al
+        // instante: sin esto el contador de la conversación quedaba en >0
+        // hasta el siguiente sondeo y el badge del tab mostraba de más.
+        if (data.sender_id !== localUserId && document.visibilityState === "visible") {
+          post(`/messaging/${activeConvId}/read`, {})
+            .then(() => window.dispatchEvent(new Event("beel:badges")))
+            .catch(() => {});
+        }
       }
     },
     onMessageDeleted: (data) => {
@@ -1535,13 +1567,25 @@ export default function MensajesPage() {
                 })()}
               </div>
 
-              {/* Fotos compartidas */}
+              {/* Fotos compartidas (traídas del servidor: incluye todo el
+                  historial, no solo los mensajes cargados en el chat) */}
               {(() => {
-                const photos = messages
+                // Mientras carga el endpoint, mostrar las de los mensajes ya
+                // cargados para no parpadear en vacío.
+                const source =
+                  chatMedia ??
+                  messages.filter((m) => m.message_type === "image").slice().reverse();
+                const photos = source
                   .filter((m) => m.message_type === "image")
                   .map((m) => ({ id: m.id, url: m.metadata?.image_url ?? m.content ?? m.body ?? "" }))
-                  .filter((p) => p.url)
-                  .reverse();
+                  .filter((p) => p.url);
+                if (chatMedia === null && photos.length === 0) {
+                  return (
+                    <div className="flex justify-center py-3">
+                      <Loader2 size={18} className="animate-spin text-[var(--text-tertiary)]" />
+                    </div>
+                  );
+                }
                 if (photos.length === 0) return null;
                 return (
                   <div>
@@ -1560,10 +1604,6 @@ export default function MensajesPage() {
                         </button>
                       ))}
                     </div>
-                    <p className="text-caption text-[var(--text-tertiary)] mt-2">
-                      Se muestran las fotos de los mensajes cargados; desliza hacia
-                      arriba en el chat para cargar más historial.
-                    </p>
                   </div>
                 );
               })()}

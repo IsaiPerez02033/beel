@@ -88,6 +88,26 @@ async def get_messages(
     return MessageListOut(messages=msgs, total=len(msgs), has_more=has_more)
 
 
+@router.get("/{conversation_id}/media", response_model=MessageListOut)
+async def get_media(
+    conversation_id: uuid.UUID,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    """Lista los mensajes de imagen de la conversación (sección Fotos del panel)."""
+    user = await user_service.get_user_by_id(db, current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    conv = await service.get_conversation(db, conversation_id)
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversación no encontrada")
+    _assert_participant(conv, user.id)
+
+    msgs = await service.get_media_messages(db, conv.id)
+    return MessageListOut(messages=msgs, total=len(msgs), has_more=False)
+
+
 @router.post("/{conversation_id}/messages", response_model=MessageOut, status_code=201)
 @limiter.limit("30/minute")
 async def send_message(
