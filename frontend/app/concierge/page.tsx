@@ -129,7 +129,7 @@ export default function ConciergePage() {
                 {/* Mensaje del usuario */}
                 {m.role === "user" && (
                   <div className="flex justify-end">
-                    <div className="max-w-[85%] bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-2xl rounded-tr-sm px-4.5 py-3 shadow-sm text-body">
+                    <div className="max-w-[85%] bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-sm px-4.5 py-3 shadow-sm text-body-sm whitespace-pre-wrap animate-concierge-bubble">
                       {m.content}
                     </div>
                   </div>
@@ -141,7 +141,7 @@ export default function ConciergePage() {
                     <KukulAvatar size={32} state="idle" />
                     <div className="flex-1 space-y-4 max-w-[85%]">
                       {/* Burbuja principal */}
-                      <div className="bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-2xl rounded-tl-sm px-4.5 py-3 text-body shadow-sm leading-relaxed animate-concierge-bubble">
+                      <div className="bg-[var(--bg-subtle)] text-[var(--text-primary)] rounded-2xl rounded-tl-sm px-4.5 py-3 text-body-sm shadow-sm leading-relaxed animate-concierge-bubble whitespace-pre-wrap">
                         {m.content}
                       </div>
 
