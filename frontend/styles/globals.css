@@ -1150,19 +1150,24 @@ input, textarea, select {
 /* Colores por parte (heredan tema claro/oscuro por las variables de marca) */
 .kukul-disc { fill: url(#kukul-disc-grad); transform-origin: 32px 32px; transform-box: view-box; }
 .kukul-body { fill: url(#kukul-body-grad); transform-origin: 32px 42px; transform-box: view-box; }
-.kukul-head { fill: url(#kukul-head-grad); transform-origin: 45px 20px; transform-box: view-box; }
-.kukul-feather { fill: url(#kukul-feather-grad); transform-origin: 28px 36px; transform-box: view-box; }
+.kukul-head { fill: url(#kukul-head-grad); transform-origin: 45px 18px; transform-box: view-box; }
+.kukul-feather { fill: url(#kukul-feather-grad); transform-origin: 32px 20px; transform-box: view-box; }
 .kukul-feathers { transform-origin: 32px 32px; transform-box: view-box; }
-.kukul-eye { fill: url(#kukul-eye-grad); transform-origin: 48px 21px; transform-box: view-box; }
-.kukul-eye-iris { transform-origin: 48px 21px; transform-box: view-box; }
-.kukul-eye-shine { fill: #ffffff; transform-origin: 48.9px 20.1px; transform-box: view-box; }
+.kukul-eye { fill: url(#kukul-eye-grad); transform-origin: 46px 18px; transform-box: view-box; }
+.kukul-eye-iris { transform-origin: 46px 18px; transform-box: view-box; }
+.kukul-eye-shine { fill: #ffffff; transform-origin: 47.1px 16.9px; transform-box: view-box; }
 .kukul-tongue {
   stroke: var(--color-accent);
   stroke-width: 1.4;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
-  transform-origin: 54px 24px;
+  transform-origin: 51px 20px;
+  transform-box: view-box;
+}
+.kukul-belly {
+  fill: url(#kukul-belly-grad);
+  transform-origin: 32px 32px;
   transform-box: view-box;
 }
 
@@ -1182,7 +1187,8 @@ input, textarea, select {
 }
 
 /* Retardos calculados para que el cuerpo y las plumas sigan el movimiento de la cabeza (Follow-through) */
-.kukul-body {
+.kukul-body,
+.kukul-belly {
   transition: 
     transform 950ms cubic-bezier(0.25, 0.8, 0.25, 1), 
     filter 950ms cubic-bezier(0.25, 0.8, 0.25, 1), 

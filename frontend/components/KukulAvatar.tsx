@@ -58,11 +58,18 @@ export default function KukulAvatar({
             <stop offset="100%" stopColor="#093C30" />
           </radialGradient>
 
-          {/* Gradiente para plumas translúcidas doradas de Quetzal */}
+          {/* Gradiente para plumas majestuosas de Quetzal */}
           <linearGradient id="kukul-feather-grad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#F5A623" stopOpacity="0.75" />
-            <stop offset="60%" stopColor="#FDBF4E" stopOpacity="0.9" />
+            <stop offset="0%" stopColor="#1DA47E" stopOpacity="0.8" />
+            <stop offset="45%" stopColor="#F5A623" stopOpacity="0.9" />
             <stop offset="100%" stopColor="#FFF5D8" stopOpacity="0.98" />
+          </linearGradient>
+
+          {/* Gradiente semi-3D para el vientre y pecho */}
+          <linearGradient id="kukul-belly-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFD466" />
+            <stop offset="50%" stopColor="#F5A623" />
+            <stop offset="100%" stopColor="#C47E0B" />
           </linearGradient>
 
           {/* Gradiente de volumen para el ojo cálido */}
@@ -80,36 +87,42 @@ export default function KukulAvatar({
         {/* Disco de fondo con volumen sutil */}
         <circle cx="32" cy="32" r="32" className="kukul-disc" fill="url(#kukul-disc-grad)" />
 
-        {/* Plumas en arco hacia atrás con borde de luz y oclusión ambiental */}
+        {/* Plumas de la corona de Quetzal detrás del cuello y la cabeza */}
         <g className="kukul-feathers" filter="url(#kukul-ao-shadow)">
-          <path className="kukul-feather kukul-feather-1" d="M20 40 C10 34 10 22 18 15 C18 24 22 30 27 34 Z" fill="url(#kukul-feather-grad)" stroke="rgba(255,255,255,0.22)" strokeWidth="0.4" />
-          <path className="kukul-feather kukul-feather-2" d="M24 42 C13 39 11 26 20 18 C21 27 25 33 30 37 Z" fill="url(#kukul-feather-grad)" stroke="rgba(255,255,255,0.22)" strokeWidth="0.4" />
-          <path className="kukul-feather kukul-feather-3" d="M28 44 C17 43 13 31 23 22 C24 31 28 37 33 40 Z" fill="url(#kukul-feather-grad)" stroke="rgba(255,255,255,0.22)" strokeWidth="0.4" />
+          <path className="kukul-feather kukul-feather-1" d="M36 15 C24 10 22 2 31 1 C33 6 35 10 36 12 Z" fill="url(#kukul-feather-grad)" stroke="rgba(255,255,255,0.22)" strokeWidth="0.4" />
+          <path className="kukul-feather kukul-feather-2" d="M34 18 C22 15 18 8 26 6 C29 11 31 14 33 16 Z" fill="url(#kukul-feather-grad)" stroke="rgba(255,255,255,0.22)" strokeWidth="0.4" />
+          <path className="kukul-feather kukul-feather-3" d="M33 21 C21 20 16 14 23 12 C26 16 29 18 31 20 Z" fill="url(#kukul-feather-grad)" stroke="rgba(255,255,255,0.22)" strokeWidth="0.4" />
+        </g>
+
+        {/* Vientre y pecho tridimensional (contraste oro-crema) */}
+        <g className="kukul-belly-group" filter="url(#kukul-ao-shadow)">
+          <path className="kukul-belly kukul-belly-chest" d="M42 23 C45 28 44 34 37 36 C39 33 40 28 42 23 Z" fill="url(#kukul-belly-grad)" />
+          <path className="kukul-belly kukul-belly-tail" d="M34 38 C26 40 21 45 24 49 C23 46 28 42 34 38 Z" fill="url(#kukul-belly-grad)" />
         </g>
 
         {/* Cuerpo/curva de la serpiente (verde 3D) */}
         <path
           className="kukul-body"
-          d="M28 46 C22 44 20 37 25 32 C29 28 37 28 41 24 C45 20 44 14 39 12 C46 12 51 17 51 24 C51 32 44 37 37 38 C33 39 31 42 33 46 Z"
+          d="M41 23 C44 29 44 35 36 37 C26 39 20 44 22 49 C24 52 29 52 32 48 C36 43 32 40 28 40 C24 40 23 44 25 46 C21 44 21 39 30 37 C39 35 44 30 42 23 Z"
           fill="url(#kukul-body-grad)"
           filter="url(#kukul-ao-shadow)"
         />
 
-        {/* Cabeza / hocico (verde 3D) */}
+        {/* Cabeza de la serpiente (verde 3D, mirando a la derecha) */}
         <path
           className="kukul-head"
-          d="M39 11 C47 10 54 15 55 23 C55.5 27 53 30 49 30 C45 30 42 27 42 23 C42 20 40 18 37 18 C37 14 38 12 39 11 Z"
+          d="M38 18 C38 13 46 12 51 16 C54 18 54 21 51 23 C48 25 42 25 38 22 Z"
           fill="url(#kukul-head-grad)"
         />
 
         {/* Ojo inteligente con iris central y reflejos brillantes (diseño expresivo ampliado) */}
-        <circle className="kukul-eye" cx="48" cy="21" r="3.2" fill="url(#kukul-eye-grad)" />
-        <circle className="kukul-eye-iris" cx="48.1" cy="21.1" r="1.6" fill="var(--color-accent)" opacity="0.65" />
-        <circle className="kukul-eye-shine kukul-eye-shine-1" cx="49.1" cy="19.9" r="1.0" fill="#ffffff" />
-        <circle className="kukul-eye-shine kukul-eye-shine-2" cx="46.9" cy="22.1" r="0.45" fill="#ffffff" opacity="0.65" />
+        <circle className="kukul-eye" cx="46" cy="18" r="3.2" fill="url(#kukul-eye-grad)" />
+        <circle className="kukul-eye-iris" cx="46.1" cy="18.1" r="1.6" fill="var(--color-accent)" opacity="0.65" />
+        <circle className="kukul-eye-shine kukul-eye-shine-1" cx="47.1" cy="16.9" r="1.0" fill="#ffffff" />
+        <circle className="kukul-eye-shine kukul-eye-shine-2" cx="44.9" cy="19.1" r="0.45" fill="#ffffff" opacity="0.65" />
 
-        {/* Lengua bífida */}
-        <path className="kukul-tongue" d="M54 24 L60 24 M60 24 L63.5 22 M60 24 L63.5 26" />
+        {/* Lengua bífida alineada con la boca */}
+        <path className="kukul-tongue" d="M51 20 L57 20 M57 20 L60.5 18 M57 20 L60.5 22" />
       </svg>
     </span>
   );
