@@ -92,33 +92,6 @@ export default function ConciergePage() {
     return () => clearInterval(interval);
   }, [lastActivity, avatarState, loading]);
 
-  // Hilo dorado interactivo para conectar Kukul con los nuevos mensajes
-  const [thread, setThread] = useState<{ x1: number; y1: number; x2: number; y2: number; visible: boolean } | null>(null);
-
-  const triggerGoldenThread = () => {
-    setTimeout(() => {
-      const avatarEl = document.getElementById("kukul-avatar-anchor");
-      const msgBubbles = document.querySelectorAll(".assistant-bubble-new");
-      const lastBubble = msgBubbles[msgBubbles.length - 1];
-      if (avatarEl && lastBubble) {
-        const rectA = avatarEl.getBoundingClientRect();
-        const rectB = lastBubble.getBoundingClientRect();
-        const scrollY = window.scrollY || window.pageYOffset;
-        const scrollX = window.scrollX || window.pageXOffset;
-        setThread({
-          x1: rectA.left + rectA.width / 2 + scrollX,
-          y1: rectA.top + rectA.height / 2 + scrollY,
-          x2: rectB.left + 12 + scrollX,
-          y2: rectB.top + 24 + scrollY,
-          visible: true,
-        });
-        
-        setTimeout(() => {
-          setThread(t => t ? { ...t, visible: false } : null);
-        }, 850);
-      }
-    }, 100);
-  };
 
   // Travel Mode: Escaneo de palabras clave del chat para cambiar la iluminación ambiental
   const [travelTheme, setTravelTheme] = useState<"beach" | "mountain" | "luxury" | "food" | "default">("default");
@@ -229,7 +202,6 @@ export default function ConciergePage() {
         ]);
         setLoading(false);
         setAvatarState("celebration");
-        triggerGoldenThread();
         
         // Regresa a reposo después de celebrar el éxito
         setTimeout(() => {
@@ -413,30 +385,7 @@ export default function ConciergePage() {
         </p>
       </div>
 
-      {/* SVG Overlay para el Hilo Dorado de Mensaje */}
-      {thread && thread.visible && (
-        <svg className="fixed inset-0 pointer-events-none z-50 w-full h-full">
-          <defs>
-            <linearGradient id="gold-thread-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FFF2CC" stopOpacity="1" />
-              <stop offset="50%" stopColor="#FDBF4E" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#D48C00" stopOpacity="0" />
-            </linearGradient>
-            <filter id="thread-glow">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-          <path
-            d={`M ${thread.x1} ${thread.y1} C ${(thread.x1 + thread.x2) / 2} ${thread.y1}, ${(thread.x1 + thread.x2) / 2} ${thread.y2}, ${thread.x2} ${thread.y2}`}
-            fill="none"
-            stroke="url(#gold-thread-grad)"
-            strokeWidth="2.2"
-            filter="url(#thread-glow)"
-            className="animate-thread-draw"
-          />
-        </svg>
-      )}
+
     </div>
   );
 }
