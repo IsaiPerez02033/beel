@@ -33,7 +33,8 @@ export default function ConciergePage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  // Estado emocional de Kukul
+  
+  // Estado emocional / comportamiento de Kukul
   const [avatarState, setAvatarState] = useState<
     | "idle"
     | "listening"
@@ -47,8 +48,100 @@ export default function ConciergePage() {
     | "fluffing"
     | "done"
   >("idle");
+  
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Tracking de cursor global para el seguimiento ocular de Kukul
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  // Control de inactividad de usuario para poner a dormir a Kukul (Sueño)
+  const [lastActivity, setLastActivity] = useState(Date.now());
+  useEffect(() => {
+    const handleUserActivity = () => {
+      setLastActivity(Date.now());
+      if (avatarState === "sleeping") {
+        setAvatarState("idle");
+      }
+    };
+    window.addEventListener("mousemove", handleUserActivity);
+    window.addEventListener("keydown", handleUserActivity);
+    window.addEventListener("click", handleUserActivity);
+    return () => {
+      window.removeEventListener("mousemove", handleUserActivity);
+      window.removeEventListener("keydown", handleUserActivity);
+      window.removeEventListener("click", handleUserActivity);
+    };
+  }, [avatarState]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const inactiveMs = Date.now() - lastActivity;
+      // 1 minuto de inactividad -> Duerme
+      if (inactiveMs > 60000 && avatarState === "idle" && !loading) {
+        setAvatarState("sleeping");
+      }
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [lastActivity, avatarState, loading]);
+
+  // Hilo dorado interactivo para conectar Kukul con los nuevos mensajes
+  const [thread, setThread] = useState<{ x1: number; y1: number; x2: number; y2: number; visible: boolean } | null>(null);
+
+  const triggerGoldenThread = () => {
+    setTimeout(() => {
+      const avatarEl = document.getElementById("kukul-avatar-anchor");
+      const msgBubbles = document.querySelectorAll(".assistant-bubble-new");
+      const lastBubble = msgBubbles[msgBubbles.length - 1];
+      if (avatarEl && lastBubble) {
+        const rectA = avatarEl.getBoundingClientRect();
+        const rectB = lastBubble.getBoundingClientRect();
+        const scrollY = window.scrollY || window.pageYOffset;
+        const scrollX = window.scrollX || window.pageXOffset;
+        setThread({
+          x1: rectA.left + rectA.width / 2 + scrollX,
+          y1: rectA.top + rectA.height / 2 + scrollY,
+          x2: rectB.left + 12 + scrollX,
+          y2: rectB.top + 24 + scrollY,
+          visible: true,
+        });
+        
+        setTimeout(() => {
+          setThread(t => t ? { ...t, visible: false } : null);
+        }, 850);
+      }
+    }, 100);
+  };
+
+  // Travel Mode: Escaneo de palabras clave del chat para cambiar la iluminación ambiental
+  const [travelTheme, setTravelTheme] = useState<"beach" | "mountain" | "luxury" | "food" | "default">("default");
+  useEffect(() => {
+    if (messages.length === 0) {
+      setTravelTheme("default");
+      return;
+    }
+    const lastMsg = messages[messages.length - 1];
+    const text = lastMsg.content.toLowerCase();
+    
+    if (text.includes("playa") || text.includes("mar") || text.includes("beach") || text.includes("isla") || text.includes("tulum")) {
+      setTravelTheme("beach");
+    } else if (text.includes("montaña") || text.includes("bosque") || text.includes("naturaleza") || text.includes("aventura") || text.includes("cabaña")) {
+      setTravelTheme("mountain");
+    } else if (text.includes("hotel") || text.includes("hospedaje") || text.includes("resort") || text.includes("lujo") || text.includes("luxury") || text.includes("premium")) {
+      setTravelTheme("luxury");
+    } else if (text.includes("comida") || text.includes("gastronomía") || text.includes("restaurante") || text.includes("cenar") || text.includes("delicioso")) {
+      setTravelTheme("food");
+    } else {
+      setTravelTheme("default");
+    }
+  }, [messages]);
 
   // Obtener recomendaciones de respuestas dinámicas según la última pregunta de Kukul
   const quickReplies = useMemo(() => {
@@ -86,15 +179,27 @@ export default function ConciergePage() {
     }
   }, [messages, loading]);
 
-  // Detectar cuando el usuario está redactando/escribiendo un mensaje (Listening State)
+  // Detectar cuando el usuario escribe, borra caracteres o permanece pausado
+  const [prevInputLength, setPrevInputLength] = useState(0);
+  const [headTiltActive, setHeadTiltActive] = useState(false);
   useEffect(() => {
     if (loading) return;
-    if (input.trim().length > 0) {
+    const currentLen = input.length;
+    
+    // Si borra caracteres, Kukul inclina la cabeza con curiosidad sutil (Head Tilt)
+    if (currentLen < prevInputLength && currentLen > 0) {
+      setHeadTiltActive(true);
+      const timer = setTimeout(() => setHeadTiltActive(false), 600);
+      return () => clearTimeout(timer);
+    }
+    setPrevInputLength(currentLen);
+    
+    if (currentLen > 0) {
       setAvatarState("listening");
     } else if (avatarState === "listening") {
       setAvatarState("idle");
     }
-  }, [input, loading, avatarState]);
+  }, [input, loading, avatarState, prevInputLength]);
 
   async function send(text: string) {
     const clean = text.trim();
@@ -124,6 +229,7 @@ export default function ConciergePage() {
         ]);
         setLoading(false);
         setAvatarState("celebration");
+        triggerGoldenThread();
         
         // Regresa a reposo después de celebrar el éxito
         setTimeout(() => {
@@ -152,8 +258,8 @@ export default function ConciergePage() {
         <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-6">
           {/* Cabecera */}
           <div className="text-center mb-6">
-            <div className="flex justify-center mb-3">
-              <KukulAvatar size={56} state={avatarState} />
+            <div id="kukul-avatar-anchor" className="flex justify-center mb-3">
+              <KukulAvatar size={56} state={avatarState} mousePos={mousePos} theme={travelTheme} headTilt={headTiltActive} />
             </div>
             <h1 className="text-h1 sm:text-display font-display font-semibold text-[var(--text-primary)]">Beel Concierge</h1>
             <p className="text-body-sm text-[var(--text-secondary)] mt-1 max-w-md mx-auto">
@@ -191,11 +297,11 @@ export default function ConciergePage() {
 
                 {/* Mensaje del asistente */}
                 {m.role === "assistant" && (
-                  <div className="flex gap-3 items-start">
-                    <KukulAvatar size={32} state="idle" />
+                  <div className={`flex gap-3 items-start ${idx === messages.length - 1 ? "assistant-bubble-new animate-fade-in" : ""}`}>
+                    <KukulAvatar size={32} state="idle" mousePos={mousePos} theme={travelTheme} />
                     <div className="flex-1 space-y-4">
                       {/* Mensaje directo sin burbuja */}
-                      <div className="text-body-sm text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed animate-concierge-bubble">
+                      <div className="text-body-sm text-[var(--text-primary)] whitespace-pre-wrap leading-relaxed">
                         {m.content}
                       </div>
 
@@ -226,7 +332,7 @@ export default function ConciergePage() {
 
             {loading && (
               <div className="flex gap-3 items-start">
-                <KukulAvatar size={32} state={avatarState} />
+                <KukulAvatar size={32} state={avatarState} mousePos={mousePos} theme={travelTheme} />
                 <div className="text-body-sm text-[var(--text-secondary)] leading-relaxed flex items-center gap-2 animate-concierge-bubble">
                   <span>
                     {avatarState === "fluffing"
@@ -306,6 +412,31 @@ export default function ConciergePage() {
           El Concierge recomienda solo hospedajes y experiencias reales publicados en Beel.
         </p>
       </div>
+
+      {/* SVG Overlay para el Hilo Dorado de Mensaje */}
+      {thread && thread.visible && (
+        <svg className="fixed inset-0 pointer-events-none z-50 w-full h-full">
+          <defs>
+            <linearGradient id="gold-thread-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFF2CC" stopOpacity="1" />
+              <stop offset="50%" stopColor="#FDBF4E" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#D48C00" stopOpacity="0" />
+            </linearGradient>
+            <filter id="thread-glow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+          <path
+            d={`M ${thread.x1} ${thread.y1} C ${(thread.x1 + thread.x2) / 2} ${thread.y1}, ${(thread.x1 + thread.x2) / 2} ${thread.y2}, ${thread.x2} ${thread.y2}`}
+            fill="none"
+            stroke="url(#gold-thread-grad)"
+            strokeWidth="2.2"
+            filter="url(#thread-glow)"
+            className="animate-thread-draw"
+          />
+        </svg>
+      )}
     </div>
   );
 }

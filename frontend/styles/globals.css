@@ -1576,6 +1576,54 @@ input, textarea, select {
   animation: kukul-nod 920ms cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   6. SLEEPING (Compañero dormido: encogido, ojos cerrados, luz baja)
+   ───────────────────────────────────────────────────────────────────────── */
+.kukul--sleeping svg {
+  animation: kukul-sleep-breathing 4.5s ease-in-out infinite;
+}
+.kukul--sleeping .kukul-head {
+  transform: translateY(1.8px) rotate(5deg) scale(0.96) !important;
+}
+.kukul--sleeping .kukul-eye {
+  transform: scaleY(0.08) !important; /* Ojos cerrados/parpados */
+  opacity: 0.25;
+}
+.kukul--sleeping .kukul-eye-iris,
+.kukul--sleeping .kukul-eye-shine {
+  opacity: 0 !important;
+}
+.kukul--sleeping .kukul-feathers {
+  transform: scale(0.86) rotate(-7deg) !important; /* Plumas recogidas */
+  opacity: 0.45;
+}
+.kukul--sleeping .kukul-disc {
+  opacity: 0.12 !important; /* Brillo muy bajo */
+  transform: scale(0.92);
+}
+.kukul--sleeping .kukul-body {
+  transform: translateY(1.0px) scale(0.98, 0.96) !important;
+}
+
+@keyframes kukul-sleep-breathing {
+  0%, 100% { transform: scale(1.0) translateY(0); }
+  50%      { transform: scale(0.98) translateY(0.3px); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   7. HILO DORADO INTERACTIVO (Animación del Path)
+   ───────────────────────────────────────────────────────────────────────── */
+.animate-thread-draw {
+  stroke-dasharray: 800;
+  stroke-dashoffset: 800;
+  animation: thread-draw-flow 950ms cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+@keyframes thread-draw-flow {
+  0% { stroke-dashoffset: 800; opacity: 1; }
+  65% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
 /* Respeto a Reduced Motion opcional del sistema */
 @media (prefers-reduced-motion: reduce) {
   .kukul svg,
