@@ -258,7 +258,7 @@ export default function ConciergePage() {
       <div className="flex-shrink-0 border-t border-[var(--border-subtle)] bg-[var(--bg-base)] px-4 py-3">
         {/* Recomendaciones de Respuestas (Pills) */}
         {quickReplies.length > 0 && (
-          <div className="flex gap-2 px-1 pb-3 overflow-x-auto scrollbar-none max-w-3xl mx-auto w-full scroll-mask-fade">
+          <div className="flex gap-2 px-1 pb-3 overflow-x-auto scrollbar-none max-w-3xl mx-auto w-full">
             {quickReplies.map((reply, idx) => (
               <button
                 key={idx}

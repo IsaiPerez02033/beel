@@ -127,13 +127,9 @@ export default function PropertyCard({
             alt={property.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className={cn(
-              "object-cover transition-all duration-[600ms] ease-out group-hover:scale-[1.06] view-transition-img",
-              imageLoaded ? "opacity-100" : "opacity-0"
-            )}
+            className="object-cover transition-all duration-[600ms] ease-out group-hover:scale-[1.06] view-transition-img"
             style={{ viewTransitionName: `prop-img-${property.id}` } as React.CSSProperties}
             priority={priority}
-            onLoad={() => setImageLoaded(true)}
             onError={() => setImgError(true)}
           />
         ) : (
