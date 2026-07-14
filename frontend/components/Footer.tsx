@@ -22,12 +22,21 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
   {
+    title: "Descubre",
+    links: [
+      { label: "Experiencias", href: "/experiencias" },
+      { label: "Planéalo con Kukul", href: "/concierge" },
+      { label: "Cómo funciona", href: "/como-funciona" },
+      { label: "Sin comisión", href: "/ser-anfitrion" },
+    ],
+  },
+  {
     title: "Beel",
     links: [
-      { label: "Cómo funciona", href: "/como-funciona" },
       { label: "Sobre Beel", href: "/sobre" },
       { label: "Contacto", href: "/contacto" },
-      { label: "Sin comisión", href: "/ser-anfitrion" },
+      { label: "Privacidad", href: "/privacidad" },
+      { label: "Términos", href: "/terminos" },
     ],
   },
 ];
@@ -42,7 +51,7 @@ export default function Footer({ className }: FooterProps) {
     <footer className={cn("bg-[var(--bg-subtle)] border-t border-[var(--border-subtle)] mt-16 hidden md:block", className)}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Columnas */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {COLUMNS.map((col) => (
             <div key={col.title}>
               <h3 className="text-body-sm font-semibold text-[var(--text-primary)] mb-4">

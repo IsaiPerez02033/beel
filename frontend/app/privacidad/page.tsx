@@ -16,7 +16,7 @@ export default function PrivacidadPage() {
           Aviso de Privacidad
         </h1>
         <p className="text-body-sm text-[var(--text-tertiary)] mb-8">
-          Última actualización: junio de 2026
+          Última actualización: julio de 2026
         </p>
 
         <div className="space-y-8 text-body text-[var(--text-secondary)] leading-relaxed">
@@ -34,8 +34,12 @@ export default function PrivacidadPage() {
             <Ul items={[
               "Datos de identificación: nombre completo, correo electrónico, número de teléfono y fotografía de perfil.",
               "Datos de verificación de identidad: imagen de tu documento oficial (INE o pasaporte) y verificación facial (liveness), procesados por nuestro proveedor de verificación.",
-              "Datos de las propiedades que publicas: dirección, fotos, descripción, precios y disponibilidad.",
-              "Datos de reservaciones y pagos: historial de reservas y datos de la transacción (procesados por nuestro proveedor de pagos).",
+              "Datos de las propiedades y experiencias que publicas: dirección o ubicación, fotos, descripción, precios y disponibilidad.",
+              "Contenido que publicas: publicaciones, historias y videos cortos (fotos y videos), que son de carácter público dentro de la plataforma.",
+              "Datos de comunicaciones: contenido de los mensajes, fotos y archivos que intercambias con otros usuarios a través de la mensajería.",
+              "Consultas al Concierge: el contenido de las conversaciones que mantienes con nuestro asistente de viajes con inteligencia artificial.",
+              "Datos de reservaciones y pagos: historial de reservas de alojamientos y experiencias, la tarifa de servicio y datos de la transacción (procesados por nuestro proveedor de pagos).",
+              "Datos de notificaciones: la suscripción push de tu navegador o dispositivo, si activas las notificaciones.",
               "Datos técnicos: dirección IP, tipo de dispositivo y navegador.",
             ]} />
           </Section>
@@ -45,8 +49,11 @@ export default function PrivacidadPage() {
             <Ul items={[
               "Crear y administrar tu cuenta.",
               "Verificar tu identidad y número de teléfono (obligatorio para anfitriones).",
-              "Publicar y gestionar propiedades y reservaciones.",
-              "Procesar pagos y, en su caso, reembolsos.",
+              "Publicar y gestionar propiedades, experiencias y reservaciones.",
+              "Habilitar la mensajería entre usuarios y el contenido público (publicaciones e historias).",
+              "Ofrecer el planeador de viajes con inteligencia artificial (Concierge).",
+              "Enviarte notificaciones push sobre tus reservas, mensajes y actividad, cuando las actives.",
+              "Procesar pagos, la tarifa de servicio y, en su caso, reembolsos.",
               "Comunicarnos contigo sobre tus reservas y tu cuenta.",
               "Prevenir fraudes y mantener la seguridad de la plataforma.",
             ]} />
@@ -72,8 +79,16 @@ export default function PrivacidadPage() {
               "Proveedor de verificación de identidad (KYC) — para validar tu documento y rostro.",
               "Proveedor de mensajería (SMS/WhatsApp) — para enviar códigos de verificación.",
               "Procesador de pagos — para gestionar cobros, pagos a anfitriones y reembolsos.",
+              "Proveedor de inteligencia artificial — cuando usas el Concierge, el contenido de tu conversación se procesa a través de un proveedor externo de modelos de IA para generar las respuestas.",
               "Proveedores de infraestructura (hosting y base de datos) — para almacenar la información de forma segura.",
             ]} />
+            <p>
+              Algunos de estos proveedores (por ejemplo, el de inteligencia artificial)
+              pueden estar ubicados fuera de México, por lo que ciertos datos pueden ser
+              objeto de una <strong>transferencia internacional</strong>. En todos los casos
+              exigimos que traten tu información con medidas de protección adecuadas y
+              únicamente para prestar el servicio contratado.
+            </p>
             <p>No vendemos tus datos personales a terceros.</p>
           </Section>
 
@@ -87,11 +102,17 @@ export default function PrivacidadPage() {
             </p>
           </Section>
 
-          <Section title="7. Cookies y tecnologías similares">
+          <Section title="7. Cookies, notificaciones y tecnologías similares">
             <p>
               Usamos cookies y almacenamiento local para mantener tu sesión iniciada y
               mejorar tu experiencia. Puedes deshabilitarlas desde tu navegador, aunque
               algunas funciones podrían no operar correctamente.
+            </p>
+            <p className="mt-3">
+              Si activas las notificaciones push, tu navegador o dispositivo genera una
+              suscripción que usamos únicamente para enviarte avisos sobre tus reservas,
+              mensajes y actividad. Puedes revocar este permiso en cualquier momento desde la
+              configuración de tu navegador o dispositivo.
             </p>
           </Section>
 

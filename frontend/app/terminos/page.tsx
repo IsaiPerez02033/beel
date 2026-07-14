@@ -16,7 +16,7 @@ export default function TerminosPage() {
           Términos y Condiciones
         </h1>
         <p className="text-body-sm text-[var(--text-tertiary)] mb-8">
-          Última actualización: junio de 2026
+          Última actualización: julio de 2026
         </p>
 
         <div className="space-y-8 text-body text-[var(--text-secondary)] leading-relaxed">
@@ -29,10 +29,18 @@ export default function TerminosPage() {
 
           <Section title="2. Descripción del servicio">
             <p>
-              Beel es una plataforma que conecta a personas que ofrecen hospedaje
-              ("anfitriones") con personas que buscan reservarlo ("huéspedes") en México.
-              Beel actúa como intermediario tecnológico; no es propietario, administrador
-              ni operador de las propiedades publicadas.
+              Beel es una plataforma que conecta a personas que ofrecen hospedaje o
+              experiencias ("anfitriones") con personas que buscan reservarlos
+              ("huéspedes") en México. Beel actúa como intermediario tecnológico; no es
+              propietario, administrador ni operador de las propiedades o experiencias
+              publicadas.
+            </p>
+            <p className="mt-3">
+              La plataforma incluye, además de la reservación de alojamientos y
+              experiencias, funciones de comunicación entre usuarios (mensajería),
+              contenido publicado por anfitriones (publicaciones, historias y videos
+              cortos), un planeador de viajes con inteligencia artificial ("Concierge" /
+              "Kukul") y notificaciones. El uso de cada función se rige por estos Términos.
             </p>
           </Section>
 
@@ -59,13 +67,21 @@ export default function TerminosPage() {
             </p>
           </Section>
 
-          <Section title="5. Rol de Beel y pagos">
+          <Section title="5. Rol de Beel, tarifas y pagos">
             <p>
               Los pagos de los huéspedes son retenidos por Beel como garantía hasta que la
-              estancia se completa satisfactoriamente, momento en el que se libera el pago
-              al anfitrión. Durante los primeros años, Beel <strong>no cobra comisión</strong>{" "}
-              a los anfitriones; el anfitrión recibe el 100% del precio que define. Pueden
-              aplicar comisiones del procesador de pagos.
+              estancia o experiencia se completa satisfactoriamente, momento en el que se
+              libera el pago al anfitrión. Durante los primeros años, Beel{" "}
+              <strong>no cobra comisión a los anfitriones</strong>: el anfitrión recibe el
+              100% del precio que define (menos las retenciones fiscales que la ley exija).
+            </p>
+            <p className="mt-3">
+              Beel cobra una <strong>tarifa de servicio al huésped</strong>, actualmente
+              del <strong>10%</strong> sobre el subtotal de la reserva, que se muestra de
+              forma desglosada antes de confirmar y pagar. Esta tarifa cubre la operación
+              de la plataforma, el soporte y la protección del pago. Beel puede modificar el
+              porcentaje de esta tarifa; el monto vigente siempre se mostrará al huésped
+              antes de pagar. Pueden aplicar, además, comisiones del procesador de pagos.
             </p>
           </Section>
 
@@ -117,15 +133,39 @@ export default function TerminosPage() {
             </p>
           </Section>
 
-          <Section title="9. Contenido y conducta">
+          <Section title="9. Contenido, funciones sociales y conducta">
             <p>
               No se permite publicar contenido falso, ofensivo, ilegal o que infrinja
               derechos de terceros. Beel puede retirar contenido o suspender cuentas que
               violen estos términos.
             </p>
+            <p className="mt-3">
+              Las publicaciones, historias y videos cortos que los anfitriones comparten en
+              la plataforma son <strong>de carácter público</strong> y pueden ser vistos por
+              cualquier usuario. Al publicar este contenido, otorgas a Beel una licencia no
+              exclusiva para mostrarlo y difundirlo dentro de la plataforma con fines de
+              operación y promoción. Eres responsable del contenido que publicas y de contar
+              con los derechos necesarios sobre él. Las conversaciones de mensajería entre
+              usuarios son privadas, pero Beel puede revisarlas ante reportes de abuso,
+              fraude o incumplimiento de estos términos.
+            </p>
           </Section>
 
-          <Section title="10. Limitación de responsabilidad">
+          <Section title="10. Planeador de viajes con inteligencia artificial (Concierge / Kukul)">
+            <p>
+              El Concierge es un asistente de inteligencia artificial que ofrece
+              sugerencias de viaje, alojamientos y experiencias. Sus respuestas se generan
+              de forma automatizada y pueden ser <strong>inexactas, incompletas o no estar
+              actualizadas</strong>; tienen carácter meramente informativo y no constituyen
+              asesoría profesional. Debes verificar la disponibilidad, el precio y las
+              condiciones reales antes de reservar. Para prestar esta función, el contenido
+              de tu conversación se procesa a través de un proveedor de inteligencia
+              artificial externo, conforme a nuestro{" "}
+              <a className="text-[var(--color-primary)] hover:underline" href="/privacidad">Aviso de Privacidad</a>.
+            </p>
+          </Section>
+
+          <Section title="11. Limitación de responsabilidad">
             <p>
               Beel no es responsable por la calidad, seguridad o legalidad de las
               propiedades, ni por la conducta de anfitriones o huéspedes. El uso de la
@@ -133,7 +173,7 @@ export default function TerminosPage() {
             </p>
           </Section>
 
-          <Section title="11. Modificaciones">
+          <Section title="12. Modificaciones">
             <p>
               Podemos modificar estos Términos en cualquier momento. Los cambios entran en
               vigor al publicarse en esta página. El uso continuado de la plataforma
@@ -141,7 +181,7 @@ export default function TerminosPage() {
             </p>
           </Section>
 
-          <Section title="12. Ley aplicable y jurisdicción">
+          <Section title="13. Ley aplicable y jurisdicción">
             <p>
               Estos Términos se rigen por las leyes de los Estados Unidos Mexicanos.
               Cualquier controversia se someterá a los tribunales competentes de la
@@ -149,7 +189,7 @@ export default function TerminosPage() {
             </p>
           </Section>
 
-          <Section title="13. Contacto">
+          <Section title="14. Contacto">
             <p>
               Para cualquier duda sobre estos Términos, escríbenos a{" "}
               <a className="text-[var(--color-primary)] hover:underline" href="mailto:hola@beel-mx.com">hola@beel-mx.com</a>.
