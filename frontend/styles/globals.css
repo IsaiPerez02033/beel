@@ -1170,6 +1170,17 @@ input, textarea, select {
   transform-origin: 32px 32px;
   transform-box: view-box;
 }
+.kukul-particles {
+  transform-origin: 45px 18px;
+  transform-box: view-box;
+  pointer-events: none;
+}
+.kukul-particle {
+  transform-origin: 45px 18px;
+  transform-box: view-box;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
 
 /* Transiciones fluidas y físicas (Spring Dynamics) con retardos para Overlapping Animation */
 .kukul-disc,
@@ -1177,7 +1188,8 @@ input, textarea, select {
 .kukul-eye,
 .kukul-eye-iris,
 .kukul-eye-shine,
-.kukul-tongue {
+.kukul-tongue,
+.kukul-belly {
   transition: 
     transform 850ms cubic-bezier(0.25, 0.8, 0.25, 1), 
     filter 850ms cubic-bezier(0.25, 0.8, 0.25, 1), 
@@ -1361,6 +1373,20 @@ input, textarea, select {
   animation-delay: 0s;
 }
 
+/* Activar y orbitar partículas flotantes sutiles en thinking state */
+.kukul--thinking .kukul-particle {
+  opacity: 0.65;
+}
+.kukul--thinking .kukul-particle-1 {
+  animation: kukul-particle-orbit-1-calm 4.8s linear infinite;
+}
+.kukul--thinking .kukul-particle-2 {
+  animation: kukul-particle-orbit-2-calm 6.0s linear infinite;
+}
+.kukul--thinking .kukul-particle-3 {
+  animation: kukul-particle-orbit-3-calm 3.6s linear infinite;
+}
+
 @keyframes kukul-think-sway-calm {
   0%, 100% { transform: translateY(0) rotate(-0.3deg); }
   50%      { transform: translateY(-0.6px) rotate(0.3deg); }
@@ -1372,6 +1398,19 @@ input, textarea, select {
 @keyframes kukul-think-light-calm {
   0%, 100% { filter: brightness(1) drop-shadow(0 0 0 rgba(245, 166, 35, 0)); }
   50%      { filter: brightness(1.22) drop-shadow(0 0 5px rgba(245, 166, 35, 0.58)); }
+}
+
+@keyframes kukul-particle-orbit-1-calm {
+  0% { transform: rotate(0deg) translateX(18px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(18px) rotate(-360deg); }
+}
+@keyframes kukul-particle-orbit-2-calm {
+  0% { transform: rotate(120deg) translateX(14px) rotate(-120deg); }
+  100% { transform: rotate(480deg) translateX(14px) rotate(-480deg); }
+}
+@keyframes kukul-particle-orbit-3-calm {
+  0% { transform: rotate(240deg) translateX(22px) rotate(-240deg); }
+  100% { transform: rotate(600deg) translateX(22px) rotate(-600deg); }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
